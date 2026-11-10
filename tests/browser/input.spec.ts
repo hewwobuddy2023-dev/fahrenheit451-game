@@ -219,12 +219,20 @@ test('subway: source-first reconstruction fails locally, supports rereading and 
 });
 
 
-test('missing decorative backdrop keeps the title and core gameplay available', async ({page}, info) => {
-  await page.route('**/phoenix-city-*.webp', route=>route.abort());
-  await page.goto('/?debug&lowres');await scene(page,'menu');await tap(page,430,346,info);await scene(page,'room');await settle(page,info);
-  expect((await state(page)).room).toBe('burn');
-  expect(await page.evaluate(()=>(window as any).__game.textures.exists('phoenix:city'))).toBe(false);
-  await page.screenshot({path:info.outputPath('procedural-fallback-native.png')});
+test('missing or stalled decorative backdrop never gates the title indefinitely', async ({page}, info) => {
+  await page.addInitScript(()=>localStorage.clear()); // each fault starts as a fresh visitor
+  for(const fault of ['abort','stall']) {
+    await page.route('**/phoenix-city-*.webp', async route=>{
+      if(fault==='abort') await route.abort();
+      else {await new Promise(r=>setTimeout(r,6500));await route.continue().catch(()=>{});}
+    });
+    await page.goto('/?debug&lowres');await scene(page,'menu');
+    expect(await page.evaluate(()=>(window as any).__game.textures.exists('phoenix:city'))).toBe(false);
+    await tap(page,430,346,info);await scene(page,'room');await settle(page,info);
+    expect((await state(page)).room).toBe('burn');
+    await page.screenshot({path:info.outputPath(`procedural-${fault}-fallback-native.png`)});
+    await page.unroute('**/phoenix-city-*.webp');
+  }
 });
 
 test('concealment: a watched hold cannot earn the book; safe window and story beat can', async ({page}, info) => {

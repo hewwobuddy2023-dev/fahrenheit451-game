@@ -21,7 +21,7 @@ const diagnostic = diagnostics(params.has('diagnostics'));
 
 class BootScene extends Phaser.Scene {
   constructor() { super('boot'); }
-  preload() { this.load.image('phoenix:city', cityUrl); }
+  preload() { this.load.image({ key: 'phoenix:city', url: cityUrl, xhrSettings: { timeout: 4000 } }); }
   create() {
     paintFx(this);
     paintCast(this);

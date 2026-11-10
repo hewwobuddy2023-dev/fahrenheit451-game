@@ -211,3 +211,10 @@ Inspected actual native opening/subway/river captures. Removed mirrored truck nu
 ### Phoenix final interaction/access checkpoint
 
 Added an explicit PAUSE button inside both memory panels so touch players can pause without relying on an obscured underlying control. Visible sound check now labels and performs unmute; native audio tests use that menu path. The packaged local server accepts a separate baseline port (4174), smoke-tested alongside candidate 4173. No gameplay rules changed in this checkpoint. Source scope frozen for QA; final runtime ancestor and browser results belong in QA_RESULTS.md.
+
+
+### Decorative-load and source-archive release check
+
+Source audit found Phaser's XHR timeout defaults to zero. The new decorative city request therefore needs an explicit bound so a stalled connection cannot gate the title indefinitely. Set its timeout to 4 seconds; native failure coverage now exercises both immediate failure and a 6.5-second delayed request before starting ordinary play with procedural fallback. Normal assets remain unchanged. This is a startup guarantee for the new optional layer, not a claimed explanation of the original physical-iPhone report.
+
+Reproduced the source ZIP metadata build failing outside Git. Build-only metadata now accepts explicit SHA or a local Git checkout, otherwise truthfully labels source-archive. Full archived source without .git builds successfully using installed exact-lock dependencies.
