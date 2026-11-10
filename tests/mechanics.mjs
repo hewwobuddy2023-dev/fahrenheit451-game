@@ -36,3 +36,22 @@ for(const [room,id,flag] of [['subway','read','c08.verse'],['camp','granger','c1
   console.log('PASS hold cannot bypass hose pressure, release/retry retains progress, pause freezes, city texture loaded');
  }finally{s.close();}
 }
+{
+ const s=await simulate({save:{v:1,room:'attic',x:1140,flags:{'e.attic':true,'a.fell':true}},lowres:true});
+ try{
+  await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','stealth Continue');await campaign(s).settle();
+  const r=s.scene(),w=r.npcs.find(n=>n.def.id==='beatty').def;
+  await s.until(()=>r.isWatching(w),'watching');await s.touch('touchstart',888,474);await s.advance(500);await s.touch('touchend',888,474);assert.ok(!r.session.flags['c04.book']);assert.equal(r.holdMs,0);
+  await s.until(()=>!r.isWatching(w),'turn away');await campaign(s).visit('hide');assert.equal(r.session.flags['c04.book'],true);
+  console.log('PASS watched concealment resets attempt; held safe window commits book after its story beat');
+ }finally{s.close();}
+}
+{
+ const s=await simulate({save:{v:1,room:'river',x:200,flags:{'e.river':true}},lowres:true});
+ try{
+  await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','breath Continue');await campaign(s).settle();
+  const r=s.scene();await s.touch('touchstart',776,474);await s.advance(5000);assert.ok(r.breath.exhausted);assert.equal(r.player.alpha,1);await s.touch('touchend',776,474);await s.advance(2200);assert.equal(r.breath.air,1);assert.equal(r.breath.exhausted,false);
+  await campaign(s).walkTo(1600,{dive:true});await campaign(s).settle();assert.equal(r.session.flags['c13.shore'],true);
+  console.log('PASS no permanent-dive bypass; recover and cross river using timed native-sized touch controls');
+ }finally{s.close();}
+}

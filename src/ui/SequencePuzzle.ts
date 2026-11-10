@@ -56,7 +56,7 @@ export class SequencePuzzle {
     label(60, 83, this.phase === 'study' ? this.def.source : `RECONSTRUCT ${this.selected.length}/${this.def.fragments.length}  ·  ${this.def.interference ? 'Let the advertising pass.' : 'Take your time.'}`, 15, C.creamDim);
     const button = (x: number, y: number, w: number, h: number, value: string, fn: () => void, chosen = false) => {
       const box = s.add.rectangle(x, y, w, h, chosen ? 0x35434a : 0x192126).setOrigin(0).setStrokeStyle(1, chosen ? C.amberN : 0x567078, 0.8).setScrollFactor(0).setInteractive({ useHandCursor: true }).on('pointerdown', fn);
-      const t = text(s, x + 12, y + h / 2, value, { fontSize: '16px', color: C.cream, wordWrap: { width: w - 24 }, lineSpacing: 2 }).setOrigin(0, 0.5);
+      const t = text(s, x + 12, y + h / 2, value, { fontSize: '18px', color: C.cream, wordWrap: { width: w - 24 }, lineSpacing: 2 }).setOrigin(0, 0.5);
       parts.push(box, t);
     };
     if (this.phase === 'study') {

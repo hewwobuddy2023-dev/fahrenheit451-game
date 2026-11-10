@@ -9,7 +9,7 @@ const looked = (f: Flags) => ['c02.n1', 'c02.n2', 'c02.n3'].filter((k) => f[k] =
 export const SCRIPTS5: Record<string, Script> = {
   rv_open: { lines: [
     { who: N, text: 'The current takes you. Behind you, helicopters sweep the water with white light.' },
-    { who: N, text: 'Hold DOWN to go under when a light comes near.' },
+    { who: N, text: 'Hold DOWN as a light reaches you. Release in the dark to breathe. You cannot stay under forever.' },
   ] },
   rv_shore: { set: { 'c13.shore': true }, lines: [
     { who: N, text: 'Your heel touches stones. The river has carried you to the bank, far out of the city.' },
@@ -132,7 +132,7 @@ export const ROOMS5: Record<string, RoomDef> = {
       { id: 'sl1', from: 480, to: 980, width: 150, period: 5200, look: 'searchlight', dive: true, reset: 300, when: (f) => !f['c13.shore'] },
       { id: 'sl2', from: 1040, to: 1420, width: 150, period: 4400, phase: 0.4, look: 'searchlight', dive: true, reset: 1000, when: (f) => !f['c13.shore'] },
     ],
-    objective: (f) => !f['c13.shore'] ? 'Drift to the shore. Hold DOWN to go under when a searchlight comes' : !f['c13.track'] ? 'Find your way in the dark' : 'Follow the track',
+    objective: (f) => !f['c13.shore'] ? 'Reach shore. Short dives under lights; release DOWN in the dark to breathe' : !f['c13.track'] ? 'Find your way in the dark' : 'Follow the track',
     enter: [{ key: 'e.river', steps: [{ title: 'CHAPTER FIVE', sub: 'The Fire That Warms' }, { say: 'rv_open' }] }],
     hotspots: [
       { id: 'shore', x: 1560, label: '', auto: true, when: (f) => !f['c13.shore'], script: 'rv_shore', steps: [{ flash: 0x101820, ms: 300 }] },
