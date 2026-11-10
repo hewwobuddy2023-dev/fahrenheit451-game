@@ -198,7 +198,7 @@ export class RoomScene extends Phaser.Scene {
     this.updateWatchers(time);
     this.updateHazards(time, diving);
     this.updateTimer(time);
-    if (playing) { this.updateNear(); this.updateHold(dtMs); } else { this.meter.clear(); this.spray?.stop(); }
+    if (playing && !this.stillWatch) { this.updateNear(); this.updateHold(dtMs); } else { this.meter.clear(); this.spray?.stop(); }
     if (this.promptWait && this.keys.act.some((k) => Phaser.Input.Keyboard.JustDown(k))) this.promptWait.hit = true;
     if (playing && !this.governed) this.govern(time);
   }
@@ -378,7 +378,7 @@ export class RoomScene extends Phaser.Scene {
 
   private async interact() {
     const h = this.near;
-    if (!h || this.mode !== 'play') return;
+    if (!h || this.mode !== 'play' || this.stillWatch) return;
     if (h.hold && !this.locked(h)) return; // filled by holding, not pressing
     const f = this.session.flags;
     const locked = this.locked(h);
