@@ -60,3 +60,9 @@ Phaser + TypeScript + Vite with lightweight static assets, simple localStorage s
 
 ## Repo scaffold
 
+
+
+## Day 2 review
+
+
+Press M to mute, or use title/pause settings. Reduced motion is available there. `?diagnostics` provides a local-only input/viewport/error panel for reporting phone failures. Background/focus loss pauses behind a return gesture. No audio/network service is required.

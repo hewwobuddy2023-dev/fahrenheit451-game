@@ -43,3 +43,11 @@ The journal lists all fifteen challenges and derives completion from actual game
 
 ## Presentation Mode
 Choose any chapter for a short classroom demonstration. Earlier flags are supplied as demonstration defaults, clearly labeled, and never written to the normal save. They are not proof that those challenges were earned. Quit to title and choose another chapter as needed.
+
+## Sound, motion and stepping away (Day 2)
+
+Sound begins after your first tap or key press. Press **M** to mute or unmute. On a phone, use **Settings & credits** on the title or **Sound** in the pause menu. The sound is original synthesized ambience and quiet feedback; no music download is needed. If the browser blocks sound, the story still plays.
+
+**Reduced motion** is available in the same menus and follows your device preference until you change it. It removes moving grain, camera shake and flashes, and slows the subway background. Essential searchlights, movement and story fades remain visible. Preferences are separate from your story save.
+
+Switching tabs, locking the device or losing browser focus pauses the complete scene. Tap the return button or press Enter before continuing. Reading, escape timers and Hound cues wait for your return. During pause or the journal, movement stops immediately. On a small phone, rotate to landscape for readable text and larger targets.
