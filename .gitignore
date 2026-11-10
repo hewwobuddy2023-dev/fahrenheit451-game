@@ -1,0 +1,33 @@
+# dependencies and builds
+node_modules/
+dist/
+build/
+coverage/
+.playwright/
+playwright-report/
+test-results/
+# local settings, secrets and editor files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+# source book, copyrighted full text and private documents
+*.mobi
+*.epub
+02_PRIVATE_REFERENCE_DO_NOT_PUSH/
+private/
+book_sources/
+*_full_novel*
+*.azw
+*.azw3
+*.kfx
+F451_PRIVATE_REFERENCE/
+# Claude / editor local settings
+.claude/settings.local.json
+.claude/*.local.*
+*.local
+npm-debug.log*

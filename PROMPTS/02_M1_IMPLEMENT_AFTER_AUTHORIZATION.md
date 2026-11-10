@@ -1,0 +1,7 @@
+# PASTE INTO CLAUDE OR CODEX ONLY AFTER USER AUTHORIZES GAME DEVELOPMENT
+
+I explicitly authorize **M1 ONLY** for Fahrenheit 451: The Fireman's Choice. Read `AGENTS.md`, `PROGRESS.md` and all relevant specs. Preserve the preproduction plan and time-critical rubric. Implement the smallest polished vertical slice: a responsive 2D scene with movement (NO jumping), keyboard + basic touch input, one meaningfully completable challenge, readable original dialogue choice, basic journal flag, checkpoint/resume, minimal atmospheric art, browser launch, and clean test/build.
+
+Use a supported Phaser/TypeScript/Vite stack after verifying current official templates and versions. Keep browser compatibility and Chromebook resource constraints primary. Build the repo safely in the current project folder; do not overwrite other unrelated folders. Make a Git commit and push only after verifying GitHub remote and permission, and after any requested explicit approvals. Configure GitHub Pages on a user-authorized repo, with correct Vite base for `/<repo>/`, as part of M1 if repo and deployment rights are confirmed.
+
+Maintain `PROGRESS.md` with exact commands and results, commit/hash, known defects and next task. Do not invent a published URL, frame rate, real-device test, licensed asset source or school playtest. Stop and request approval before M2. No large unreviewed feature additions, no whole-game one-shot build, no secret keys or uploaded source ebook in public repo.
