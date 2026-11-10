@@ -22,3 +22,10 @@
 ## QA checklist
 
 Check against low-effect preset; check menus/dialogue at Chromebook size; inspect contrast with/without grain; ensure text doesn't touch edges or overlap; touch hit targets usable on iPhone landscape; validate all font fallback and licensed assets.
+
+## Work reusable polish pass — November 9
+
+- Flame atlas: 8 smooth phase frames, 96×144 padded cells (previously 6×64×112). Transparent cell edges avoid clipped tongues and neighboring-frame bleed. Source-over painted bodies retain orange; separate emissive glows, embers and smoke remain additive where appropriate. Regression checks verify side padding in every generated frame.
+- River: a small 8-frame surface silhouette, arm stroke, bob and wake replaces the upright walk cycle until the shore flag. Contact shadow returns on land. Movement speed, hazard rules, timers and collision positions are unchanged.
+- Wider touch rows, wrapped choices, explicit per-target fixed scroll factors, DIVE and mobile-specific control wording. Title no longer asks for a nonexistent room sky texture. Latin-only font CSS reduces unused font output.
+- Comparison captures in `docs/qa/` are Canvas simulations using fallback fonts, not browser/WebGL or iPhone screenshots. Real-device visual approval is outstanding.

@@ -50,28 +50,42 @@ export function paintFx(scene: Phaser.Scene) {
   paint(scene, 'leaf', 10, 6, (c) => { c.fillStyle = '#8a4a22'; c.beginPath(); c.ellipse(5, 3, 5, 2.5, 0.3, 0, Math.PI * 2); c.fill(); });
   paint(scene, 'book', 22, 8, (c) => { c.fillStyle = '#d9cba8'; c.fillRect(0, 2, 22, 6); c.fillStyle = '#6b2a1a'; c.fillRect(0, 0, 22, 3); });
 
-  // fire: 6 frames of layered flame tongues, painted additively
-  const t = paint(scene, 'flame', 64 * 6, 112, (c) => {
-    for (let f = 0; f < 6; f++) {
-      const r = rng(30 + f);
-      c.save(); c.translate(f * 64 + 32, 108);
-      c.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < 9; i++) {
-        const w = 10 + r() * 14, h = 40 + r() * 60, dx = (r() - 0.5) * 26, lean = (r() - 0.5) * 18;
+  // Eight padded frames. The old 64px cells clipped tongues wider than their
+  // cell and sampled adjacent flames; smooth phase changes also avoid random popping.
+  const fw = 96, fh = 144, count = 8;
+  const random = rng(30);
+  const tongues = Array.from({ length: 7 }, (_, i) => ({
+    x: (i - 3) * 7, w: 10 + random() * 7, h: 54 + random() * 49, phase: random() * Math.PI * 2,
+  }));
+  const t = paint(scene, 'flame', fw * count, fh, (c) => {
+    for (let f = 0; f < count; f++) {
+      c.save(); c.translate(f * fw + fw / 2, fh - 10);
+      c.globalCompositeOperation = 'source-over';
+      for (const tongue of tongues) {
+        const phase = f / count * Math.PI * 2 + tongue.phase;
+        const h = tongue.h * (0.87 + Math.sin(phase) * 0.12);
+        const lean = Math.sin(phase + 0.8) * 10;
+        const x = tongue.x, w = tongue.w;
         const g = c.createLinearGradient(0, 0, 0, -h);
-        g.addColorStop(0, 'rgba(255,240,190,0.55)'); g.addColorStop(0.35, 'rgba(255,150,50,0.45)');
-        g.addColorStop(0.75, 'rgba(200,50,20,0.25)'); g.addColorStop(1, 'rgba(120,20,10,0)');
+        g.addColorStop(0, 'rgba(255,230,165,0.55)');
+        g.addColorStop(0.35, 'rgba(255,140,40,0.42)');
+        g.addColorStop(0.8, 'rgba(210,48,15,0.22)');
+        g.addColorStop(1, 'rgba(140,25,10,0)');
         c.fillStyle = g;
-        c.beginPath(); c.moveTo(dx - w, 0);
-        c.quadraticCurveTo(dx - w * 0.6 + lean * 0.3, -h * 0.55, dx + lean, -h);
-        c.quadraticCurveTo(dx + w * 0.6 + lean * 0.3, -h * 0.55, dx + w, 0);
-        c.fill();
+        c.beginPath(); c.moveTo(x - w, 0);
+        c.bezierCurveTo(x - w * 1.1, -h * 0.3, x + lean - w * 0.4, -h * 0.7, x + lean, -h);
+        c.bezierCurveTo(x + lean + w * 0.2, -h * 0.7, x + w * 0.8, -h * 0.35, x + w, 0);
+        c.quadraticCurveTo(x, 6, x - w, 0); c.fill();
       }
       c.restore();
     }
   });
-  for (let i = 0; i < 6; i++) t.add(i, 0, i * 64, 0, 64, 112);
-  if (!scene.anims.exists('flame')) scene.anims.create({ key: 'flame', frames: [0, 1, 2, 3, 4, 5].map((i) => ({ key: 'flame', frame: i })), frameRate: 12, repeat: -1 });
+  for (let i = 0; i < count; i++) t.add(i, 0, i * fw, 0, fw, fh);
+  if (!scene.anims.exists('flame')) scene.anims.create({ key: 'flame', frames: Array.from({ length: count }, (_, frame) => ({ key: 'flame', frame })), frameRate: 12, repeat: -1 });
+  paint(scene, 'wake', 160, 40, (c) => {
+    c.strokeStyle = 'rgba(160,195,210,0.3)'; c.lineWidth = 1.5;
+    for (let i = 0; i < 3; i++) { c.beginPath(); c.ellipse(80, 20, 44 + i * 15, 5 + i * 4, 0, 0.12, Math.PI - 0.12); c.stroke(); }
+  });
 
   // TV-wall content: abstract "family" figures and colour fields that scroll; tinted per wall
   paint(scene, 'tv', 512, 200, (c) => {
@@ -96,9 +110,9 @@ export function fireAt(scene: Phaser.Scene, x: number, y: number, size: number, 
   const parts: Phaser.GameObjects.GameObject[] = [];
   const n = Math.max(1, Math.round(size));
   for (let i = 0; i < n; i++) {
-    const f = scene.add.sprite(x + (i - (n - 1) / 2) * 34, y, 'flame', i % 6).setOrigin(0.5, 1)
-      .setBlendMode(Phaser.BlendModes.ADD).setDepth(depth).setScale(warm ? 0.7 : 1 + Math.random() * 0.3);
-    f.play({ key: 'flame', startFrame: i % 6 });
+    const f = scene.add.sprite(x + (i - (n - 1) / 2) * 34, y, 'flame', i % 8).setOrigin(0.5, 1)
+      .setBlendMode(Phaser.BlendModes.NORMAL).setDepth(depth).setScale(warm ? 0.7 : 1 + Math.random() * 0.3);
+    f.play({ key: 'flame', startFrame: i % 8 });
     if (warm) f.setTint(0xffc070);
     parts.push(f);
   }

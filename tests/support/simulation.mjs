@@ -88,7 +88,7 @@ export async function simulate({ width = 844, height = 390, dpr = 3, lowres = fa
   };
   return { w, game, scene, advance, until, touch, tap, key, render,
     save: () => w.localStorage.getItem('f451.save'),
-    screenshot: async (path) => { await render(); await writeFile(path, native(game.canvas).toBuffer('image/png')); },
+    screenshot: async (path) => { await render(); await writeFile(path, native(game.canvas).toBuffer(path.endsWith('.webp') ? 'image/webp' : 'image/png')); },
     close: () => { game.destroy(true); game.runDestroy(); w.close(); },
   };
 }

@@ -17,6 +17,7 @@ export class Dialogue {
   open = false;
   onSpeaker?: (who: string) => void;
   private scene: Phaser.Scene;
+  private touch: boolean;
   private panel: Phaser.GameObjects.Graphics;
   private root: Phaser.GameObjects.Container;
   private name: Phaser.GameObjects.Text;
@@ -39,6 +40,7 @@ export class Dialogue {
 
   constructor(scene: Phaser.Scene, touch: boolean) {
     this.scene = scene;
+    this.touch = touch;
     const g = this.panel = scene.add.graphics();
     this.paintPanel(BOX.y);
     const hit = scene.add.zone(BOX.x, BOX.y, BOX.w, BOX.h).setOrigin(0).setScrollFactor(0).setInteractive();
@@ -119,7 +121,7 @@ export class Dialogue {
     this.name.setText(line.who);
     this.nameBg.setVisible(!narr).setSize(this.name.width + 32, 26);
     this.body.setColor(narr ? C.creamDim : C.cream).setFontStyle(narr ? 'italic' : 'normal');
-    this.full = line.text;
+    this.full = this.touch ? line.text.replace('Hold DOWN', 'Hold DIVE') : line.text;
     this.shown = 0;
     this.body.setText('');
     this.more.setVisible(false);

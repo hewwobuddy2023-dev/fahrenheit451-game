@@ -33,7 +33,7 @@ try{
   const run=s.scene();await s.advance(34500);assert.ok(run.caughtAt>0,'count-of-ten reset');
   await d.walkTo(2500);await d.settle();expect('river',12);chapters.push(s.save());
   const river=s.scene();s.w.__qa.go(650);await s.until(()=>river.caughtAt>0,'river capture');
-  await d.walkTo(1600,{dive:true});await d.settle();assert.ok(river.session.flags['c13.shore']);
+  await d.walkTo(1600,{dive:true});await d.settle();assert.ok(river.session.flags['c13.shore']);assert.equal(river.player.texture.key,'fig:montagCivil');assert.ok(river.shadow.visible);assert.ok(!river.wake.visible);
   await d.walkTo(2040);await d.settle();await d.visit('on');expect('camp',13);
   await d.walkTo(800);await d.settle();await d.visit('granger');expect('camp',14);
   const finalCheckpoint=s.save();
