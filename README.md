@@ -1,6 +1,41 @@
-# FAHRENHEIT 451: THE FIREMAN'S CHOICE — PREPRODUCTION
+# FAHRENHEIT 451: THE FIREMAN'S CHOICE
 
-Status: proposed/selected design; **no implementation authorized**. School final due **2026-11-13**. Read `AGENTS.md` before any work. Read `PREPRODUCTION_MASTER.md` for full background and confirmed vs recommended decisions.
+Status: **Milestone 1 (vertical slice) implemented on `feat/m1-vertical-slice`; M2 not authorized.** School final due **2026-11-13**. Read `AGENTS.md` and `PROGRESS.md` before any work.
+
+**Play:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/
+
+## Controls
+
+| Action | Keyboard | Touch |
+|---|---|---|
+| Move | A / D or arrow keys | on-screen arrow buttons |
+| Interact / advance dialogue | E, Enter or Space (one press = one action; held keys don't repeat) | ACT button, or tap the dialogue box |
+| Choose a response | Up / Down (or W / S), then E / Enter | tap the response |
+| Journal | J (or the JOURNAL chip) | tap the JOURNAL chip |
+| Pause | Esc or P | II button |
+
+URL flags: `?debug` shows an fps readout and exposes `window.__game` for QA. `?lowres` forces 1× render resolution (use it to compare performance on a weak Chromebook).
+
+## Develop
+
+Requires Node 24 (tested with 24.20.0 / npm 11.19.0).
+
+```bash
+npm ci
+npm run dev        # http://localhost:5173
+npm test           # save/challenge/content unit tests (node:test)
+npm run build      # typecheck + production build into dist/
+```
+
+Pushing to `main` or `feat/m1-vertical-slice` runs `.github/workflows/pages.yml`: tests, typecheck, build, deploy to GitHub Pages.
+
+### Code map
+
+- `src/content.ts`: the 15-challenge journal list, completion rules, dialogue scripts and room data. **M2 content goes here.**
+- `src/state.ts`: versioned save, checkpoints, challenge rules (pure, unit-tested).
+- `src/art.ts`: all art, painted once at boot with Canvas 2D (no image files). `src/stage.ts` places it.
+- `src/scenes/`: title, room (movement, hotspots, dialogue flow, pause, journal), end card.
+- `src/ui/`: dialogue box, HUD and touch buttons, journal, menu list.
 
 ## Working game concept
 
@@ -27,4 +62,4 @@ Phaser + TypeScript + Vite with lightweight static assets, simple localStorage s
 
 ## Repo scaffold
 
-This package intentionally contains no app source, package.json, installed dependencies, or live deployment config; add only when implementation is authorized. Placeholder folders `assets`, `src`, `public`, `tests`, `.github/workflows` reserve expected structure. `.gitignore` is a defensive baseline.
+See "Code map" above. `.gitignore` excludes `node_modules/`, `dist/`, env files, ebook formats (`*.mobi`, `*.epub`, `*.azw*`, `*.kfx`), the private reference folders and `.claude/settings.local.json`. The novel stays outside this repository.
