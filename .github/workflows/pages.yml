@@ -20,7 +20,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npm run test:simulation && npm run test:campaign && npm run test:regression
+      - run: npm run test:simulation && npm run test:campaign:all && npm run test:regression && npm run test:day2 && npm run test:cinematics
       - run: npm run build # runs tsc --noEmit first
       - uses: actions/upload-pages-artifact@v5
         if: github.event_name != 'pull_request'
@@ -43,3 +43,27 @@ jobs:
     steps:
       - id: deploy
         uses: actions/deploy-pages@v5
+
+  browser:
+    # Isolated PR validation; this job never uploads Pages or invokes deployment.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run build
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-evidence
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

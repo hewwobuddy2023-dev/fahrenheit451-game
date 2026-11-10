@@ -65,3 +65,10 @@ Phaser + TypeScript + Vite with lightweight static assets, simple localStorage s
 ## Repo scaffold
 
 See "Code map" above. `.gitignore` excludes `node_modules/`, `dist/`, env files, ebook formats (`*.mobi`, `*.epub`, `*.azw*`, `*.kfx`), the private reference folders and `.claude/settings.local.json`. The novel stays outside this repository.
+
+
+## Day 2 review
+
+Current isolated continuation: `work/day2-quality-sprint`, stacked draft PR #2 into the first Work branch (PR #1). Read `REVIEW_START_HERE.md`, `DAY2_QA_REPORT.md`, and the Day 2 Claude handoff. No merge/deployment performed. `npm run test:campaign:all` runs three complete simulated campaigns; `npm run test:browser` runs the production build through Chromium/WebKit. Physical iPhone/Chromebook tests, two actual human playtests, printed quotation verification and rehearsal remain owner work.
+
+Press M to mute, or use title/pause settings. Reduced motion is available there. `?diagnostics` provides a local-only input/viewport/error panel for reporting phone failures. Background/focus loss pauses behind a return gesture. No audio/network service is required.

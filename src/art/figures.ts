@@ -55,6 +55,7 @@ function body(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim' |
   c.save();
   c.translate(stoop * 9, stoop * 4);
   c.rotate(stoop * 0.18);
+  c.translate(0, moving ? -Math.abs(Math.cos(p)) * 1.5 : 0);
   const sway = moving ? Math.sin(p * 2) * 1.2 : 0;
   const tail = moving ? -Math.abs(Math.sin(p)) * 4 - 2 : -1;
   const sl = -15 * bulk, sr = 13 * bulk, top = -146 - chest;
@@ -110,6 +111,16 @@ function details(c: Ctx, o: Fig, walk: number | null, breath: number) {
   c.translate(stoop * 9, stoop * 4);
   c.rotate(stoop * 0.18);
   const top = -146 - breath * 1.2, hx = 4, hy = top - 18;
+  // Quiet fabric planes and seams keep dark coats readable between light sources.
+  c.fillStyle = o.dress ? 'rgba(235,220,200,0.13)' : 'rgba(195,174,148,0.15)';
+  poly(c, [-11, top + 3, -2, top + 21, -8, top + 57, -16, top + 46]);
+  c.strokeStyle = 'rgba(215,192,156,0.2)'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(1, top + 20); c.lineTo(0, -(o.coatLen ?? 52) + 2); c.stroke();
+  c.fillStyle = 'rgba(216,196,160,0.45)';
+  for (let y = top + 30; y < -79; y += 18) c.fillRect(3, y, 2, 2);
+  // Collar edge and a short cheek highlight preserve the profile without a portrait workflow.
+  c.fillStyle = 'rgba(200,180,149,0.25)'; poly(c, [-9, top + 1, 0, top + 13, 8, top - 2, 4, top + 7]);
+  if (!o.skin) { c.fillStyle = 'rgba(192,164,132,0.3)'; c.fillRect(hx + 7, hy + 1, 3, 6); }
   if (o.stripe) { c.fillStyle = 'rgba(214,150,70,0.55)'; c.fillRect(-19, -68, 38, 3); c.fillRect(-15, top + 40, 30, 2); }
   if (o.badge) { c.fillStyle = o.badge; c.fillRect(hx + 7, hy - 25, 6, 12); }
   if (o.pipe) { c.fillStyle = '#ff8a3a'; c.fillRect(hx + 19, hy, 3, 2); }
@@ -121,7 +132,7 @@ function details(c: Ctx, o: Fig, walk: number | null, breath: number) {
 
 function frame(c: Ctx, x: number, y: number, o: Fig, walk: number | null, breath: number) {
   const s = o.tall ?? 1;
-  const bob = walk !== null ? -Math.abs(Math.cos(walk)) * 3 : 0;
+  const bob = 0; // feet stay on the walk plane; torso supplies the walking rise below
   c.save();
   c.translate(x, y + bob);
   c.scale(s, s);

@@ -47,4 +47,30 @@ npm run build
 
 All commands passed locally at implementation checkpoint `46129d6`. The PR workflow runs the simulation suites as well as unit/build checks. `tests/support/simulation.mjs` runs the actual bundled Phaser game under jsdom/native Canvas, with synthetic TouchManager events and deterministic time. It is not a real browser, WebKit, iPhone, human playtest or hardware benchmark. Campaign tests teleport between static hotspots, not through chase crossings; they do not set completion flags. `QA_REPORT.md` contains the per-challenge results and limitations.
 
-Do not tick the hardware/browser/human/citation hard-acceptance items above from these simulation results. Use `PLAYTEST_FORM.md`, `PERFORMANCE_AUDIT.md` and `WORK_TO_CLAUDE_HANDOFF.md` for the remaining acceptance work. Existing deployed Pages was observed rendering its title and opening in cloud Chrome; patched Work source has not been browser-tested or deployed.
+Do not tick the hardware/browser/human/citation hard-acceptance items above from these simulation results. Use `PLAYTEST_FORM.md`, `PERFORMANCE_AUDIT.md` and `WORK_TO_CLAUDE_HANDOFF.md` for the remaining acceptance work. Existing deployed Pages was observed rendering its title and opening in cloud Chrome; that Sprint 1 historical checkpoint had not been browser-tested or deployed. Day 2 native results below supersede the browser gap; no deployment has occurred.
+
+
+## Day 2 browser and extended regressions
+
+```sh
+npm ci
+npm test
+npm run typecheck
+npm run test:simulation
+npm run test:campaign:all
+npm run test:regression
+npm run test:day2
+npm run test:cinematics
+npm run build
+npx playwright install chromium webkit
+npm run test:browser
+```
+
+Linux CI installs browser system dependencies with `npx playwright install --with-deps chromium webkit`. The browser suite serves the production build with Vite preview on 127.0.0.1:4173. It uses browser-protocol mouse/touch/keyboard input and reads state for assertions; no __qa progression calls. Chromium uses CDP for a held native touch; WebKit uses native touch taps plus keyboard holds. This is Linux WebKit, not physical Safari/iOS.
+
+Continuous trace screenshots can stall software WebGL readback. Routine CI tracing is off; failures retain PNGs/results. For a focused diagnosis: set `F451_TRACE=1` to retain a trace without screencast screenshots. Do not treat traced CI FPS as school hardware performance. Waits for holds/movement assert observed completion with bounded deadlines rather than assuming a fixed wall-time delay means the engine processed that much game time.
+
+`npm run test:gallery` produces staged eleven-scene after captures in `docs/qa/day2-after/` (ignored generated files). They are Canvas fixtures, not human progress. `DAY2_QA_REPORT.md` records the inherited versus newly reproduced bugs and real browser results. Follow the physical device checklist in `PLAYTEST_FORM.md` before declaring iPhone/Chromebook acceptance.
+
+
+Final Day 2 implementation `95837d3`, CI `42808394871`: **20/20 native tests and 11/11 unit tests PASS**, with all three complete simulated ending campaigns and remaining regression/typecheck/build checks PASS. Deployment SKIPPED. Physical-device acceptance remains open; use the explicit checklist in `DAY2_QA_REPORT.md`.

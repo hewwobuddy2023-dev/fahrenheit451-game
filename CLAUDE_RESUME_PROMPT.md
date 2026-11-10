@@ -1,45 +1,42 @@
-# Ready-to-paste Claude Code resume prompt
+# Ready-to-paste Claude Code prompt — review both Work sprints
 
-You are resuming my existing **Fahrenheit 451: The Fireman’s Choice** project in Claude Code on my Windows PC. ChatGPT Work collaborated while the PC was unavailable. Review its changes before integrating them. Do not restart the game or assume main has current source.
+Resume my existing **Fahrenheit 451: The Fireman's Choice** game. Deadline: Friday, November 13, 2026. Preserve my game, Phaser/TypeScript/Vite stack, 15 mandatory challenges, three endings, novel event order and GitHub Pages hosting. Do not restart or blindly merge.
 
 Repository: https://github.com/hewwobuddy2023-dev/fahrenheit451-game
-Original M2 branch/checkpoint: `feat/m2-chapters` at `94c45a3d38a1ec3c562631bd33fe851357a47eee`.
-Work branch: `work/overnight-mobile-qa`.
-Draft review PR: https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/1 (base M2).
-Original PC checkout: `C:\Users\gabe\Documents\Fahrenheit451Game`.
-Deadline: Friday, November 13, 2026.
+Original M2: `feat/m2-chapters`, verified checkpoint `94c45a3`.
+Sprint 1: `work/overnight-mobile-qa`, verified base/head `19b9328`, draft PR #1 into M2: https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/1
+Day 2: `work/day2-quality-sprint`, draft PR #2 into the Sprint 1 branch: https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/2
+My expected original PC checkout: `C:\Users\gabe\Documents\Fahrenheit451Game`.
 
-First read current `AGENTS.md`, `WORK_TO_CLAUDE_HANDOFF.md`, `QA_REPORT.md`, `PROGRESS.md`, `TESTING.md`, and the PR diff/checks. The handoff gives the verified implementation SHAs, changed files, exact commands, tests and limitations. Fetch remote state and inspect my PC checkout for uncommitted/unpushed work. Preserve it. Use a separate review worktree as the handoff describes; never reset or clean my existing checkout.
+Read `AGENTS.md`, the **Day 2 section of `WORK_TO_CLAUDE_HANDOFF.md`**, `DAY2_QA_REPORT.md`, `QA_REPORT.md` (historical Sprint 1), `PERFORMANCE_AUDIT.md`, `TESTING.md` and both PR diffs/checks. Fetch actual current remote heads. Inspect my original checkout for uncommitted/unpushed work and preserve it. Use an isolated review worktree as the handoff describes; never reset/clean my checkout or force-push.
 
-Work repaired a reproducible camera-scroll touch hit-test mismatch caused by Phaser’s container helper skipping inherited scroll factors. It added DIVE, whole-row touch targets, wrapped dialogue choices, pointer-owned holds/cancellation and quick Hound tap latching. It made save checkpoints atomic across complete story events, recovered legacy interrupted transitions, caught localStorage getter failures, fixed completed-ending Continue, and added a cancel-first restart confirmation. It also fixed a destroyed spray-emitter reference crashing the Chapter 2 vent after Chapter 1 and paused stillness progression behind overlays.
+Review incremental Day 2 diff (`19b9328..Day2`) and cumulative result (`94c45a3..Day2`). Sprint 1 fixed scroll-factor hit targets, DIVE, quick Hound taps/cancellation, atomic checkpoints, legacy recovery, ending Continue, restart confirmation, a destroyed emitter crash and paused stillness; it added flame/river polish and school drafts.
 
-Visual changes are restrained and reusable: padded smooth flame frames, a surface-floating river silhouette/wake instead of walking across water, a correct walking/shadow return at shore, clearer control wording/objectives, safe-area viewport sizing and Latin-only font CSS. Preserve the approved dark analog dystopia. No runtime dependency upgrade, engine change, full 3D or hosting switch occurred.
+Day 2 adds explicit focus suspension and active encounter time, local-only `?diagnostics`, real Chromium/WebKit test infrastructure, original gesture-unlocked synthesized ambience/cues with mute and separate settings, reduced motion, stage/cast/forest/ground polish, cinematic pose ownership, fresh-opening truck creation, a global cosmetic resolution fallback, consistent movement/deadlines at low FPS, frozen pause hazard phases and a brief `faber.tear` Defiance detail. Runtime dependency versions remain unchanged; Playwright is new and dev-only. Review audio cleanup, local preferences, font fallbacks, scale transitions and timing carefully.
 
-The automated evidence is substantial but limited: 9 unit tests, TypeScript, production build and actual Phaser DOM/native Canvas simulations pass. The simulation completes 01–15 in sequence and three endings independently, wrong-answer and Hound retries, stillness reset/pause, hazard captures/crossings, chapter Continue, all five Presentation chapter starts with normal-save isolation, storage errors, rapid inputs and restart confirmation. It uses synthetic touch events, fallback fonts and deterministic time. **It is not a browser or real iPhone test.** Work could not launch local Chromium, had no WebKit executable, and did not test my physical iPhone or Chromebook. Existing deployed Pages rendered in cloud Chrome, but that was the old baseline, not Work source.
-
-My original report that nothing can be tapped on the real iPhone is still not conclusively closed. The scrolled-room failure is a verified fix; baseline title synthetic taps worked. Do not claim the phone is fixed solely because these tests pass.
-
-Run from the isolated review checkout:
+Run:
 
 ```powershell
 npm ci
 npm test
 npm run typecheck
 npm run test:simulation
-npm run test:campaign
+npm run test:campaign:all
 npm run test:regression
+npm run test:day2
+npm run test:cinematics
 npm run build
-npm run dev -- --host 127.0.0.1
+npx playwright install chromium webkit
+npm run test:browser
+npm run dev -- --host 0.0.0.0
 ```
 
-Inspect code and visual diffs; compare the labeled Canvas fixtures in `docs/qa` against actual browser rendering. Test the patched build in Chromium and true WebKit where available. Test real keyboard and synthetic browser touch, portrait/landscape/resizing and safe areas. Specifically test title New Game/Continue, all Presentation rows/Back, held movement/ACT, quick taps, dialogue choices, journal/pause, Hound miss/retry, two-finger river dive, shore animation, all ending cards/title returns and interrupted-save recovery. Ask me to test the real iPhone when a reviewed build is reachable through an approved route. Do not silently deploy it for that purpose.
+Separate evidence types. Deterministic Phaser simulations complete three full New Game→15/15 routes, all endings, retries, saves, slow-delta escape and render/input regressions. Native browser tests use browser-protocol inputs and read state; no debug progression calls. Their completed job results and failed initial evidence are in the Day 2 report. Trace screenshots caused severe headless GPU readback overhead in the first run; do not fabricate performance conclusions. Linux WebKit is not iOS. Test code existing is not evidence it passed.
 
-Then validate on my actual school Chromebook and school Wi-Fi. Measure demanding scene FPS with debug/default and lowres, a five-minute scene, and escape fairness under reduced frame rates. Simulation FPS is not performance evidence. Prioritize critical compatibility defects over more art.
+**My physical iPhone's original total tap failure is still not conclusively closed.** Test the reviewed source on my phone through the local LAN URL; use `?diagnostics` on a failure. Verify early/repeated taps, fresh and old saves, all demo rows, holds, dialogue/choices, journal/pause, quick Hound retry, two-finger river DIVE, endings, rotation/toolbars/safe areas, lock/background/resume, mute and iOS audio. Check real Chromebook/school Wi-Fi, demanding scene FPS/lowres, five-minute stability, keyboard and timed presentation.
 
-Review any conflicts with newer M2 or PC changes safely on an isolated branch, preserve both writers’ work, and rerun checks. Give me your findings, any blockers, and a specific merge recommendation. **Merge only after I explicitly approve.** Do not merge into main, force-push, delete branches/tags, overwrite my work or change GitHub Pages hosting. The current workflow deploys pushes/merges to M2, so treat integration as a potential release action and confirm approval before it occurs.
+Inspect representative all-five-chapter native captures and staged before/after gallery. Canvas fallback omits some tints; staged flags/effect triggers are art fixtures, not earned challenge evidence. Preserve working fire/float systems. Do not add unrelated systems or untested dependencies under the deadline.
 
-After acceptance, continue school readiness: two actual human playtests; verified matching-edition quotations/pages; personal revision of the connection statement and final word count; rulebook review; and a real timed 3–5-minute demonstration. Work supplied `RULEBOOK.md`, `CONNECTION_STATEMENT_DRAFT.md`, `PRESENTATION_SCRIPT.md`, `DEMO_ROUTE.md`, `PLAYTEST_FORM.md`, `RUBRIC_AUDIT.md` and `PERFORMANCE_AUDIT.md`. They contain placeholders and explicit unfinished requirements. Do not invent pages, playtests, benchmarks or rehearsal evidence, and never publish the complete novel.
+School requirements are not finished: two actual people must playtest; three exact short quotations need verified printed page numbers/edition; final statement must be 300–400 words after insertion; a 3–5-minute presentation must be rehearsed. Current prose is 308 words before quotations and the script has 331 quoted spoken words. Never claim these human tasks occurred. Do not publish the private MOBI or full novel.
 
-One inherited narrative documentation mismatch is noted: `faber.tear` is stored but does not currently have its own ending branch, despite a STORY claim. Decide whether a small approved detail or a documentation correction is appropriate; preserve chronology, all fifteen challenges, all three available endings and shared city destruction.
-
-No automatic five-hour continuation was configured. Keep logical commits, update the handoff/progress after verified milestones, and leave the next exact task recorded. Start by inspecting the PR and preparing the isolated review now.
+After review, give a clear merge recommendation and the highest-priority remaining task. If both PRs pass and I approve: integrate #2 into the Work branch first, then review #1's expanded cumulative result. **Only merge #1 into M2 after my explicit release approval: pushes/merges to M2 can deploy Pages.** Do not merge or deploy automatically. If M2 or either Work base advanced, compare all heads and resolve conflicts on a separate review branch, rerun checks and preserve everyone else's work.

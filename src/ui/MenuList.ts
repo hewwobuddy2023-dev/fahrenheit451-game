@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { sound } from '../audio.ts';
 import { C, FONT, text } from '../view.ts';
 
 export interface Item { label: string; action: () => void; enabled?: boolean; note?: string }
@@ -47,6 +48,13 @@ export class MenuList {
     this.bar.setY(i * this.gap);
   }
 
+  setLabel(i: number, label: string) {
+    const row = this.rows[i];
+    if (!row || row.item.label === label) return;
+    row.item.label = label;
+    row.t.setText(label.toUpperCase());
+  }
+
   move(d: number) {
     const n = this.rows.length;
     for (let k = 1; k <= n; k++) {
@@ -57,7 +65,7 @@ export class MenuList {
 
   choose() {
     const it = this.rows[this.sel]?.item;
-    if (it && it.enabled !== false) it.action();
+    if (it && it.enabled !== false) { sound.cue('ui'); it.action(); }
   }
 
   destroy() { this.root.destroy(); }

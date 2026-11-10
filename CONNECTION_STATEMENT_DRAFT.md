@@ -2,6 +2,8 @@
 
 **Not submission-ready:** replace the three marked quotation slots with short, exact quotations and page numbers from one verified paginated edition. The supplied 2011 MOBI metadata does not establish print page numbers. Do not submit the brackets. Count the final essay again after inserting quotations; target 300–400 words.
 
+Prose count before inserting quotations: **308 words**, excluding the three placeholders. Three short quotations and their citations should keep the final statement within 300–400 words; count it again after owner verification.
+
 ## Draft essay
 
 My game, *Fahrenheit 451: The Fireman’s Choice*, focuses on how people can lose the ability to think for themselves when they stop paying attention. In Bradbury’s novel, censorship involves both government force and people choosing entertainment over difficult ideas. I wanted the player to experience that problem through actions instead of only reading an explanation.

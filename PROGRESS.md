@@ -1,12 +1,11 @@
 # LIVE PROGRESS — DO NOT INFER RESULTS
 
-**Last updated:** 2026-11-09 (Phoenix) by ChatGPT Work; Claude’s historical entries are retained below.
-**Stage:** M2 campaign implemented and verified in deterministic Phaser simulation. Work fixes await browser/device review in draft PR #1, `work/overnight-mobile-qa` → `feat/m2-chapters`. M1 preserved as tag `m1-complete`. Read `WORK_TO_CLAUDE_HANDOFF.md` first.
-**Local repo:** `C:\Users\gabe\Documents\Fahrenheit451Game`
-**GitHub repo:** https://github.com/hewwobuddy2023-dev/fahrenheit451-game (public). Branches: `main` (docs only), `feat/m1-vertical-slice` (M1).
-**GitHub Pages:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/ (deploy status below). The `github-pages` environment allows deploys from `main` and `feat/m1-vertical-slice`.
-**Stack (pinned):** phaser 3.90.0, typescript 5.9.3, vite 6.4.6; fonts @fontsource/oswald, ibm-plex-sans, special-elite 5.3.0. Node 24.20.0 / npm 11.19.0 locally; CI uses Node 24.
-**Novel:** private MOBI lives outside the repo (`Documents/F451_PRIVATE_REFERENCE/`). Not tracked; checked with `git ls-files | grep -iE 'mobi|epub|azw|kfx|novel|private|\.env|settings\.local'` → nothing.
+**Last updated:** 2026-11-10 (Phoenix) by ChatGPT Work; Claude’s historical entries are retained below.
+**Stage:** Day 2 continues M2 and Sprint 1 on `work/day2-quality-sprint` (draft PR #2 into the first Work branch). Three full 15/15 ending simulations pass. Final implementation CI at `95837d3`: 20/20 Chromium/WebKit tests PASS; physical iPhone/Chromebook checks remain open. PR #1 and #2 remain draft, unmerged; no deployment. Read the Day 2 handoff and `DAY2_QA_REPORT.md` first.
+**Local repo:** `C:\Projects\Fahrenheit451Game`
+**GitHub repo:** https://github.com/hewwobuddy2023-dev/fahrenheit451-game (public). Branches: `main` (older docs), `feat/m1-vertical-slice` (M1), `feat/m2-chapters` (M2), both isolated Work branches.
+**GitHub Pages:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/ (deploy status below). The workflow deploys pushes to main/M1/M2; inspect current environment rules before an owner-approved release.
+**Stack (pinned):** phaser 3.90.0, typescript 5.9.3, vite 6.4.6; fonts @fontsource/oswald, ibm-plex-sans, special-elite 5.3.0. Work uses Node 24.22.1; CI uses Node 24. The owner PC runtime is unobserved this sprint.
 **Playtests:** 0 human playtests.
 **Rubric writing:** six review drafts prepared; quotations/pages, human playtests and timed rehearsal remain incomplete. Current Work notes supersede repaired issues in historical M1 notes.
 
@@ -17,7 +16,7 @@
 | M0 Design/preflight | Done | — | N/A | N/A | Approved by user 2026-11-09 |
 | M1 Vertical slice | Implemented, awaiting user review | see `git log` on `feat/m1-vertical-slice` | Local + CI pass | Dev server, built-in browser pane (Chromium) | Details below |
 | M2 15 challenges + endings | Implemented; browser/device acceptance pending | `46129d6` Work checkpoint | unit/typecheck/build + full Phaser simulation PASS | Work build not browser-tested | PR #1, owner approval required before integration |
-| M3 Art and audio polish | Shared flame/river polish implemented; no audio | `46129d6` | simulation/build PASS | actual browser visual review pending | no audio claim |
+| M3 Art and audio polish | Shared art/cinematic/audio polish implemented on Day 2 | see Day 2 history | simulation/build PASS | native CI captures available; physical visual/audio review pending | synthesized ambience, mute, reduced motion |
 | M4 Submission | Drafts prepared; not complete | handoff documentation | N/A | rehearsal/human tests pending | citations and school-device checks required |
 
 ## M1: what exists
@@ -127,3 +126,63 @@ Latest verified implementation: **`46129d63ac2b41c48581fbe91e19883dbc6827f9`**. 
 All local checks passed; 01–15 and three endings pass simulation. Real Work-build browser/WebKit/iPhone acceptance remains open. Two actual people, verified printed quotations/pages and a timed school-device rehearsal remain undone. No deployment, merge or automatic five-hour continuation was configured. Next exact task: Claude fetches PR #1 in a separate worktree, reviews diff/checks, then runs the patched build in real browsers and verifies the owner’s iPhone failure before recommending integration.
 
 Final implementation PR CI: run `42751743738` at `46129d6` **PASS** (unit, simulation, campaign, regression, build). Latest documentation head and its check are shown on PR #1.
+
+## Day 2 — November 10, 2026 — browser and focus checkpoint
+
+Verified PR #1 is draft/unmerged at `19b9328313510be02d6b017639bba746c0a5dfbf`; M2 remains `94c45a3`. New branch `work/day2-quality-sprint` starts exactly at the Work head. Live Pages unchanged.
+
+Reproduced focus-loss failure in the timed escape: scene clock advanced 40 seconds after blur. Added an explicit DOM resume curtain that suspends complete active scenes, and accumulated active encounter time so Clock.now jumps cannot consume a Hound response or escape timer after resuming. Existing key/touch release remains in place. New regression fails before the repair and passes after it. Full 01–15 and all three ending simulations pass again.
+
+Added opt-in `?diagnostics` (no transmission/storage; bounded recent errors, DOM/input counts, scene, viewport and canvas metrics), including a safe font API fallback. Added pinned dev-only Playwright 1.65.0 and native Chromium/WebKit PR validation for startup taps, scrolled targets, rotation, held interaction, delayed fonts and all five demo chapter starts. Local Chromium launch still fails at socket creation (EPERM); browser results must be taken from the PR job, not inferred from the test code. Existing unit/type/build and simulation results are recorded in the Day 2 report at completion.
+
+Next: inspect actual browser CI results; add original synthesized ambience with mute, reusable visual improvements and deeper regression cases. No merge/deploy authorization implied.
+
+### Day 2 audio, composition and cinematic checkpoint
+
+Previous checkpoint: `baa0771` (draft PR #2: https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/2), stacked on PR #1. Initial build/simulation CI passes; its native-browser job is still running and is not yet acceptance evidence.
+
+- Added original Web Audio synthesis: one generated noise bed, one ambient tone, bounded/throttled effect voices, differentiated room profiles, footsteps, page/interaction/completion/Hound/ending feedback. Lazy gesture unlock, safe rejection/unsupported fallback, M mute and local preferences; settings also available from title and pause. No audio downloads or runtime dependencies. Audio state is visible in opt-in diagnostics.
+- Added reduced motion preference (OS preference default): moving grain, camera shake and flashes suppressed; subway background slowed; essential hazards/fades retained. Portrait hint recommends landscape. Opening objective now directs the player toward the piles and explains holding.
+- Inspected staged fixtures across eleven settings/all five chapters. Added baked character collar/lapel/button details, steadier ground contact, interior trim, static ground lighting/shadow planes, more varied tree silhouettes and a distant forest layer. Foreground fade uses sprite extents so it stops hiding the swimmer. Removed duplicated sky layer draws. No gameplay hit targets on decorative layers.
+- Reproduced scripted-walk animation being replaced with idle by the frame loop; pole-slide/fall positions were also overwritten by normal floor positioning. Explicit scripted walk/pose ownership fixes both. New cinematic regression fails before and passes after the fix.
+- Closed the documented unused `faber.tear` consequence with one original Defiance epilogue line; tested through the actual ending sequence. Event order, challenge count and ending availability unchanged.
+- Independently completed three full New Game → 15/15 runs (Preservation, Defiance, Submission), plus existing alternate/checkpoint regressions. Added quota-failure preservation and 30/20 FPS deterministic-delta pause/escape tests. These are simulations, not hardware measurements.
+- Unit suite now 11 tests including audio lifecycle, bounded voices, mute and blocked autoplay. Typecheck/build pass; staged comparison gallery is generated by `npm run test:gallery` and supplied in the review archive. Browser audio/performance checks are added for the next PR CI run. No merge/deployment.
+
+Next: read native browser job results, repair any verified engine/browser defects, then finish school materials, reports and review archive.
+
+Native browser run `42802233199` at `baa0771`: build PASS, browser **3 passed / 9 failed**, deploy SKIPPED. Actual captures confirm title input started gameplay and rotation/journal targets responded. Failures include a title cinematic exceeding the test's 30-second wall budget, insufficient movement during a fixed 600 ms hold, and incomplete holds after a fixed 2200 ms. Captures show 3 FPS Chromium / about 7 FPS WebKit under trace instrumentation; do not describe these as iPhone or Chromebook performance. Retained initial screenshots/results for review. Next run disables continuous trace screenshots and waits for observable movement/hold completion with a bounded deadline, without calling game APIs to progress.
+
+The native opening capture also exposed `k:truck` missing on a fresh boot (it was only painted on first entering the firehouse). Extracted the shared truck painter and call it before street use. A fresh-opening regression asserts no `__MISSING` object. Actual font/Phaser notices are now included under `public/licenses/` in the build.
+
+### Sustained slow-render fallback
+
+Implementation checkpoint `af4a49c` is pushed. Reviewed native traces expose why the old governor was too slow to help an already slow title/cinematic: it sampled only during room play, after 180 rendered frames, and lowered resolution only once. Moved that cosmetic check to the game loop, using sustained time windows across scenes and repeated steps down to the existing 960×540 base. No gameplay timing/difficulty changes. A regression forces sustained low reported FPS, verifies the 1.5 → 1.25 → 1 resolution steps, an unchanged save and correct touch coordinates afterward. Typecheck/build pass. Native run `42804548431` is pending; its results will be recorded separately from these source/simulation findings.
+
+### Settings and audio return edge cases
+
+Verified touch/keyboard preference changes do not modify the story save. M now updates the visible sound label in title settings/pause, and switching off the parlor walls changes the television ambience. Explicit return also resumes a suspended audio context: the focus curtain consumes Enter, so it must pass that gesture to audio itself. Unit/type/day2/build checks pass. No new dependency or release action.
+
+Audio initialization review confirmed Phaser would otherwise allocate its own unused Web Audio context at boot. Set `audio.noAudio` on Phaser (the independent Soundscape remains enabled), and add a native assertion that its backend has no context before the first gesture. Type/build/four-viewport simulations pass. This is resource/lifecycle cleanup, not a claimed explanation of the original phone symptom.
+
+### Final pause-phase regression
+
+A focused test failed before the repair: the river searchlight moved from x=556.92 to x=518.46 while pause was open for five seconds. The room update now stops encounter/world updates during pause or journal, retaining the exact hazard phase and active deadline. Countdown/stillness no longer need to advance behind those overlays. Added a native-browser pause/DOM-blur/explicit-return test; this DOM lifecycle injection is not a physical tab/lock test. Full campaign and targeted checks are rerun before pushing.
+
+### Low-frame-rate fairness repair
+
+10 FPS deterministic full escape **failed before** correction (`Walk timed out run x=152.835`): movement used at most 50 ms per frame while the countdown used the full delta. Removed that second cap (Phaser supplies a capped/smoothed delta) and use exponential velocity easing. Base speed, reach, hazards and 34-second timer are unchanged. Afterward **10, 20 and 30 FPS** pause/escape cases pass, alongside all three full 15/15 campaigns, touch suites, save regressions, typecheck and production build. This demonstrates timing consistency, not acceptable throughput at 10 FPS or a Chromebook benchmark.
+
+
+### Final Day 2 review checkpoint
+
+Verified implementation `95837d3a37a3c6223e50390ef2273030a9692b14`, CI run `42808394871`: 20/20 native Chromium/WebKit tests, 11 unit tests, four viewport simulations, three separate full 15/15 ending campaigns, save/edge/focus/pause/10–30 FPS/cinematic regressions, typecheck and build all PASS. Deployment SKIPPED. This documentation-only checkpoint records results and polishes all school drafts, the review guide and both Claude handoffs.
+
+Archive includes complete tracked source, production build, Git bundle/diffs, final and initial native evidence, eleven staged before/after room comparisons, six school drafts and exact continuation instructions. No private novel, credentials, node_modules or browser binaries. PR #2 remains draft into `work/overnight-mobile-qa`; PR #1 remains draft into M2. Nothing merged or deployed.
+
+Next exact task: Claude reviews both diffs in the separate PC worktree, then the owner performs the physical iPhone checklist in `DAY2_QA_REPORT.md`, real Chromebook measurements, two human playtests, printed quotation/page verification and a timed presentation. Do not approve release until those material gaps are resolved. No automatic restart is configured.
+
+
+### Quick review launch follow-up
+
+Inspected final documentation CI `42810221687` at `ed9fa87`: build/browser SUCCESS, deploy SKIPPED. Added a dependency-free local static server, Windows launcher and `TEST_IT_FIRST.md` for immediate supplied-build/phone review. Server HTTP smoke checks cover root/assets/base-prefix/HEAD/404/method restrictions; this does not constitute testing Windows double-click or real iPhone networking. Game runtime unchanged.

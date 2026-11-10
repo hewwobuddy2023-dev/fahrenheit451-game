@@ -32,10 +32,10 @@ Source major-event order preserved through Chapters 1–5. Alternate endings cle
 ## Ending design (choice at Granger's fire; the city's destruction is shared by all three)
 
 - **Preservation (closest to the novel)** — Montag stays and offers the verse he has recovered. After the bombs, the fire is used for warmth and the group walks upstream to help.
-- **Defiance (adaptation)** — Montag leaves at once to carry out Faber's plan: plant books and turn the firehouses against themselves. The bombs fall before his act can matter; afterwards he speaks to survivors in the ruins, and the response is mixed. Earlier choices (planting books at Black's house, the Dover Beach outburst, tearing Faber's Bible) shape the wording and the consequence shown.
+- **Defiance (adaptation)** — Montag chooses to go back and carry out Faber's plan: plant books and turn the firehouses against themselves. The jets interrupt before anyone can move. Afterwards he goes into the ruins and speaks to survivors, and the response is mixed. Earlier choices (planting books at Black's house, the Dover Beach outburst, tearing Faber's Bible) shape the wording and the consequence shown.
 - **Submission (adaptation)** — Montag stays silent. Officially dead, he walks away from the group to live unnoticed in a small town and lets the verse go. He watches the city's light die from a distance and puts a Seashell back in his ear. He does not return to the destroyed city.
 
-All three are always offered. Earlier flags change Granger's question, Montag's inner line, the order of the options and the epilogue details. The alternate endings carry an in-game note that in the novel Montag stays with the book people.
+All three are always offered. Earlier flags change Montag's inner line, the Defiance option's wording and the epilogue details. The three outcome choices keep a stable order. The alternate endings carry an in-game note that in the novel Montag stays with the book people.
 
 ## Dialogue writing rules
 

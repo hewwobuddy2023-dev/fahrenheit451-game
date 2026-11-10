@@ -1,18 +1,21 @@
 import assert from 'node:assert/strict';
 
 /** Teleports only between static hotspots. Events, holds, choices, retries and chases use real game logic/input. */
-export function campaign(s) {
+export function campaign(s, { ending = 'preservation' } = {}) {
   let wrongPicks = 0, missedHound = 0, stillResets = 0;
   const tried = new WeakSet();
+  const heard = new Set();
   async function settle({ missHound = false, moveStill = false } = {}) {
     for (let i = 0; i < 5000; i++) {
       const r = s.scene();
       if (r.sys.settings.key === 'end') return;
       if (r.mode === 'play' && !r.stillWatch) return;
       if (r.dialogue?.open) {
+        heard.add(r.dialogue.current);
         if (r.dialogue.choosing) {
           const choices = r.dialogue.choices;
-          let index = choices.findIndex(c => !c.again);
+          let index = choices.findIndex(c => c.set?.['c15.ending'] === ending);
+          if (index < 0) index = choices.findIndex(c => !c.again);
           if (!tried.has(choices) && choices.some(c => c.again)) {
             tried.add(choices); index = choices.findIndex(c => c.again); wrongPicks++;
           }
@@ -29,7 +32,7 @@ export function campaign(s) {
         assert.ok(r.stillWatch.until>before,'movement resets only stillness wait'); stillResets++;
         await s.tap(914,112); assert.equal(r.mode,'pause');
         await s.advance(6000); assert.equal(r.mode,'pause'); assert.ok(r.stillWatch,'pause must not finish the encounter');
-        await s.tap(500,234); assert.equal(r.mode,'play'); assert.ok(r.stillWatch.until>r.time.now);
+        await s.tap(500,234); assert.equal(r.mode,'play'); assert.ok(r.stillWatch.until>r.activeTime);
       } else await s.advance(100);
     }
     throw new Error(`Unsettled ${s.scene().room?.id}/${s.scene().mode}/${s.scene().dialogue?.current}`);
@@ -64,7 +67,7 @@ export function campaign(s) {
         if(r.player.x<edge && edge-r.player.x<30){
           const speed=175*(r.room.limp?0.72:1);
           const duration=(h.to+28-r.player.x)/speed*1000+150;
-          for(let t=0;t<duration;t+=50){if(((r.time.now+t)/h.period+(h.phase??0))%1*h.period<h.pulse){safe=false;break;}}
+          for(let t=0;t<duration;t+=50){if(((r.activeTime+t)/h.period+(h.phase??0))%1*h.period<h.pulse){safe=false;break;}}
         }
       }
       if(!safe){await release();await s.advance(100);continue;}
@@ -73,5 +76,5 @@ export function campaign(s) {
     }
     await release();throw new Error(`Walk timed out ${roomId} x=${s.scene().player.x}`);
   }
-  return { settle,visit,walkTo,stats:()=>({wrongPicks,missedHound,stillResets}) };
+  return { settle,visit,walkTo,heard:(text)=>[...heard].some(line=>line.startsWith(text)),stats:()=>({wrongPicks,missedHound,stillResets}) };
 }

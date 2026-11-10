@@ -1,4 +1,4 @@
-# Rubric audit — November 9, 2026 (Phoenix)
+# Rubric audit — November 10, 2026 (Phoenix)
 
 Deadline: Friday, November 13, 2026. Draft status; no grade or completion claim is made.
 
@@ -23,3 +23,10 @@ Deadline: Friday, November 13, 2026. Draft status; no grade or completion claim 
 - Nov 11: two actual playtests; fix any blockers; verify quotations/pages; revise the statement.
 - Nov 12: rehearse the 3–5-minute route on the school device and check final Pages deployment. Prepare any teacher-approved backup.
 - Nov 13: final launch check and submission.
+
+
+## Day 2 changes
+
+Three separate simulated New Game runs now reach 15/15, one for each ending. Audio, reduced motion, focus suspension, cinematic pose repair, native browser test infrastructure and an eleven-scene composition pass are implemented on the isolated Day 2 branch. Native browser results and their limits belong in `DAY2_QA_REPORT.md`; do not infer success from a test file existing.
+
+Mandatory owner work remains: **two actual people playtest**, **three accurate short quotations with verified printed pages**, personal review of the statement and **a timed Chromebook rehearsal**. No tool can substitute automated runs for these rubric requirements. A review ZIP and two draft PRs do not constitute a submitted or deployed release.

@@ -16,4 +16,7 @@ Correct Granger recall order: “To every thing…” → “and a time to every
 
 If running late, describe the ending choice rather than pretending it has been viewed. Do not use debug flags or forged progress as classroom completion evidence. If the school network fails, use a teacher-approved prepared screen recording made from the reviewed build; none has been recorded by Work.
 
-Before class: verify the exact hosted commit, fullscreen/readability, the mute expectation (this build has no audio), keyboard input, and a timed rehearsal. Keep the direct GitHub Pages URL available, not only a redirect.
+Before class: verify the exact hosted commit, fullscreen/readability, the M mute control (or pause → Sound), audio volume, keyboard input, and a timed rehearsal. Keep the direct GitHub Pages URL available, not only a redirect.
+
+
+Day 2 rehearsal notes: set sound to a quiet level before class, or mute it with M. Use the keyboard throughout the live Chromebook demo. If switching to another slide/tab triggers the return curtain, press Enter to resume the game; timers stay paused. The opening objective now tells a new player to move right and hold E. The all-fifteen journal remains actual progress in normal mode and seeded demonstration progress in Presentation Mode. Do not report the proposed time budgets as a measured rehearsal.

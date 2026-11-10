@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { sound } from '../audio.ts';
 import { RULES } from '../content.ts';
 import { completedIds, type Session } from '../state.ts';
 import { addAtmosphere, C, FONT, H, W, onActions, setupCamera, text } from '../view.ts';
@@ -18,6 +19,8 @@ export class EndScene extends Phaser.Scene {
 
   create() {
     setupCamera(this);
+    sound.useScene('end');
+    sound.cue('ending');
     const e = ENDINGS[String(this.session.flags['c15.ending'])] ?? { title: 'THE END', note: '' };
     const t = text(this, W / 2, H / 2 - 60, e.title, { fontFamily: FONT.type, fontSize: '44px' }).setOrigin(0.5).setLetterSpacing(6).setAlpha(0);
     const n = text(this, W / 2, H / 2 + 4, e.note, { fontSize: '17px', color: C.creamDim, align: 'center', wordWrap: { width: 640 } }).setOrigin(0.5).setAlpha(0);

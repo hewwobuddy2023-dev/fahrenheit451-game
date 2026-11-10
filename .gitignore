@@ -31,3 +31,7 @@ F451_PRIVATE_REFERENCE/
 .claude/*.local.*
 *.local
 npm-debug.log*
+
+# Reproducible staged review captures (delivered in the review ZIP, not runtime)
+docs/qa/day2-before/
+docs/qa/day2-after/

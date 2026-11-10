@@ -1,6 +1,7 @@
 // Room kits. A kit paints its textures once (keyed by kit name, freed on chapter change), places the
 // background, props and foreground occluders, and returns its lights, floor style and effect hooks.
 import Phaser from 'phaser';
+import { settings } from '../settings.ts';
 import type { Light, RoomDef } from '../content/types.ts';
 import type { Flags } from '../state.ts';
 import { C, FLOOR_TOP, H, W } from '../view.ts';
@@ -61,8 +62,33 @@ function addLayer(s: Phaser.Scene, key: string, factor: number, depth: number, y
 
 function tree(c: Ctx, x: number, base: number, h: number, col: string, r: () => number) {
   c.fillStyle = col;
-  c.fillRect(x - 4, base - h * 0.45, 8, h * 0.45);
-  for (let i = 0; i < 7; i++) { c.beginPath(); c.ellipse(x + (r() - 0.5) * h * 0.5, base - h * 0.5 - r() * h * 0.45, h * 0.22, h * 0.17, 0, 0, Math.PI * 2); c.fill(); }
+  poly(c, [x - 8, base, x - 3, base - h, x + 3, base - h, x + 8, base]);
+  c.strokeStyle = col; c.lineWidth = 4;
+  // Broken branching silhouettes avoid a row of identical circular crowns.
+  for (let i = 0; i < 9; i++) {
+    const y = base - h * (0.3 + i * 0.065), side = i % 2 ? -1 : 1;
+    const reach = h * (0.12 + r() * 0.12) * (1 - i * 0.055);
+    c.beginPath(); c.moveTo(x, y + 14); c.lineTo(x + side * reach, y - 22); c.stroke();
+    const cx = x + side * reach * 0.7, cy = y - 22, w = reach * 1.1;
+    const points: number[] = [];
+    for (let n = 0; n < 14; n++) {
+      const angle = n / 14 * Math.PI * 2, shape = 0.75 + r() * 0.3;
+      points.push(cx + Math.cos(angle) * w * shape, cy + Math.sin(angle) * h * 0.1 * shape);
+    }
+    poly(c, points);
+  }
+}
+
+/** Baked architectural trim: a ceiling plane, baseboard and quiet vertical seams. */
+function interiorTrim(c: Ctx, width: number, floor: number) {
+  c.fillStyle = 'rgba(0,0,0,0.24)';
+  poly(c, [0, 0, width, 0, width - 32, 36, 32, 36]);
+  c.fillRect(0, floor - 15, width, 15);
+  c.fillStyle = 'rgba(224,205,168,0.13)'; c.fillRect(0, floor - 16, width, 1);
+  c.fillStyle = 'rgba(0,0,0,0.2)';
+  for (let x = 34; x < width; x += 320) c.fillRect(x, 38, 2, floor - 54);
+  c.strokeStyle = 'rgba(220,200,170,0.08)'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(0, 24); c.lineTo(width, 24); c.stroke();
 }
 
 /** Foreground occluder sprite (fades when Montag is behind it). */
@@ -144,9 +170,9 @@ const station: Kit = (s, room) => {
       c.fillStyle = '#ffd08a'; c.fillRect(x - 10, 127, 20, 3);
       radial(c, x, 128, 26, 'rgba(255,200,120,A)', 0.5);
     }
+    interiorTrim(c, RW, F);
     speckle(c, RW, F, 20000, 11);
   });
-  addLayer(s, 'k:sky', 0.12, 0);
   addLayer(s, 'k:station:wall', 1, 1);
   for (const x of WINDOWS) s.add.image(x + 40, 120, 'cone').setOrigin(0.5, 0).setRotation(-0.3).setScale(0.55, 0.9).setTint(0x9ab8c4).setAlpha(0.14).setBlendMode(ADD).setDepth(2);
   const lampCones = cones(s, LAMPS, 126, C.amberN, 0.48);
@@ -183,7 +209,7 @@ const station: Kit = (s, room) => {
         s.tweens.add({ targets: eye, scale: 0.24, yoyo: true, duration: 400, onComplete: () => eye.setTint(C.coldN) });
       },
       houndGone: () => { hound.setVisible(false); eye.setVisible(false); },
-      alarm: () => { s.tweens.add({ targets: bulb, alpha: 0.9, yoyo: true, repeat: 7, duration: 150 }); s.cameras.main.flash(250, 120, 20, 10); },
+      alarm: () => { s.tweens.add({ targets: bulb, alpha: 0.9, yoyo: true, repeat: 7, duration: 150 }); if (!settings.reducedMotion) s.cameras.main.flash(250, 120, 20, 10); },
     },
     update: (f) => {
       const want = room.id === 'station2' && !!f['s2.hound'] && !!f['s2.cards'] && !f['s2.alarm'];
@@ -251,6 +277,10 @@ function stationProps(s: Phaser.Scene) {
     c.fillStyle = '#2c2420'; c.beginPath(); c.roundRect(46, 100, 104, 42, [10, 10, 2, 2]); c.fill();
     c.fillStyle = '#d9cba8'; c.beginPath(); c.roundRect(64, 88, 66, 16, 7); c.fill(); c.fillRect(88, 136, 16, 34);
   });
+  truckTexture(s);
+}
+
+function truckTexture(s: Phaser.Scene) {
   paint(s, 'k:truck', 330, 250, (c) => {
     c.fillStyle = '#5a5048'; c.fillRect(10, 30, 320, 4); c.fillRect(10, 46, 320, 4); for (let x = 18; x < 330; x += 18) c.fillRect(x, 30, 3, 20);
     c.fillStyle = vgrad(c, 56, 216, [[0, '#8a3a16'], [0.5, '#6a240e'], [1, '#2a0a07']]); c.beginPath(); c.roundRect(0, 56, 330, 160, [14, 0, 0, 6]); c.fill();
@@ -280,7 +310,6 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
     const RW = room.width, F = FLOOR_TOP;
     nightSky(s, 'k:sky', variant !== 'alley', variant === 'boulevard' ? 0.2 : 0.32);
     skyline(s, 'k:street:mid', W + (RW - W) * 0.5 + 40, 0.05, 300);
-    addLayer(s, 'k:sky', 0.12, 0);
     addLayer(s, 'k:street:mid', 0.5, 0.5).setTint(0x8a7a78);
     const key = `k:street:${variant}`;
     paint(s, key, RW, F, (c) => {
@@ -318,6 +347,7 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
     const fx: Record<string, () => void> = {};
     let update: ((f: Flags) => void) | undefined;
     if (variant === 'burn') {
+      truckTexture(s);
       s.add.image(380, 470, 'k:truck').setOrigin(0.5, 1).setDepth(3).setFlipX(true);
       const piles = [900, 1060, 1220].map((x) => s.add.image(x, 472, 'k:pile').setOrigin(0.5, 1).setDepth(4.4));
       paint(s, 'k:pile', 120, 50, (c) => {
@@ -331,7 +361,7 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
       fx.ignite = () => first('ignite', () => {
         piles.forEach((p) => fireAt(s, p.x, 472, 2));
         [960, 1100, 1240].forEach((x, i) => s.time.delayedCall(500 + i * 300, () => fireAt(s, x, F - 120, 3, false, 2.5)));
-        s.cameras.main.flash(300, 255, 140, 60);
+        if (!settings.reducedMotion) s.cameras.main.flash(300, 255, 140, 60);
       });
     }
     if (variant === 'corner') {
@@ -339,6 +369,7 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
       s.add.particles(0, 0, 'leaf', { x: { min: 0, max: RW }, y: -10, speedY: { min: 20, max: 50 }, speedX: { min: 10, max: 40 }, rotate: { min: 0, max: 360 }, lifespan: 9000, frequency: 600 }).setDepth(6);
     }
     if (variant === 'lawn') {
+      truckTexture(s);
       s.add.image(320, 470, 'k:truck').setOrigin(0.5, 1).setDepth(3);
       update = (f) => { if (f['c10.w3']) first('housefire', () => [820, 960, 1100].forEach((x) => fireAt(s, x, F - 20, 3, false, 2.5))); };
     }
@@ -375,6 +406,7 @@ const home: Kit = (s, room) => {
     c.fillStyle = '#5a5a62'; c.fillRect(1380, 160, 30, 20);
     // parlor: three wall-sized screens (content added as live layers)
     for (const x of PARLOR) { c.fillStyle = '#060608'; c.fillRect(x - 150, 60, 300, 250); }
+    interiorTrim(c, RW, F);
     speckle(c, RW, F, 12000, 31, 0.02);
   });
   addLayer(s, 'k:home:wall', 1, 1);
@@ -428,6 +460,7 @@ const attic: Kit = (s) => {
     }
     for (let x = 200; x < 640; x += 110) { c.fillStyle = '#2a1c12'; c.fillRect(x, 120, 90, 200); c.fillStyle = '#4a3220'; for (let y = 130; y < 310; y += 30) c.fillRect(x + 4, y, 82, 4); for (let y = 134; y < 310; y += 30) for (let b = x + 6; b < x + 84; b += 7) { c.fillStyle = ['#6b2a1a', '#2a3a5a', '#7a6a3a'][(b + y) % 3]; c.fillRect(b, y - 18, 6, 18); } }
     radial(c, 1400, 60, 200, 'rgba(242,165,74,A)', 0.2);
+    interiorTrim(c, RW, F);
     speckle(c, RW, F, 14000, 41);
   });
   addLayer(s, 'k:attic:wall', 1, 1);
@@ -438,7 +471,7 @@ const attic: Kit = (s) => {
   return {
     floor: { key: 'boards', top: '#3a281a', bottom: '#100a06', line: 'rgba(0,0,0,0.5)', spacing: 60, kind: 'boards' },
     lights: [{ x: 400, y: 200, color: C.amberN, r: 300 }, { x: 1400, y: 120, color: C.amberN, r: 360 }],
-    fx: { books: () => { fall.start(); s.time.delayedCall(4000, () => fall.stop()); }, glowOrange: () => s.cameras.main.flash(900, 255, 120, 40) },
+    fx: { books: () => { fall.start(); s.time.delayedCall(4000, () => fall.stop()); }, glowOrange: () => { if (!settings.reducedMotion) s.cameras.main.flash(900, 255, 120, 40); } },
   };
 };
 
@@ -455,6 +488,7 @@ const faber: Kit = (s) => {
     radial(c, 1010, 230, 120, 'rgba(242,190,110,A)', 0.35);
     // small picture-frame television
     c.fillStyle = '#3a2a1e'; c.fillRect(1260, 140, 110, 84); c.fillStyle = '#0a0c10'; c.fillRect(1270, 150, 90, 64);
+    interiorTrim(c, RW, F);
     speckle(c, RW, F, 9000, 51, 0.02);
   });
   addLayer(s, 'k:faber:wall', 1, 1);
@@ -488,6 +522,7 @@ const subway: Kit = (s) => {
     for (let x = 80; x < RW; x += 110) if (r() > 0.3) { // passengers tapping along
       c.fillStyle = '#121014'; c.beginPath(); c.ellipse(x, 236, 12, 14, 0, 0, Math.PI * 2); c.fill(); c.fillRect(x - 16, 250, 32, 50);
     }
+    interiorTrim(c, RW, F);
     speckle(c, RW, F, 6000, 61, 0.02);
   });
   addLayer(s, 'k:subway:wall', 1, 1);
@@ -497,7 +532,7 @@ const subway: Kit = (s) => {
     floor: { key: 'metal', top: '#2e2c30', bottom: '#0a0a0c', line: 'rgba(255,255,255,0.06)', spacing: 40, kind: 'metal' },
     lights: [{ x: 300, y: 60, color: 0xe8e2d0, r: 300 }, { x: 900, y: 60, color: 0xe8e2d0, r: 300 }],
     fx: {},
-    tick: (dt) => { tunnel.tilePositionX += dt * 1.6; },
+    tick: (dt) => { tunnel.tilePositionX += dt * (settings.reducedMotion ? 0.25 : 1.6); },
   };
 };
 
@@ -507,9 +542,16 @@ function forest(variant: 'river' | 'camp'): Kit {
   return (s, room) => {
     const RW = room.width, F = FLOOR_TOP;
     nightSky(s, 'k:sky:wild', true, 0.1);
-    addLayer(s, 'k:sky:wild', 0.12, 0);
     skyline(s, 'k:city:far', W + 200, 0.08, 330, '#160f10');
     const city = addLayer(s, 'k:city:far', 0.08, 0.3).setTint(0x6a5a5a);
+    const distantWidth = Math.ceil(W + (RW - W) * 0.4 + 40);
+    paint(s, 'k:forest:distant', distantWidth, F, (c) => {
+      const r = rng(451);
+      for (let x = 0; x < distantWidth; x += 55) tree(c, x + r() * 25, F - 16, 180 + r() * 90, '#182024', r);
+      c.fillStyle = vgrad(c, F - 100, F, [[0, 'rgba(112,131,137,0)'], [1, 'rgba(112,131,137,0.12)']]);
+      c.fillRect(0, F - 100, distantWidth, 100);
+    });
+    addLayer(s, 'k:forest:distant', 0.4, 0.7);
     paint(s, `k:forest:${variant}`, RW, F, (c) => {
       const r = rng(RW + 7);
       for (let x = -50; x < RW; x += 70) tree(c, x + r() * 40, F, 150 + r() * 170, '#070908', r);
@@ -537,8 +579,8 @@ function forest(variant: 'river' | 'camp'): Kit {
     // shared by all endings: the city dies on the horizon
     fx.bombs = () => {
       const cam = s.cameras.main;
-      s.time.delayedCall(200, () => cam.flash(1400, 255, 250, 240));
-      s.time.delayedCall(900, () => { city.setTint(0xffffff); s.tweens.add({ targets: city, alpha: 0, y: 40, duration: 2600 }); cam.shake(900, 0.004); });
+      s.time.delayedCall(200, () => { if (!settings.reducedMotion) cam.flash(1400, 255, 250, 240); });
+      s.time.delayedCall(900, () => { city.setTint(0xffffff); s.tweens.add({ targets: city, alpha: 0, y: 40, duration: 2600 }); if (!settings.reducedMotion) cam.shake(900, 0.004); });
       s.time.delayedCall(1600, () => s.add.particles(0, 0, 'smoke', { x: { min: 0, max: W }, y: 340, speedY: { min: -20, max: -5 }, lifespan: 9000, frequency: 120, scale: { start: 1, end: 3 }, alpha: { start: 0.25, end: 0 }, tint: 0x8a7a70, duration: 6000 }).setScrollFactor(0.1).setDepth(0.6));
     };
     fx.dawn = () => {
