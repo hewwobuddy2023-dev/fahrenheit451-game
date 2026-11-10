@@ -194,7 +194,7 @@ export const ROOMS2: Record<string, RoomDef> = {
     hotspots: [
       { id: 'stairs', x: 960, label: '', auto: true, when: (f) => !f['a.fell'], steps: [{ fx: 'books' }, { say: 'a_books' }] },
       { id: 'hide', x: 1140, label: 'Hide the book', py: 290, required: true, when: (f) => !!f['a.fell'] && !f['c04.book'],
-        watcher: 'beatty', watchedScript: 'a_watched', script: 'a_hide' },
+        watcher: 'beatty', watchedScript: 'a_watched', script: 'a_hide', hold: { flag: 'c04.book', ms: 650, fx: 'pull' } },
       { id: 'woman', x: 520, label: '', auto: true, when: (f) => !!f['c04.book'] && !f['c04.plea'], script: 'a_woman',
         steps: [{ fade: 'out', ms: 800 }, { fx: 'glowOrange' }, { say: 'a_match' }, { wait: 700 }, { goto: 'home2', x: 900 }] },
     ],

@@ -32,7 +32,7 @@ export class Soundscape {
   private filter?: BiquadFilterNode;
   private drone?: OscillatorNode;
   private noise?: AudioBufferSourceNode;
-  private voices = new Set<OscillatorNode>();
+  private voices = new Set<AudioScheduledSourceNode>();
   private last = new Map<Cue, number>();
   private profile = 'menu';
   private scene = 'menu';
@@ -78,7 +78,7 @@ export class Soundscape {
       seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
       const white = seed / 0xffffffff * 2 - 1;
       previous = (previous + white * 0.08) / 1.025;
-      data[i] = previous * 0.55 + (seed % 11003 < 4 ? white * 0.3 : 0);
+      data[i] = previous * 0.65 + white * 0.12 + (seed % 11003 < 4 ? white * 0.3 : 0);
     }
     this.noise = c.createBufferSource(); this.noise.buffer = buffer; this.noise.loop = true; this.noise.connect(this.filter); this.noise.start();
     this.drone = c.createOscillator(); this.drone.type = 'sine';
@@ -133,13 +133,24 @@ export class Soundscape {
     const [start, end, duration, gap] = CUES[kind], now = c.currentTime;
     if ((now - (this.last.get(kind) ?? -100)) * 1000 < gap) return;
     this.last.set(kind, now);
-    const osc = c.createOscillator(), gain = c.createGain();
-    osc.type = kind === 'hound' || kind === 'caught' ? 'triangle' : 'sine';
-    osc.frequency.setValueAtTime(start, now); osc.frequency.exponentialRampToValueAtTime(end, now + duration);
-    gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(kind === 'step' ? 0.15 : 0.26, now + 0.008);
+    const gain = c.createGain();
+    const noisy = ['step', 'ignite', 'caught'].includes(kind);
+    let osc: AudioScheduledSourceNode;
+    let filter: BiquadFilterNode | undefined;
+    if (noisy) {
+      const source = c.createBufferSource(); source.buffer = this.noise!.buffer; osc = source;
+      filter = c.createBiquadFilter(); filter.type = kind === 'step' ? 'lowpass' : 'bandpass';
+      filter.frequency.value = kind === 'step' ? 350 : kind === 'ignite' ? 1300 : 850; filter.Q.value = 0.7;
+      source.connect(filter); filter.connect(gain);
+    } else {
+      const tone = c.createOscillator(); tone.type = kind === 'hound' ? 'sawtooth' : 'sine';
+      tone.frequency.setValueAtTime(start, now); tone.frequency.exponentialRampToValueAtTime(end, now + duration);
+      tone.connect(gain); osc = tone;
+    }
+    gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(noisy ? (kind === 'step' ? 0.5 : 0.65) : 0.26, now + 0.008);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-    osc.connect(gain); gain.connect(this.master!); this.voices.add(osc);
-    osc.onended = () => { this.voices.delete(osc); osc.disconnect(); gain.disconnect(); };
+    gain.connect(this.master!); this.voices.add(osc);
+    osc.onended = () => { this.voices.delete(osc); osc.disconnect(); filter?.disconnect(); gain.disconnect(); };
     osc.start(now); osc.stop(now + duration + 0.015);
   }
 

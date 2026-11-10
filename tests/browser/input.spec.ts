@@ -1,3 +1,4 @@
+import { writeFile } from 'node:fs/promises';
 import { test, expect, type Page, type TestInfo } from '@playwright/test';
 import { CHAPTER_STARTS } from '../../src/content.ts';
 
@@ -12,9 +13,12 @@ async function tap(page: Page, x: number, y: number, info: TestInfo) {
 async function hose(page: Page, info: TestInfo) {
   const cdp = info.project.name === 'chromium-touch' ? await page.context().newCDPSession(page) : undefined;
   const r = (await page.locator('canvas').boundingBox())!;
+  let isHeld = false;
   const held = async (on: boolean) => {
+    if (on === isHeld) return;
     if (cdp) await cdp.send('Input.dispatchTouchEvent', { type: on ? 'touchStart' : 'touchEnd', touchPoints: on ? [{x:r.x+888/960*r.width,y:r.y+474/540*r.height,id:1}] : [] });
     else if (on) await page.keyboard.down('KeyE'); else await page.keyboard.up('KeyE');
+    isHeld = on;
   };
   try {
     for(let n=0;n<12 && !(await state(page)).flags['c01.p2'];n++) {
@@ -123,6 +127,23 @@ test('audio unlock/mute, local offline play and browser frame sample', async ({ 
   const signal=await page.evaluate(()=>(window as any).__audio.sampleOutput());
   console.log(JSON.stringify({label:'Actual Web Audio analyser signal, not a speaker listening test',signal}));
   expect(signal.peak).toBeLessThan(.95);
+  if (info.project.name === 'chromium-desktop') {
+    const rendered = await page.evaluate(async () => {
+      const context = new OfflineAudioContext(1, 48000 * 2, 48000);
+      const graph = new (window as any).__audio.constructor(() => context);
+      await graph.unlock(); // offline resume rejection is expected; original graph is still created
+      graph.useScene('burn');
+      const render = context.startRendering(); graph.cue('ignite');
+      const buffer = await render;
+      return Array.from(buffer.getChannelData(0));
+    });
+    const data=Buffer.alloc(44+rendered.length*2);data.write('RIFF');data.writeUInt32LE(data.length-8,4);data.write('WAVEfmt ',8);data.writeUInt32LE(16,16);data.writeUInt16LE(1,20);data.writeUInt16LE(1,22);data.writeUInt32LE(48000,24);data.writeUInt32LE(96000,28);data.writeUInt16LE(2,32);data.writeUInt16LE(16,34);data.write('data',36);data.writeUInt32LE(rendered.length*2,40);
+    rendered.forEach((v,i)=>data.writeInt16LE(Math.round(Math.max(-1,Math.min(1,v))*32767),44+i*2));
+    await writeFile(info.outputPath('original-fire-offline-render.wav'),data);
+    const rms=Math.sqrt(rendered.reduce((sum,v)=>sum+v*v,0)/rendered.length);expect(rms).toBeGreaterThan(.001);
+    console.log(JSON.stringify({label:'Native OfflineAudioContext renders original fire graph; NOT a physical speaker test',rms,peak:rendered.reduce((max,v)=>Math.max(max,Math.abs(v)),0)}));
+  }
+
   await page.keyboard.press('KeyM'); expect(await page.evaluate(() => (window as any).__audio.status.muted)).toBe(true);
   await expect.poll(()=>page.evaluate(()=>(window as any).__audio.sampleOutput().rms),{timeout:10000}).toBeLessThan(.00005);
   await page.keyboard.press('KeyM'); expect(await page.evaluate(() => (window as any).__audio.status.muted)).toBe(false);
@@ -142,13 +163,17 @@ test('audio unlock/mute, local offline play and browser frame sample', async ({ 
     return { p50ms: frames[60], p95ms: frames[114], renderer: g.renderer.type, canvas: [g.canvas.width, g.canvas.height], resources: performance.getEntriesByType('resource').map((e: any) => ({ name: new URL(e.name).pathname, transfer: e.transferSize, body: e.encodedBodySize })) };
   });
   console.log(JSON.stringify({ label: 'CI browser sample, NOT Chromebook benchmark', browser: browser.version(), viewport: page.viewportSize(), timing, requestCount: requests.length }));
-  expect(requests.every(url => url.startsWith('http://127.0.0.1:4173/'))).toBe(true);
+  console.log(JSON.stringify({label:'Request origins including local image decoder blob',requests:requests.map(url=>url.startsWith('blob:')?url.slice(0,35):url)}));
+  expect(requests.every(url => url.startsWith('http://127.0.0.1:4173/') || url.startsWith('blob:http://127.0.0.1:4173/'))).toBe(true);
 });
 
 test('native pause freezes searchlight phase; DOM focus loss waits for explicit return', async ({ page }, info) => {
   await seed(page, 'river', 200, { 'e.river': true });
   await page.goto('/?debug&lowres'); await scene(page, 'menu');
   await tap(page, 430, 282, info); await scene(page, 'room'); await settle(page, info);
+  await page.keyboard.down('KeyS');
+  try {await expect.poll(()=>page.evaluate(()=>(window as any).__game.scene.getScene('room').breath.exhausted),{timeout:30000}).toBe(true);}finally{await page.keyboard.up('KeyS');}
+  await expect.poll(()=>page.evaluate(()=>(window as any).__game.scene.getScene('room').breath.air),{timeout:20000}).toBeGreaterThan(.99);
   await page.keyboard.press('Escape');
   const phase = await page.evaluate(() => (window as any).__game.scene.getScene('room').beams.get('sl1').x);
   await page.waitForTimeout(1500);
@@ -184,4 +209,25 @@ test('subway: source-first reconstruction fails locally, supports rereading and 
   for(const i of [2,5,0,4])await tap(page,220+(i%2)*425,231+Math.floor(i/2)*75,info);
   await settle(page,info);expect((await state(page)).room).toBe('faber1');expect((await state(page)).flags['c08.verse']).toBe(true);
   await page.screenshot({path:info.outputPath('subway-complete-native.png')});
+});
+
+
+test('missing decorative backdrop keeps the title and core gameplay available', async ({page}, info) => {
+  await page.route('**/phoenix-city-*.webp', route=>route.abort());
+  await page.goto('/?debug&lowres');await scene(page,'menu');await tap(page,430,346,info);await scene(page,'room');await settle(page,info);
+  expect((await state(page)).room).toBe('burn');
+  expect(await page.evaluate(()=>(window as any).__game.textures.exists('phoenix:city'))).toBe(false);
+  await page.screenshot({path:info.outputPath('procedural-fallback-native.png')});
+});
+
+test('concealment: a watched hold cannot earn the book; safe window and story beat can', async ({page}, info) => {
+  await seed(page,'attic',1140,{'e.attic':true,'a.fell':true});await page.goto('/?debug&lowres');await scene(page,'menu');await tap(page,430,282,info);await scene(page,'room');await settle(page,info);
+  await expect.poll(()=>page.evaluate(()=>{const r=(window as any).__game.scene.getScene('room');return r.activeTime%4200<800;}),{timeout:30000}).toBe(true);
+  await page.keyboard.down('KeyE');await page.waitForTimeout(250);await page.keyboard.up('KeyE');
+  expect((await state(page)).flags['c04.book']).toBeUndefined();
+  await expect.poll(()=>page.evaluate(()=>{const r=(window as any).__game.scene.getScene('room');return r.activeTime%4200>1900&&r.activeTime%4200<2400;}),{timeout:45000}).toBe(true);
+  await page.keyboard.down('KeyE');
+  try {await expect.poll(async ()=>(await state(page)).dialogue,{timeout:20000}).toBe(true);}finally{await page.keyboard.up('KeyE');}
+  await settle(page,info);expect((await state(page)).flags['c04.book']).toBe(true);
+  await page.screenshot({path:info.outputPath('concealed-book-native.png')});
 });
