@@ -1,22 +1,27 @@
 import Phaser from 'phaser';
 import { C, FONT, W, text } from '../view.ts';
-import type { Choice, Line, Script } from '../content.ts';
+import type { Choice, Line, Script } from '../content/types.ts';
+import type { Flags } from '../state.ts';
 
 const BOX = { x: 80, y: 384, w: W - 160, h: 140 };
-const CPS = 55; // typewriter characters per second
+const STEP = 3;   // characters revealed per tick
+const TICK = 55;  // ms per tick (~55 chars/s, ~18 text redraws/s)
 
 /**
  * Dialogue box with typewriter text and choices.
  * advance(): finishes the current line, else shows the next one, else confirms the highlighted choice.
+ * Choices may retry (`again`), continue into another script (`next`), or be hidden by flags (`when`).
+ * All flags set along the way are collected and handed back only when the conversation ends.
  */
 export class Dialogue {
   open = false;
+  onSpeaker?: (who: string) => void;
+  private scene: Phaser.Scene;
   private root: Phaser.GameObjects.Container;
   private name: Phaser.GameObjects.Text;
   private nameBg: Phaser.GameObjects.Rectangle;
   private body: Phaser.GameObjects.Text;
   private more: Phaser.GameObjects.Triangle;
-  private hint: Phaser.GameObjects.Text;
   private choiceRows: Phaser.GameObjects.Container[] = [];
   private queue: Line[] = [];
   private full = '';
@@ -24,44 +29,42 @@ export class Dialogue {
   private typing?: Phaser.Time.TimerEvent;
   private script?: Script;
   private choices?: Choice[];
+  private retry?: Choice[];
   private sel = 0;
-  private chosen?: Choice;
-  private done?: (c?: Choice) => void;
-  private scene: Phaser.Scene;
+  private acc: Flags = {};
+  private flags: Flags = {};
+  private lookup: (k: string) => Script = () => ({ lines: [] });
+  private done?: (acc: Flags) => void;
 
   constructor(scene: Phaser.Scene, touch: boolean) {
     this.scene = scene;
     const g = scene.add.graphics();
-    g.fillStyle(C.panel, 0.92).fillRect(BOX.x, BOX.y, BOX.w, BOX.h);
+    g.fillStyle(C.panel, 0.93).fillRect(BOX.x, BOX.y, BOX.w, BOX.h);
     g.lineStyle(1, C.emberN, 0.55).strokeRect(BOX.x + 0.5, BOX.y + 0.5, BOX.w - 1, BOX.h - 1);
     g.fillStyle(C.emberN, 0.9).fillRect(BOX.x, BOX.y, 3, BOX.h);
     const hit = scene.add.zone(BOX.x, BOX.y, BOX.w, BOX.h).setOrigin(0).setInteractive();
     hit.on('pointerdown', () => { if (!this.choices) this.advance(); });
-    this.nameBg = scene.add.rectangle(BOX.x, BOX.y - 26, 10, 26, C.panel, 0.92).setOrigin(0);
-    this.name = text(scene, BOX.x + 16, BOX.y - 13, '', {
-      fontFamily: FONT.display, fontSize: '15px', fontStyle: '600', color: C.ember,
-    }).setOrigin(0, 0.5).setLetterSpacing(3);
-    this.body = text(scene, BOX.x + 28, BOX.y + 22, '', {
-      fontSize: '19px', lineSpacing: 7, wordWrap: { width: BOX.w - 70 },
-    });
+    this.nameBg = scene.add.rectangle(BOX.x, BOX.y - 26, 10, 26, C.panel, 0.93).setOrigin(0);
+    this.name = text(scene, BOX.x + 16, BOX.y - 13, '', { fontFamily: FONT.display, fontSize: '15px', fontStyle: '600', color: C.ember })
+      .setOrigin(0, 0.5).setLetterSpacing(3);
+    this.body = text(scene, BOX.x + 28, BOX.y + 20, '', { fontSize: '19px', lineSpacing: 7, wordWrap: { width: BOX.w - 70 } });
     this.more = scene.add.triangle(BOX.x + BOX.w - 26, BOX.y + BOX.h - 20, 0, 0, 12, 0, 6, 8, C.amberN);
     scene.tweens.add({ targets: this.more, y: '+=4', yoyo: true, repeat: -1, duration: 500 });
-    this.hint = text(scene, BOX.x + BOX.w - 44, BOX.y + BOX.h - 21, touch ? 'TAP' : 'E / ENTER', {
-      fontFamily: FONT.display, fontSize: '11px', color: C.muted,
-    }).setOrigin(1, 0.5).setLetterSpacing(2);
-    this.root = scene.add.container(0, 0, [g, hit, this.nameBg, this.name, this.body, this.more, this.hint])
+    const hint = text(scene, BOX.x + BOX.w - 44, BOX.y + BOX.h - 21, touch ? 'TAP' : 'E / ENTER', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
+      .setOrigin(1, 0.5).setLetterSpacing(2);
+    this.root = scene.add.container(0, 0, [g, hit, this.nameBg, this.name, this.body, this.more, hint])
       .setScrollFactor(0, 0, true).setDepth(1200).setVisible(false);
   }
 
-  play(script: Script, done: (chosen?: Choice) => void) {
-    this.script = script;
+  play(script: Script, flags: Flags, lookup: (k: string) => Script, done: (acc: Flags) => void) {
+    this.flags = flags;
+    this.lookup = lookup;
     this.done = done;
-    this.chosen = undefined;
-    this.queue = [...script.lines];
+    this.acc = {};
     this.open = true;
     this.root.setVisible(true).setAlpha(0);
     this.scene.tweens.add({ targets: this.root, alpha: 1, duration: 140 });
-    this.next();
+    this.begin(script);
   }
 
   advance() {
@@ -77,10 +80,35 @@ export class Dialogue {
     this.paintChoices();
   }
 
+  /** QA hook: choose option i directly. */
+  choose(i: number) {
+    if (!this.choices) return false;
+    this.sel = Math.min(i, this.choices.length - 1);
+    this.pick();
+    return true;
+  }
+
+  get choosing() { return !!this.choices; }
+  get options() { return this.choices?.map((c) => c.text) ?? []; }
+  get current() { return this.full; }
+
+  private begin(script: Script) {
+    this.script = script;
+    if (script.set) Object.assign(this.acc, script.set);
+    this.queue = [...script.lines];
+    this.retry = undefined;
+    this.next();
+  }
+
   private next() {
     const line = this.queue.shift();
     if (line) return this.show(line);
-    if (this.script?.choices && !this.chosen) return this.showChoices(this.script.choices);
+    if (this.retry) return this.showChoices(this.retry);
+    if (this.script?.choices) {
+      const list = this.script.choices.filter((c) => !c.when || c.when({ ...this.flags, ...this.acc }));
+      this.script = { ...this.script, choices: undefined };
+      if (list.length) return this.showChoices(list);
+    }
     this.close();
   }
 
@@ -93,10 +121,15 @@ export class Dialogue {
     this.shown = 0;
     this.body.setText('');
     this.more.setVisible(false);
+    this.onSpeaker?.(line.who);
     this.typing?.remove();
     this.typing = this.scene.time.addEvent({
-      delay: 1000 / CPS, repeat: this.full.length - 1,
-      callback: () => { this.shown++; this.body.setText(this.full.slice(0, this.shown)); if (this.shown >= this.full.length) this.more.setVisible(true); },
+      delay: TICK, repeat: Math.ceil(this.full.length / STEP) - 1,
+      callback: () => {
+        this.shown = Math.min(this.full.length, this.shown + STEP);
+        this.body.setText(this.full.slice(0, this.shown));
+        if (this.shown >= this.full.length) this.more.setVisible(true);
+      },
     });
   }
 
@@ -110,14 +143,16 @@ export class Dialogue {
   private showChoices(choices: Choice[]) {
     this.choices = choices;
     this.sel = 0;
+    this.full = '';
     this.body.setText('');
     this.name.setText('YOUR RESPONSE');
     this.nameBg.setVisible(true).setSize(this.name.width + 32, 26);
     this.more.setVisible(false);
+    const gap = choices.length > 3 ? 27 : 38;
     this.choiceRows = choices.map((c, i) => {
-      const y = BOX.y + 30 + i * 40;
-      const bg = this.scene.add.rectangle(BOX.x + 16, y, BOX.w - 32, 34, C.emberN, 0).setOrigin(0, 0.5);
-      const t = text(this.scene, BOX.x + 40, y, c.text, { fontSize: '18px' }).setOrigin(0, 0.5);
+      const y = BOX.y + 24 + i * gap;
+      const bg = this.scene.add.rectangle(BOX.x + 16, y, BOX.w - 32, gap - 4, C.emberN, 0).setOrigin(0, 0.5);
+      const t = text(this.scene, BOX.x + 40, y, c.text, { fontSize: choices.length > 3 ? '16px' : '18px' }).setOrigin(0, 0.5);
       bg.setInteractive({ useHandCursor: true })
         .on('pointerover', () => { this.sel = i; this.paintChoices(); })
         .on('pointerdown', () => { this.sel = i; this.pick(); });
@@ -137,12 +172,21 @@ export class Dialogue {
   }
 
   private pick() {
-    const c = this.choices![this.sel];
-    this.chosen = c;
+    const list = this.choices!;
+    const c = list[this.sel];
     this.choices = undefined;
     this.choiceRows.forEach((r) => r.destroy());
     this.choiceRows = [];
     this.queue = [...(c.reply ?? [])];
+    if (c.again) { this.retry = list; return this.next(); }
+    if (c.set) Object.assign(this.acc, c.set);
+    this.retry = undefined;
+    if (c.next) {
+      const after = this.lookup(c.next);
+      this.queue.push(...after.lines);
+      this.script = { ...after, lines: [] };
+      if (after.set) Object.assign(this.acc, after.set);
+    }
     this.next();
   }
 
@@ -152,6 +196,6 @@ export class Dialogue {
     this.root.setVisible(false);
     const d = this.done;
     this.done = undefined;
-    d?.(this.chosen);
+    d?.(this.acc);
   }
 }

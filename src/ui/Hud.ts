@@ -5,6 +5,8 @@ import { C, FONT, W, H, text } from '../view.ts';
 export class Hud {
   touchLeft = false;
   touchRight = false;
+  touchAct = false;
+  private timer?: Phaser.GameObjects.Text;
   private scene: Phaser.Scene;
   private panel: Phaser.GameObjects.Graphics;
   private chapter: Phaser.GameObjects.Text;
@@ -51,7 +53,8 @@ export class Hud {
         l.on(ev, () => (this.touchLeft = false));
         r.on(ev, () => (this.touchRight = false));
       }
-      a.on('pointerdown', opts.onAct);
+      a.on('pointerdown', () => { this.touchAct = true; opts.onAct(); });
+      for (const ev of ['pointerup', 'pointerout']) a.on(ev, () => (this.touchAct = false));
       p.on('pointerdown', opts.onPause);
       this.touchUi = scene.add.container(0, 0, [l, lt, r, rt, a, at, p, pt]).setScrollFactor(0, 0, true).setDepth(1001);
     }
@@ -69,7 +72,7 @@ export class Hud {
   /** Hide touch buttons while dialogue or menus own the screen, so they never overlap text. */
   showTouch(on: boolean) {
     this.touchUi?.setVisible(on);
-    if (!on) this.touchLeft = this.touchRight = false;
+    if (!on) this.touchLeft = this.touchRight = this.touchAct = false;
   }
 
   toast(title: string, sub: string) {
@@ -87,8 +90,16 @@ export class Hud {
     ] });
   }
 
+  /** Countdown or meter readout under the objective panel (text, so never colour-only). */
+  setTimer(s: string | null) {
+    if (s === null) { this.timer?.setVisible(false); return; }
+    this.timer ??= text(this.scene, 34, 82, '', { fontFamily: FONT.display, fontSize: '18px', color: C.amber })
+      .setLetterSpacing(3).setScrollFactor(0).setDepth(1001);
+    this.timer.setVisible(true).setText(s);
+  }
+
   note(s: string) {
-    const t = text(this.scene, W - 24, H - 22, s, { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
+    const t = text(this.scene, W - 24, 64, s, { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
       .setOrigin(1, 0.5).setLetterSpacing(2).setScrollFactor(0).setDepth(1001);
     this.scene.tweens.add({ targets: t, alpha: 0, delay: 1400, duration: 600, onComplete: () => t.destroy() });
   }
