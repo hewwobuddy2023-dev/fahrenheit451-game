@@ -1,3 +1,4 @@
+
 # FAHRENHEIT 451: THE FIREMAN'S CHOICE
 
 Status: **Milestone 1 (vertical slice) implemented on `feat/m1-vertical-slice`; M2 not authorized.** School final due **2026-11-13**. Read `AGENTS.md` and `PROGRESS.md` before any work.
