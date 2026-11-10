@@ -35,7 +35,7 @@ try {
   } finally{s.close();}
 }
 // Explicit pause in a timed room never consumes its deadline.
-for(const fps of [30,20]) {
+for(const fps of [30,20,10]) {
   const s=await simulate({frameMs:1000/fps,save:{v:1,room:'run',x:150,flags:{'e.run':true}}});
   try {
     await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','low-FPS run');await campaign(s).settle();

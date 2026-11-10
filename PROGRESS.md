@@ -169,3 +169,7 @@ Audio initialization review confirmed Phaser would otherwise allocate its own un
 ### Final pause-phase regression
 
 A focused test failed before the repair: the river searchlight moved from x=556.92 to x=518.46 while pause was open for five seconds. The room update now stops encounter/world updates during pause or journal, retaining the exact hazard phase and active deadline. Countdown/stillness no longer need to advance behind those overlays. Added a native-browser pause/DOM-blur/explicit-return test; this DOM lifecycle injection is not a physical tab/lock test. Full campaign and targeted checks are rerun before pushing.
+
+### Low-frame-rate fairness repair
+
+10 FPS deterministic full escape **failed before** correction (`Walk timed out run x=152.835`): movement used at most 50 ms per frame while the countdown used the full delta. Removed that second cap (Phaser supplies a capped/smoothed delta) and use exponential velocity easing. Base speed, reach, hazards and 34-second timer are unchanged. Afterward **10, 20 and 30 FPS** pause/escape cases pass, alongside all three full 15/15 campaigns, touch suites, save regressions, typecheck and production build. This demonstrates timing consistency, not acceptable throughput at 10 FPS or a Chromebook benchmark.
