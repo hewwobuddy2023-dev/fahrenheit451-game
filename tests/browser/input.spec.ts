@@ -135,3 +135,27 @@ test('audio unlock/mute, local offline play and browser frame sample', async ({ 
   console.log(JSON.stringify({ label: 'CI browser sample, NOT Chromebook benchmark', browser: browser.version(), viewport: page.viewportSize(), timing, requestCount: requests.length }));
   expect(requests.every(url => url.startsWith('http://127.0.0.1:4173/'))).toBe(true);
 });
+
+test('native pause freezes searchlight phase; DOM focus loss waits for explicit return', async ({ page }, info) => {
+  await seed(page, 'river', 200, { 'e.river': true });
+  await page.goto('/?debug&lowres'); await scene(page, 'menu');
+  await tap(page, 430, 282, info); await scene(page, 'room'); await settle(page, info);
+  await page.keyboard.press('Escape');
+  const phase = await page.evaluate(() => (window as any).__game.scene.getScene('room').beams.get('sl1').x);
+  await page.waitForTimeout(1500);
+  expect(await page.evaluate(() => (window as any).__game.scene.getScene('room').beams.get('sl1').x)).toBe(phase);
+  await tap(page, 500, 234, info);
+  await expect.poll(() => page.evaluate(() => (window as any).__game.scene.getScene('room').beams.get('sl1').x)).not.toBe(phase);
+  // Inject the DOM lifecycle signal, not an internal Phaser call. Physical tab/lock behavior is a device check.
+  await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+  const button = page.getByRole('button', { name: 'Game paused · Tap or press Enter to return' });
+  await expect(button).toBeVisible();
+  const active = await page.evaluate(() => (window as any).__game.scene.getScene('room').activeTime);
+  await page.waitForTimeout(1500);
+  expect(await page.evaluate(() => (window as any).__game.scene.getScene('room').activeTime)).toBe(active);
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(button).toBeVisible(); // focus alone does not resume the encounter
+  if (info.project.use.hasTouch) await button.tap(); else await page.keyboard.press('Enter');
+  await expect(button).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => (window as any).__game.scene.getScene('room').activeTime)).toBeGreaterThan(active);
+});
