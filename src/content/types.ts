@@ -77,6 +77,7 @@ export interface Hazard {
   width: number;
   period: number;            // ms for one full there-and-back
   phase?: number;            // 0..1
+  pulse?: number;            // lane mode: dangerous only for this many ms per period (a car crossing, a door opening)
   look: 'beam' | 'headlights' | 'searchlight' | 'doorlight';
   dive?: boolean;            // holding DOWN keeps Montag hidden (river)
   reset: number;             // x Montag returns to when caught
