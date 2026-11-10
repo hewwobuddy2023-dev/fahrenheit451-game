@@ -165,4 +165,37 @@ export const CAST: Record<string, Fig> = {
 
 export function paintCast(scene: Phaser.Scene) {
   for (const [k, o] of Object.entries(CAST)) figureSheet(scene, 'fig:' + k, o);
+  paintSwimmer(scene);
+}
+
+/** Surface silhouette: head, shoulders and a slow arm stroke; legs remain below the water.
+ * A tiny reusable sheet replaces the walking figure, with no physics or movement changes.
+ */
+function paintSwimmer(scene: Phaser.Scene) {
+  const key = 'fig:montagFloat', width = 176, height = 80, count = 8;
+  const t = paint(scene, key, width * count, height, (c) => {
+    for (let i = 0; i < count; i++) {
+      const phase = i / count * Math.PI * 2;
+      c.save(); c.translate(i * width, 0);
+      c.fillStyle = 'rgba(115,155,175,0.5)';
+      c.beginPath(); c.ellipse(88, 56, 62, 5, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#20303a';
+      poly(c, [30, 53, 61, 43, 104, 39, 128, 44, 123, 54, 80, 57]);
+      limb(c, 115, 43, 138 + Math.sin(phase) * 12, 54, 6, 4);
+      limb(c, 138 + Math.sin(phase) * 12, 54, 151 + Math.sin(phase) * 12, 51, 4, 2.5);
+      c.fillStyle = '#4b5558';
+      limb(c, 123, 42, 129, 31, 5, 5);
+      c.beginPath(); c.ellipse(132, 26, 10, 13, -0.18, 0, Math.PI * 2); c.fill();
+      poly(c, [140, 24, 146, 30, 140, 32]);
+      c.fillStyle = '#161b1c';
+      c.beginPath(); c.ellipse(130, 18, 10, 7, -0.1, Math.PI, Math.PI * 2); c.fill();
+      c.strokeStyle = 'rgba(165,195,210,0.65)'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(29, 56); c.quadraticCurveTo(85, 60 + Math.sin(phase) * 2, 148, 55); c.stroke();
+      c.restore();
+    }
+  });
+  for (let i = 0; i < count; i++) t.add(i, 0, i * width, 0, width, height);
+  for (const [name, frameRate] of [['idle', 4], ['walk', 7]] as const) {
+    scene.anims.create({ key: key + ':' + name, frames: Array.from({ length: count }, (_, frame) => ({ key, frame })), frameRate, repeat: -1 });
+  }
 }

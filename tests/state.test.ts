@@ -114,3 +114,35 @@ test('every room is reachable from the opening', () => {
   }
   for (const id of Object.keys(ROOMS)) assert.ok(seen.has(id), `${id} unreachable`);
 });
+
+test('unavailable localStorage getter is caught, including session checkpoints', () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, get() { throw new Error('SecurityError'); } });
+  try {
+    assert.equal(loadSave(), null);
+    assert.equal(writeSave({ v: 1, room: 'burn', x: 640, flags: {} }), false);
+    const session = new Session({ v: 1, room: 'burn', x: 640, flags: {} });
+    assert.equal(session.checkpoint('burn', 700), false);
+    assert.equal(session.x, 700);
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'localStorage', original);
+    else Reflect.deleteProperty(globalThis, 'localStorage');
+  }
+});
+
+test('legacy interrupted transitions recover without losing earlier choices', async () => {
+  const { restoreCheckpoint } = await import('../src/checkpoints.ts');
+  for (const [room, flag, next] of [
+    ['burn', 'c01.lit', 'station1'], ['attic', 'c04.plea', 'home2'], ['home2', 'c06.still', 'home3'],
+    ['subway', 'c08.verse', 'faber1'], ['home4', 'c09.burned', 'station3'], ['run', 'c12.river', 'river'],
+  ]) {
+    const save = { v: 1 as const, room, x: 600, flags: { [flag]: true, 'c01.tone': 'deferent' } };
+    const restored = restoreCheckpoint(save)!;
+    assert.equal(restored.room, next);
+    assert.deepEqual(restored.flags, save.flags);
+    assert.equal(restoreCheckpoint({ ...save, flags: {} })?.room, room);
+  }
+  for (const room of ['not-a-room', '__proto__', 'toString']) {
+    assert.equal(restoreCheckpoint({ v: 1, room, x: 1, flags: {} }), null);
+  }
+});

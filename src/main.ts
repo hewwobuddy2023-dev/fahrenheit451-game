@@ -1,10 +1,10 @@
-import '@fontsource/oswald/500.css';
-import '@fontsource/oswald/600.css';
-import '@fontsource/oswald/700.css';
-import '@fontsource/ibm-plex-sans/400.css';
-import '@fontsource/ibm-plex-sans/400-italic.css';
-import '@fontsource/ibm-plex-sans/600.css';
-import '@fontsource/special-elite/400.css';
+import '@fontsource/oswald/latin-500.css';
+import '@fontsource/oswald/latin-600.css';
+import '@fontsource/oswald/latin-700.css';
+import '@fontsource/ibm-plex-sans/latin-400.css';
+import '@fontsource/ibm-plex-sans/latin-400-italic.css';
+import '@fontsource/ibm-plex-sans/latin-600.css';
+import '@fontsource/special-elite/latin-400.css';
 import Phaser from 'phaser';
 import { paintCast } from './art/figures.ts';
 import { paintFx } from './art/fx.ts';

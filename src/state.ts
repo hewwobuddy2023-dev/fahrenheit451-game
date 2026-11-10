@@ -13,9 +13,9 @@ export const SAVE_KEY = 'f451.save';
 type Store = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 /** Returns null for missing, unparsable, wrong-version or malformed saves. Never throws. */
-export function loadSave(store: Store = localStorage): SaveData | null {
+export function loadSave(store?: Store): SaveData | null {
   try {
-    const raw = store.getItem(SAVE_KEY);
+    const raw = (store ?? localStorage).getItem(SAVE_KEY);
     if (!raw) return null;
     const d = JSON.parse(raw);
     const ok =
@@ -29,17 +29,17 @@ export function loadSave(store: Store = localStorage): SaveData | null {
 }
 
 /** Storage can be full or blocked (private mode, managed devices); the game keeps running either way. */
-export function writeSave(data: SaveData, store: Store = localStorage): boolean {
+export function writeSave(data: SaveData, store?: Store): boolean {
   try {
-    store.setItem(SAVE_KEY, JSON.stringify(data));
+    (store ?? localStorage).setItem(SAVE_KEY, JSON.stringify(data));
     return true;
   } catch {
     return false;
   }
 }
 
-export function clearSave(store: Store = localStorage): void {
-  try { store.removeItem(SAVE_KEY); } catch { /* storage blocked: nothing to clear */ }
+export function clearSave(store?: Store): void {
+  try { (store ?? localStorage).removeItem(SAVE_KEY); } catch { /* storage blocked: nothing to clear */ }
 }
 
 /** A challenge is complete when every flag it requires is set. Completion is always derived, never stored. */
@@ -77,6 +77,6 @@ export class Session {
     this.room = room;
     this.x = Math.round(x);
     if (this.demo) return true;
-    return writeSave({ v: 1, room, x: this.x, flags: { ...this.flags } }, this.store ?? localStorage);
+    return writeSave({ v: 1, room, x: this.x, flags: { ...this.flags } }, this.store);
   }
 }

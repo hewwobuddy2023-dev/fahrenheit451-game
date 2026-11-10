@@ -28,6 +28,7 @@ export class RoomScene extends Phaser.Scene {
   private floor!: ReturnType<typeof buildFloor>;
   private player!: Phaser.GameObjects.Sprite;
   private shadow!: Phaser.GameObjects.Image;
+  private wake?: Phaser.GameObjects.Image;
   private npcs: NpcView[] = [];
   private keys!: { left: Phaser.Input.Keyboard.Key[]; right: Phaser.Input.Keyboard.Key[]; act: Phaser.Input.Keyboard.Key[]; down: Phaser.Input.Keyboard.Key[] };
   private dialogue!: Dialogue;
@@ -55,7 +56,7 @@ export class RoomScene extends Phaser.Scene {
   private timerStart = 0;
   private fps: number[] = [];
   private governed = false;
-  private stillWatch?: { until: number; x: number; ms: number };
+  private stillWatch?: { until: number; x: number; ms: number; moving?: boolean };
   private promptWait?: { until: number; hit: boolean };
 
   constructor() { super('room'); }
@@ -66,6 +67,10 @@ export class RoomScene extends Phaser.Scene {
     this.vx = 0; this.facing = 1; this.near = undefined; this.holdMs = 0;
     this.camTarget = null; this.overlay = undefined; this.caughtAt = 0;
     this.npcs = []; this.glows = new Map(); this.beams = new Map(); this.eyes = new Map();
+    // Scene restarts destroy its objects, but retain class fields. Never reuse a
+    // destroyed emitter when a later chapter starts its next hold interaction.
+    this.spray = undefined;
+    this.wake = undefined;
     this.fps = []; this.governed = false; this.stillWatch = undefined; this.promptWait = undefined;
   }
 
@@ -82,10 +87,12 @@ export class RoomScene extends Phaser.Scene {
     if (this.room.dark) this.dark = darkness(this); else this.dark = undefined;
 
     const x = Phaser.Math.Clamp(this.session.x, 40, this.room.width - 40);
-    const fig = this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag';
+    const swimming = this.room.id === 'river' && !this.session.flags['c13.shore'];
+    const fig = swimming ? 'fig:montagFloat' : this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag';
     this.shadow = shadowFor(this, x, WALK_Y);
     this.player = this.add.sprite(x, WALK_Y + 6, fig, 0).setOrigin(0.5, 1).setDepth(5);
     this.player.play(fig + ':idle');
+    if (this.room.id === 'river') this.wake = this.add.image(x, WALK_Y + 3, 'wake').setDepth(5.1);
     for (const n of this.room.npcs ?? []) {
       const y = n.back ? 452 : WALK_Y;
       const spr = this.add.sprite(n.x, y + 6, 'fig:' + n.fig, 0).setOrigin(0.5, 1).setDepth(n.back ? 4.5 : 5 - 0.01).setFlipX(n.face === -1);
@@ -99,7 +106,7 @@ export class RoomScene extends Phaser.Scene {
       left: [kb.addKey('LEFT'), kb.addKey('A')], right: [kb.addKey('RIGHT'), kb.addKey('D')],
       act: [kb.addKey('E'), kb.addKey('ENTER'), kb.addKey('SPACE')], down: [kb.addKey('DOWN'), kb.addKey('S')],
     };
-    const release = () => kb.resetKeys();
+    const release = () => { kb.resetKeys(); this.hud?.resetTouch(); this.vx = 0; };
     this.game.events.on('blur', release);
     this.events.once('shutdown', () => this.game.events.off('blur', release));
 
@@ -148,12 +155,17 @@ export class RoomScene extends Phaser.Scene {
     const p = this.player;
     let dir = 0;
     const playing = this.mode === 'play';
-    if (playing || this.stillWatch) {
+    if (playing) {
       if (this.keys.left.some((k) => k.isDown) || this.hud.touchLeft) dir -= 1;
       if (this.keys.right.some((k) => k.isDown) || this.hud.touchRight) dir += 1;
     }
     if (this.stillWatch) {
-      if (dir) { this.stillWatch.until = time + this.stillWatch.ms; this.flashNote('YOU MOVED. STAY STILL.'); }
+      if (!playing) this.stillWatch.until += dtMs;
+      else if (dir) {
+        this.stillWatch.until = time + this.stillWatch.ms;
+        if (!this.stillWatch.moving) this.flashNote('YOU MOVED. STAY STILL.');
+      }
+      this.stillWatch.moving = !!dir;
       dir = 0;
     }
     const speed = SPEED * (this.room.limp ? 0.72 : 1);
@@ -161,10 +173,13 @@ export class RoomScene extends Phaser.Scene {
     if (Math.abs(this.vx) < 3) this.vx = 0;
     p.x = Phaser.Math.Clamp(p.x + this.vx * dt, 40, this.room.width - 40);
     if (dir) this.facing = dir;
-    this.animate(p, this.vx, this.facing, this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag');
-    const diving = playing && (this.keys.down.some((k) => k.isDown)) && (this.room.hazards ?? []).some((h) => h.dive);
-    p.setAlpha(diving ? 0.35 : 1).setY(WALK_Y + 6 + (diving ? 14 : 0));
-    this.shadow.setX(p.x);
+    const swimming = this.room.id === 'river' && !f['c13.shore'];
+    this.animate(p, this.vx, this.facing, swimming ? 'fig:montagFloat' : this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag');
+    const diving = playing && (this.keys.down.some((k) => k.isDown) || this.hud.touchDown) && (this.room.hazards ?? []).some((h) => h.dive);
+    this.hud.showDive(this.room.id === 'river' && !f['c13.shore']);
+    p.setAlpha(diving ? 0.35 : 1).setY(WALK_Y + 6 + (diving ? 14 : swimming ? Math.sin(time * 0.002) * 2 : 0));
+    this.shadow.setX(p.x).setVisible(!swimming);
+    this.wake?.setX(p.x).setVisible(swimming).setAlpha(diving ? 0.18 : 0.6).setScale(1 + Math.sin(time * 0.003) * 0.08, 1);
     p.setTint(lightTint(p.x, this.roomLights));
     this.dark?.follow(p.x - this.cameras.main.scrollX, p.y);
 
@@ -366,6 +381,9 @@ export class RoomScene extends Phaser.Scene {
   // ---------- input ----------
 
   private onAction(a: Act) {
+    // A quick touch may start and end between two frames. Latch it on the event,
+    // rather than requiring the Hound prompt's polling loop to observe a held finger.
+    if (a === 'act' && this.promptWait) { this.promptWait.hit = true; return; }
     switch (this.mode) {
       case 'dialogue':
         if (a === 'act') this.dialogue.advance();
@@ -407,6 +425,8 @@ export class RoomScene extends Phaser.Scene {
     const blocked = key !== h.script && key !== h.doneScript;
     const firstTime = !(h.doneFlag && f[h.doneFlag]);
     this.mode = 'cutscene';
+    this.vx = 0;
+    this.hud.showTouch(false);
     if (key) await this.say(key);
     if (!locked && !blocked && firstTime && h.steps) await this.runSteps(h.steps);
     if (this.isExit()) return;
@@ -418,6 +438,7 @@ export class RoomScene extends Phaser.Scene {
     this.mode = 'play';
     this.camTarget = null;
     this.hud.showTouch(true);
+    this.checkpoint();
   }
 
   /** Play one script; resolves when it closes. Flags apply at the end only. */
@@ -524,7 +545,7 @@ export class RoomScene extends Phaser.Scene {
     }
     if ('prompt' in s) {
       for (;;) {
-        const t = text(this, W / 2, 210, s.prompt, { fontFamily: FONT.display, fontSize: '30px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 18, y: 10 } })
+        const t = text(this, W / 2, 210, this.touch ? s.prompt.replace('PRESS E', 'TAP ACT') : s.prompt, { fontFamily: FONT.display, fontSize: '30px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 18, y: 10 } })
           .setOrigin(0.5).setLetterSpacing(6).setScrollFactor(0).setDepth(1150);
         this.hud.showTouch(true);
         this.promptWait = { until: this.time.now + s.ms, hit: false };
@@ -539,8 +560,8 @@ export class RoomScene extends Phaser.Scene {
     }
     if ('goto' in s) return this.transition(s.goto, s.x);
     if ('ending' in s) {
-      this.mode = 'exit';
       this.checkpoint();
+      this.mode = 'exit';
       cam.fadeOut(900, 0, 0, 0);
       await sleep(this, 950);
       this.scene.start('end', { session: this.session });
@@ -622,7 +643,9 @@ export class RoomScene extends Phaser.Scene {
       if (want && !g.getData('on')) { g.setData('on', true); g.setData('tw', this.tweens.add({ targets: g, alpha: { from: 0.15, to: 0.5 }, yoyo: true, repeat: -1, duration: 900 })); }
       if (!want && g.getData('on')) { g.setData('on', false); (g.getData('tw') as Phaser.Tweens.Tween).remove(); g.setAlpha(0); }
     }
-    if (announce && this.mode !== 'exit') this.checkpoint();
+    // Flags and their following steps form one event. Saving halfway through can
+    // hide the hotspot on reload before its transition has happened.
+    if (announce && this.mode === 'play' && !this.stillWatch) this.checkpoint();
   }
 
   // ---------- overlays ----------
@@ -634,7 +657,7 @@ export class RoomScene extends Phaser.Scene {
     const g = this.add.graphics().fillStyle(0x000000, 0.72).fillRect(0, 0, W, H)
       .fillStyle(C.panel, 0.95).fillRect(W / 2 - 200, 130, 400, 280)
       .lineStyle(1, C.emberN, 0.5).strokeRect(W / 2 - 199.5, 130.5, 399, 279);
-    const block = this.add.zone(0, 0, W, H).setOrigin(0).setInteractive();
+    const block = this.add.zone(0, 0, W, H).setOrigin(0).setScrollFactor(0).setInteractive();
     const title = text(this, W / 2, 168, 'PAUSED', { fontFamily: FONT.display, fontSize: '30px', fontStyle: '600' }).setOrigin(0.5).setLetterSpacing(8);
     const help = text(this, W / 2, 460, 'MOVE  A / D OR ARROWS     INTERACT  E / ENTER / SPACE (HOLD WHERE ASKED)     JOURNAL  J     PAUSE  ESC', {
       fontFamily: FONT.display, fontSize: '11px', color: C.creamDim,

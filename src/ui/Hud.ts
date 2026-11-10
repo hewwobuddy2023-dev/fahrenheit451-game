@@ -6,8 +6,12 @@ export class Hud {
   touchLeft = false;
   touchRight = false;
   touchAct = false;
+  touchDown = false;
+  private held = new Map<number, 'left' | 'right' | 'act' | 'down'>();
+  private diveUi?: Phaser.GameObjects.Container;
   private timer?: Phaser.GameObjects.Text;
   private scene: Phaser.Scene;
+  private touch: boolean;
   private panel: Phaser.GameObjects.Graphics;
   private chapter: Phaser.GameObjects.Text;
   private objective: Phaser.GameObjects.Text;
@@ -17,14 +21,15 @@ export class Hud {
 
   constructor(scene: Phaser.Scene, chapter: string, opts: { touch: boolean; demo: boolean; onJournal: () => void; onPause: () => void; onAct: () => void }) {
     this.scene = scene;
+    this.touch = opts.touch;
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(1000);
     this.chapter = text(scene, 34, 24, chapter, { fontFamily: FONT.display, fontSize: '11px', color: C.creamDim })
       .setLetterSpacing(2).setScrollFactor(0).setDepth(1001);
-    this.objective = text(scene, 34, 42, '', { fontSize: '16px', fontStyle: '600' }).setScrollFactor(0).setDepth(1001);
+    this.objective = text(scene, 34, 42, '', { fontSize: '18px', fontStyle: '600' }).setScrollFactor(0).setDepth(1001);
 
     this.journal = text(scene, W - 24, 34, '', { fontFamily: FONT.display, fontSize: '14px', color: C.cream })
       .setOrigin(1, 0.5).setLetterSpacing(2).setScrollFactor(0).setDepth(1001)
-      .setPadding(10, 6, 10, 6).setBackgroundColor('rgba(13,10,9,0.8)')
+      .setPadding(14, 18, 14, 18).setBackgroundColor('rgba(13,10,9,0.8)')
       .setInteractive({ useHandCursor: true }).on('pointerdown', opts.onJournal);
 
     if (opts.demo) {
@@ -40,39 +45,63 @@ export class Hud {
         const t = dir
           ? (dir > 0 ? scene.add.triangle(x + 2, y, 0, 0, 0, 22, 16, 11, C.creamN, 0.9) : scene.add.triangle(x - 2, y, 16, 0, 16, 22, 0, 11, C.creamN, 0.9))
           : text(scene, x, y, label, { fontFamily: FONT.display, fontSize: '15px' }).setOrigin(0.5).setLetterSpacing(1);
-        c.setInteractive();
+        // Phaser's Container.setScrollFactor(..., true) skips inherited default
+        // properties. Set this on each hit target explicitly or it drifts by cam.scrollX.
+        c.setScrollFactor(0).setInteractive();
         return [c, t] as const;
       };
-      const [l, lt] = btn(64, H - 62, 40, '<');
-      const [r, rt] = btn(160, H - 62, 40, '>');
-      const [a, at] = btn(W - 72, H - 66, 46, 'ACT');
-      const [p, pt] = btn(W - 34, 92, 22, 'II');
-      l.on('pointerdown', () => (this.touchLeft = true));
-      r.on('pointerdown', () => (this.touchRight = true));
-      for (const ev of ['pointerup', 'pointerout']) {
-        l.on(ev, () => (this.touchLeft = false));
-        r.on(ev, () => (this.touchRight = false));
+      const [l, lt] = btn(66, H - 62, 47, '<');
+      const [r, rt] = btn(174, H - 62, 47, '>');
+      const [a, at] = btn(W - 72, H - 66, 47, 'ACT');
+      const [p, pt] = btn(W - 46, 112, 32, 'II');
+      const [d, dt] = btn(W - 184, H - 66, 47, 'DIVE');
+      const release = (p: Phaser.Input.Pointer) => { this.held.delete(p.id); this.syncTouch(); };
+      for (const [obj, action] of [[l, 'left'], [r, 'right'], [a, 'act'], [d, 'down']] as const) {
+        obj.on('pointerdown', (p: Phaser.Input.Pointer) => {
+          this.held.set(p.id, action); this.syncTouch();
+          if (action === 'act') opts.onAct();
+        });
+        obj.on('pointerout', release);
       }
-      a.on('pointerdown', () => { this.touchAct = true; opts.onAct(); });
-      for (const ev of ['pointerup', 'pointerout']) a.on(ev, () => (this.touchAct = false));
+      scene.input.on('pointerup', release);
+      scene.input.on('pointerupoutside', release);
+      const cancel = () => this.resetTouch();
+      scene.game.canvas.addEventListener('touchcancel', cancel);
+      scene.events.once('shutdown', () => {
+        scene.input.off('pointerup', release);
+        scene.input.off('pointerupoutside', release);
+        scene.game.canvas.removeEventListener('touchcancel', cancel);
+      });
       p.on('pointerdown', opts.onPause);
-      this.touchUi = scene.add.container(0, 0, [l, lt, r, rt, a, at, p, pt]).setScrollFactor(0, 0, true).setDepth(1001);
+      this.diveUi = scene.add.container(0, 0, [d, dt]).setVisible(false);
+      this.touchUi = scene.add.container(0, 0, [l, lt, r, rt, a, at, p, pt, this.diveUi]).setScrollFactor(0, 0, true).setDepth(1001);
     }
   }
 
   setObjective(s: string, done: number) {
-    this.objective.setText(s);
+    this.objective.setText(this.touch ? s.replace('Hold DOWN', 'Hold DIVE').replace('Hold E', 'Hold ACT') : s);
+    this.objective.setWordWrapWidth(W - 340);
     const w = Math.max(this.objective.width, this.chapter.width) + 40;
     this.panel.clear()
-      .fillStyle(C.panel, 0.78).fillRect(18, 14, w, 56)
-      .fillStyle(C.emberN, 1).fillRect(18, 14, 3, 56);
+      .fillStyle(C.panel, 0.78).fillRect(18, 14, w, Math.max(56, this.objective.height + 40))
+      .fillStyle(C.emberN, 1).fillRect(18, 14, 3, Math.max(56, this.objective.height + 40));
     this.journal.setText(`JOURNAL  ${done}/15  [J]`);
   }
 
   /** Hide touch buttons while dialogue or menus own the screen, so they never overlap text. */
   showTouch(on: boolean) {
     this.touchUi?.setVisible(on);
-    if (!on) this.touchLeft = this.touchRight = this.touchAct = false;
+    if (!on) this.resetTouch();
+  }
+
+  showDive(on: boolean) { this.diveUi?.setVisible(on); }
+
+  resetTouch() { this.held.clear(); this.syncTouch(); }
+
+  private syncTouch() {
+    const actions = new Set(this.held.values());
+    this.touchLeft = actions.has('left'); this.touchRight = actions.has('right');
+    this.touchAct = actions.has('act'); this.touchDown = actions.has('down');
   }
 
   toast(title: string, sub: string) {
