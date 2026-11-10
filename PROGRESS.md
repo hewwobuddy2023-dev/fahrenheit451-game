@@ -88,3 +88,14 @@ User reviews M1 at the Pages URL, runs the Chromebook `?debug` check, then autho
 | 5 | 13–15 + endings | (this commit) | 7/7 pass (all 15 rules achievable) · tsc clean · build OK | **NOT yet browser-tested** (usage limit reached). River, Granger's fire, recall, choice, shared bombing, 3 epilogues and the ending card are written but unplayed. |
 
 **Next session:** browser-test Ch5 and all three endings; screenshots per chapter; deploy check of the Pages URL; final M2 report. M2 not declared complete.
+
+## Work mobile checkpoint — 2026-11-09 (Phoenix)
+
+Work branch: `work/overnight-mobile-qa`, based on verified remote M2 `94c45a3`.
+Implementation is authorized by the owner's overnight request; the preproduction stop gate above is obsolete for this sprint.
+
+- Reproduced scrolled-camera input failure in actual Phaser TouchManager under DOM/native Canvas simulation: container child hit targets retained inherited scroll factor 1. Explicit scroll factor 0 repairs touch buttons, dialogue, choices, journal and pause blockers. This does **not** conclusively explain the owner's title-screen Safari report; baseline title taps worked in simulation.
+- Enlarged menu rows and choice targets; added DIVE, pointer-specific holds/cancellation, and event-latched Hound taps. Safer event-boundary saves and recovery of six legacy interrupted transition checkpoints; completed ending Continue returns to ending card. Storage getter exceptions now stay inside error handling.
+- `npm test`: inherited 7 passed before edits; expanded suite pending final checkpoint. `npm run typecheck` passed after initial source edits. `npm run test:simulation`: New Game, dialogue taps, held movement, journal and pause passed at 844×390, 667×375, 390×844, and 1366×768/lowres. This is simulation, **not browser/iOS testing**.
+- Local Chromium launch blocked by socket permission; cloud browser could not reach local server; WebKit executable absent. No physical phone/Chromebook or human playtest performed. No deployment or merge.
+- Next: complete campaign simulation (all 15, Ch5 and three endings), add save/retry regressions, then review/build/push and create PR.

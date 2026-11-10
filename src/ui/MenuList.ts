@@ -11,7 +11,7 @@ export class MenuList {
   private bar: Phaser.GameObjects.Rectangle;
   private gap: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, items: Item[], gap = 46, size = 24) {
+  constructor(scene: Phaser.Scene, x: number, y: number, items: Item[], gap = 64, size = 24) {
     this.gap = gap;
     this.root = scene.add.container(x, y).setScrollFactor(0).setDepth(1100);
     this.bar = scene.add.rectangle(-18, 0, 4, size + 6, C.emberN).setOrigin(0, 0.5);
@@ -26,14 +26,17 @@ export class MenuList {
         this.root.add(row.n);
       }
       if (item.enabled !== false) {
-        t.setInteractive({ useHandCursor: true })
+        // Target the whole row, independently of the font's glyph bounds.
+        const hit = scene.add.zone(-8, i * gap, Math.max(420, t.width + 24), gap - 2).setOrigin(0, 0.5);
+        hit.setScrollFactor(0).setInteractive({ useHandCursor: true })
           .on('pointerover', () => this.select(i))
           .on('pointerdown', () => { this.select(i); this.choose(); });
+        this.root.add(hit);
       }
       this.root.add(t);
       this.rows.push(row);
     });
-    this.root.setScrollFactor(0, 0, true); // children too, or pointer hit-tests drift with the camera
+    this.root.setScrollFactor(0, 0, true);
     this.sel = Math.max(0, items.findIndex((it) => it.enabled !== false));
     this.select(this.sel);
   }

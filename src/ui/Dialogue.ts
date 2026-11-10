@@ -17,6 +17,7 @@ export class Dialogue {
   open = false;
   onSpeaker?: (who: string) => void;
   private scene: Phaser.Scene;
+  private panel: Phaser.GameObjects.Graphics;
   private root: Phaser.GameObjects.Container;
   private name: Phaser.GameObjects.Text;
   private nameBg: Phaser.GameObjects.Rectangle;
@@ -38,11 +39,9 @@ export class Dialogue {
 
   constructor(scene: Phaser.Scene, touch: boolean) {
     this.scene = scene;
-    const g = scene.add.graphics();
-    g.fillStyle(C.panel, 0.93).fillRect(BOX.x, BOX.y, BOX.w, BOX.h);
-    g.lineStyle(1, C.emberN, 0.55).strokeRect(BOX.x + 0.5, BOX.y + 0.5, BOX.w - 1, BOX.h - 1);
-    g.fillStyle(C.emberN, 0.9).fillRect(BOX.x, BOX.y, 3, BOX.h);
-    const hit = scene.add.zone(BOX.x, BOX.y, BOX.w, BOX.h).setOrigin(0).setInteractive();
+    const g = this.panel = scene.add.graphics();
+    this.paintPanel(BOX.y);
+    const hit = scene.add.zone(BOX.x, BOX.y, BOX.w, BOX.h).setOrigin(0).setScrollFactor(0).setInteractive();
     hit.on('pointerdown', () => { if (!this.choices) this.advance(); });
     this.nameBg = scene.add.rectangle(BOX.x, BOX.y - 26, 10, 26, C.panel, 0.93).setOrigin(0);
     this.name = text(scene, BOX.x + 16, BOX.y - 13, '', { fontFamily: FONT.display, fontSize: '15px', fontStyle: '600', color: C.ember })
@@ -113,6 +112,9 @@ export class Dialogue {
   }
 
   private show(line: Line) {
+    this.paintPanel(BOX.y);
+    this.name.setY(BOX.y - 13);
+    this.nameBg.setY(BOX.y - 26);
     const narr = !line.who;
     this.name.setText(line.who);
     this.nameBg.setVisible(!narr).setSize(this.name.width + 32, 26);
@@ -148,12 +150,16 @@ export class Dialogue {
     this.name.setText('YOUR RESPONSE');
     this.nameBg.setVisible(true).setSize(this.name.width + 32, 26);
     this.more.setVisible(false);
-    const gap = choices.length > 3 ? 27 : 38;
+    const gap = 68;
+    const top = Math.min(BOX.y, BOX.y + BOX.h - choices.length * gap - 24);
+    this.paintPanel(top);
+    this.name.setY(top - 13);
+    this.nameBg.setY(top - 26);
     this.choiceRows = choices.map((c, i) => {
-      const y = BOX.y + 24 + i * gap;
+      const y = top + 12 + gap / 2 + i * gap;
       const bg = this.scene.add.rectangle(BOX.x + 16, y, BOX.w - 32, gap - 4, C.emberN, 0).setOrigin(0, 0.5);
-      const t = text(this.scene, BOX.x + 40, y, c.text, { fontSize: choices.length > 3 ? '16px' : '18px' }).setOrigin(0, 0.5);
-      bg.setInteractive({ useHandCursor: true })
+      const t = text(this.scene, BOX.x + 40, y, c.text, { fontSize: '18px', lineSpacing: 3, wordWrap: { width: BOX.w - 88 } }).setOrigin(0, 0.5);
+      bg.setScrollFactor(0).setInteractive({ useHandCursor: true })
         .on('pointerover', () => { this.sel = i; this.paintChoices(); })
         .on('pointerdown', () => { this.sel = i; this.pick(); });
       const row = this.scene.add.container(0, 0, [bg, t]).setScrollFactor(0, 0, true);
@@ -161,6 +167,13 @@ export class Dialogue {
       return row;
     });
     this.paintChoices();
+  }
+
+  private paintPanel(y: number) {
+    const h = BOX.y + BOX.h - y;
+    this.panel.clear().fillStyle(C.panel, 0.96).fillRect(BOX.x, y, BOX.w, h)
+      .lineStyle(1, C.emberN, 0.55).strokeRect(BOX.x + 0.5, y + 0.5, BOX.w - 1, h - 1)
+      .fillStyle(C.emberN, 0.9).fillRect(BOX.x, y, 3, h);
   }
 
   private paintChoices() {
