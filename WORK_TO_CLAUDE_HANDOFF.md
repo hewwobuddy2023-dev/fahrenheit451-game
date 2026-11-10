@@ -1,5 +1,7 @@
 # Work → Claude Code handoff
 
+**Current continuation: read the Day 2 section below and `DAY2_QA_REPORT.md` first. Sprint 1 sections are retained as history.**
+
 **Review first. Do not merge automatically.** Work collaborated with the existing Claude project. Owner authorized implementation, tests, a separate branch and PR; no main merge or unverified release replacement.
 
 ## 1. Starting point and current branch
@@ -124,3 +126,82 @@ Windows PC’s uncommitted state is **unobserved**. No local PC work was touched
 When the owner says **“I’m on PC”**, read this handoff and the current PR state first. Explain what passed, the remaining real-device uncertainty, and that Claude must review before the owner decides whether to merge. Begin the browser/device acceptance milestone, not another redesign.
 
 No automatic continuation or five-hour usage reset has been scheduled. Resume manually from this branch/PR and prompt; do not promise unattended restarts.
+
+# Day 2 — read this section first for the November 10 continuation
+
+## Verified base and PR relationship
+
+Day 2 inherited all four Sprint 1 commits, including its input, save, emitter, stillness, flame and river fixes. GitHub PR #1 was verified open/draft/unmerged at **`19b9328313510be02d6b017639bba746c0a5dfbf`**. M2 remained `94c45a3`. Day 2 starts exactly there on **`work/day2-quality-sprint`**.
+
+Draft PR #2: **https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/2**, base **`work/overnight-mobile-qa`**. It does not target M2/main. No merge/deploy, force push, tag change or owner-PC modification occurred.
+
+Implementation history so far: `baa0771` (focus/diagnostics/browser harness), `af4a49c` (audio/art/cinematic fixes/expanded QA), `7691f07` (global cosmetic governor), `885ea32` (audio preference/return edges), `80f1cb0` (disable unused engine audio backend), `09bb8c8` (pause phase), `95837d3` (low-FPS movement fairness). Check current remote head and the report for later review descendants; do not substitute an old handoff SHA for the fetched branch.
+
+## What Day 2 changed
+
+- Reproduced a 40-second timed-escape advance after blur; freeze complete scenes behind an explicit HTML resume gesture. Use active encounter time so wall-clock jumps cannot consume Hound/escape/stillness deadlines. Preserve atomic normal checkpoints and demo isolation.
+- Opt-in `?diagnostics`: local-only bounded input/error/scene/viewport/canvas/scale/renderer/audio readout. `?debug` retains test hooks; normal play is uncluttered. Safe fallback if FontFaceSet is missing.
+- Reproduced the frame loop replacing scripted walks with idle and overwriting pole/fall Y positions. Added explicit pose/walk ownership. Native captures exposed a fresh-boot missing truck texture; paint it before street display.
+- Added original synthesized audio, gesture unlock/fallback, bounded cue voices, room profiles, footsteps and action cues, M/touch mute, separate local preferences and proper focus return. Disable Phaser's unused sound backend so it does not create an extra context. TV ambience follows the actual screen state. No audio downloads/commercial music/runtime service.
+- Settings and pause offer reduced motion; default follows OS preference. Suppress grain/shake/flashes, slow subway background, retain essential hazards/fades. Opening says move right/hold; portrait suggests landscape. Pause targets enlarged.
+- Baked cast details, architectural trim, static ground light/shadow planes, distant forest and branching trees across eleven reviewed compositions. Foreground fade accounts for swimmer width. Removed duplicate sky draws. First sprint fire/river systems retained.
+- Removed the extra 50 ms movement delta cap that made the 10 FPS timed escape repeatedly fail while its clock advanced normally. Movement and deadlines now share the same Phaser delta, with exponential velocity easing; base speed/timer unchanged. All three full campaigns and 10/20/30 FPS escape cases pass.
+- Global render governor can step down during title/cinematics after sustained low performance; resolution is its only output. Regression confirms unchanged save and valid input after both steps.
+- One brief original Defiance consequence for `faber.tear === 'tear'`, verified through the ending. No structural story or challenge change.
+- All school drafts updated, with real-human/citation/rehearsal gaps kept explicit. Engine/font notices now ship under `public/licenses/`.
+
+## New verification and limits
+
+Read **`DAY2_QA_REPORT.md`** and updated **`PERFORMANCE_AUDIT.md`** for final native results. Day 2 independently reran inherited baseline checks before editing. New local results: 11 unit tests, TypeScript/build, four viewport simulations, three full New Game→15/15 campaigns (one per ending), chapter/ending Continue and prior regressions pass. Added quota-failure preservation, focus suspension, 30/20/10 FPS deterministic escape/pause, cinematic ownership, fresh opening, reduced-resolution input and settings-isolation checks.
+
+Native tests serve the built production files and use real browser-protocol mouse/touch/key input; assertions read state. Chromium holds a native touch through CDP. WebKit tests native taps and keyboard holds; it is **Linux WebKit, not an iPhone**. The first run at `baa0771` had 3 passes/9 failures with 3–7 FPS under tracing. Those failures are retained, not hidden. See the Day 2 report for the inspected reruns after removing screencast overhead and replacing fixed wall waits with bounded completion assertions. Physical iPhone, true iOS audio, Chromebook throughput, school Wi-Fi, five-minute hardware stability and human playtests remain unperformed.
+
+**The original physical-iPhone title tap failure is not conclusively closed.** Native title/rotation observations narrow it; the live Pages build has not received these Work fixes. Reproduce with the reviewed source on the owner's phone and capture `?diagnostics` if it fails. Do not say a synthetic, Linux-WebKit or Chromium result is real-iOS acceptance.
+
+## Dependencies, conflicts and review order
+
+Only new Day 2 package is pinned **dev-only `@playwright/test@1.65.0`** plus matching Playwright/core packages. Existing Phaser/font runtime versions unchanged. Audio uses Web Audio directly; Phaser's unused backend is disabled. Preferences are `f451.options`; story saves retain v1 `f451.save` and prior compatibility handling.
+
+Review overlapping files carefully: `RoomScene.ts`, `MenuScene.ts`, `main.ts`, `view.ts`, art kits/figures, dialogue/menu list, workflow and simulation helpers. Active-time deadlines replace `time.now` for encounters. Do not reintroduce wall deadlines or the old per-room governor. Preserve source-owned scripted poses when changing movement. No Windows checkout state was observed.
+
+If both reviews pass and the owner approves integration: **merge PR #2 into the Work branch first**, then review PR #1's resulting cumulative diff. PR #2's base is outside the push-deploy branch list. **Merging PR #1 into M2 can deploy Pages immediately**; obtain explicit owner release approval first. Never blindly merge, squash away useful history without owner direction, reset another checkout, or change hosting.
+
+## Exact next PC review
+
+In PowerShell, first inspect the original checkout; use a new destination for a worktree. If it exists, inspect it instead of overwriting it.
+
+```powershell
+git -C "C:\Users\gabe\Documents\Fahrenheit451Game" status --short
+git -C "C:\Users\gabe\Documents\Fahrenheit451Game" fetch origin
+git -C "C:\Users\gabe\Documents\Fahrenheit451Game" worktree add --detach "C:\Users\gabe\Documents\Fahrenheit451Game-Day2Review" origin/work/day2-quality-sprint
+Set-Location "C:\Users\gabe\Documents\Fahrenheit451Game-Day2Review"
+git rev-parse HEAD
+git log --oneline 19b9328..HEAD
+git diff --stat 19b9328..HEAD
+git diff --stat 94c45a3..HEAD
+npm ci
+npm test
+npm run typecheck
+npm run test:simulation
+npm run test:campaign:all
+npm run test:regression
+npm run test:day2
+npm run test:cinematics
+npm run build
+npx playwright install chromium webkit
+npm run test:browser
+npm run dev -- --host 0.0.0.0
+```
+
+Use the printed LAN URL on the owner's iPhone on the same trusted Wi-Fi. This serves a local review build and does not replace Pages. Check New/Continue/settings/chapter rows, walking/holds/quick Hound taps, choices, journal, pause/quit, two-finger DIVE, rotation/toolbars/safe areas, endings, background/lock and audio mute/return. Record commit and iOS/browser version. Check the real Chromebook/school network separately; run the timed route and two actual playtests. Verify three printed quotations/pages and personally revise the 308-word pre-quotation statement.
+
+No automatic continuation was configured. If resuming in another chatbot, begin with `REVIEW_START_HERE.md` in the complete review ZIP, then this Day 2 section and the two PR diffs. The ZIP includes source, build, patches/history, test evidence, staged/native captures and school materials, without the private novel, credentials or node_modules.
+
+
+### Completed Day 2 native checkpoints
+
+- `7691f07`, run `42805025544`: **16/16 native tests PASS**, build/simulations PASS; deployment SKIPPED.
+- `09bb8c8`, run `42807639158`: **20/20 native tests PASS**, including engine-audio-disabled and manual pause/DOM-focus-return checks in all four projects; build/simulations PASS; deployment SKIPPED.
+- Final implementation `95837d3a37a3c6223e50390ef2273030a9692b14` adds the reproduced low-FPS movement repair. **Final CI run `42808394871`: 20/20 native tests PASS** (browser job `129803329207`), **11 unit tests plus all simulation/regression/typecheck/build checks PASS** (build job `129803329804`), including three separate New Game→15/15 ending campaigns and 10/20/30 FPS escape cases. Deploy `129803775011` SKIPPED. Documentary descendants do not change runtime source.
+
+Native captures are Chromium 158.0.8127.18 / WebKit 27.2 on Ubuntu 26.04.1, not real iOS. Three separate normal simulated campaigns reach all 15 challenges, one per ending. The review archive retains initial failures and completed successful evidence, with exact SHAs. No live deployment or merge.

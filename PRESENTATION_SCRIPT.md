@@ -31,3 +31,6 @@ Use your own phrasing. Rehearse it against `DEMO_ROUTE.md`; the route’s timing
 “The journal lists all fifteen challenges. In a normal game they must be completed in order. Presentation Mode supplies earlier progress for demonstrations, so that is not evidence of a full playthrough. My rulebook explains the controls and retry rules. My connection statement will use three quotations checked against the same printed edition.”
 
 **Before presenting:** replace the last sentence if the quotations are already finalized. Report human playtesting only after the two real sessions occur.
+
+
+Delivery check: the quoted speaking text has 331 words; budget about two and a half minutes of speech at 130 words per minute, with demonstrations overlapping the explanation. The actual 3–5-minute total still requires a timed rehearsal. M mutes the new ambience if the room needs silence. Explain any chapter jump as Presentation Mode, and press Enter on the return curtain after changing tabs.

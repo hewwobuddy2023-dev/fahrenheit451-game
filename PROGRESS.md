@@ -1,11 +1,11 @@
 # LIVE PROGRESS — DO NOT INFER RESULTS
 
 **Last updated:** 2026-11-10 (Phoenix) by ChatGPT Work; Claude’s historical entries are retained below.
-**Stage:** Day 2 continues M2 and Sprint 1 on `work/day2-quality-sprint` (draft PR #2 into the first Work branch). Three full 15/15 ending simulations pass. Native CI at `7691f07`: 16/16 Chromium/WebKit tests PASS; physical iPhone/Chromebook checks remain open. PR #1 and #2 remain draft, unmerged; no deployment. Read the Day 2 handoff and `DAY2_QA_REPORT.md` first.
+**Stage:** Day 2 continues M2 and Sprint 1 on `work/day2-quality-sprint` (draft PR #2 into the first Work branch). Three full 15/15 ending simulations pass. Final implementation CI at `95837d3`: 20/20 Chromium/WebKit tests PASS; physical iPhone/Chromebook checks remain open. PR #1 and #2 remain draft, unmerged; no deployment. Read the Day 2 handoff and `DAY2_QA_REPORT.md` first.
 **Local repo:** `C:\Users\gabe\Documents\Fahrenheit451Game`
-**GitHub repo:** https://github.com/hewwobuddy2023-dev/fahrenheit451-game (public). Branches: `main` (docs only), `feat/m1-vertical-slice` (M1).
-**GitHub Pages:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/ (deploy status below). The `github-pages` environment allows deploys from `main` and `feat/m1-vertical-slice`.
-**Stack (pinned):** phaser 3.90.0, typescript 5.9.3, vite 6.4.6; fonts @fontsource/oswald, ibm-plex-sans, special-elite 5.3.0. Node 24.20.0 / npm 11.19.0 locally; CI uses Node 24.
+**GitHub repo:** https://github.com/hewwobuddy2023-dev/fahrenheit451-game (public). Branches: `main` (older docs), `feat/m1-vertical-slice` (M1), `feat/m2-chapters` (M2), both isolated Work branches.
+**GitHub Pages:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/ (deploy status below). The workflow deploys pushes to main/M1/M2; inspect current environment rules before an owner-approved release.
+**Stack (pinned):** phaser 3.90.0, typescript 5.9.3, vite 6.4.6; fonts @fontsource/oswald, ibm-plex-sans, special-elite 5.3.0. Work uses Node 24.22.1; CI uses Node 24. The owner PC runtime is unobserved this sprint.
 **Novel:** private MOBI lives outside the repo (`Documents/F451_PRIVATE_REFERENCE/`). Not tracked; checked with `git ls-files | grep -iE 'mobi|epub|azw|kfx|novel|private|\.env|settings\.local'` → nothing.
 **Playtests:** 0 human playtests.
 **Rubric writing:** six review drafts prepared; quotations/pages, human playtests and timed rehearsal remain incomplete. Current Work notes supersede repaired issues in historical M1 notes.
@@ -173,3 +173,12 @@ A focused test failed before the repair: the river searchlight moved from x=556.
 ### Low-frame-rate fairness repair
 
 10 FPS deterministic full escape **failed before** correction (`Walk timed out run x=152.835`): movement used at most 50 ms per frame while the countdown used the full delta. Removed that second cap (Phaser supplies a capped/smoothed delta) and use exponential velocity easing. Base speed, reach, hazards and 34-second timer are unchanged. Afterward **10, 20 and 30 FPS** pause/escape cases pass, alongside all three full 15/15 campaigns, touch suites, save regressions, typecheck and production build. This demonstrates timing consistency, not acceptable throughput at 10 FPS or a Chromebook benchmark.
+
+
+### Final Day 2 review checkpoint
+
+Verified implementation `95837d3a37a3c6223e50390ef2273030a9692b14`, CI run `42808394871`: 20/20 native Chromium/WebKit tests, 11 unit tests, four viewport simulations, three separate full 15/15 ending campaigns, save/edge/focus/pause/10–30 FPS/cinematic regressions, typecheck and build all PASS. Deployment SKIPPED. This documentation-only checkpoint records results and polishes all school drafts, the review guide and both Claude handoffs.
+
+Archive includes complete tracked source, production build, Git bundle/diffs, final and initial native evidence, eleven staged before/after room comparisons, six school drafts and exact continuation instructions. No private novel, credentials, node_modules or browser binaries. PR #2 remains draft into `work/overnight-mobile-qa`; PR #1 remains draft into M2. Nothing merged or deployed.
+
+Next exact task: Claude reviews both diffs in the separate PC worktree, then the owner performs the physical iPhone checklist in `DAY2_QA_REPORT.md`, real Chromebook measurements, two human playtests, printed quotation/page verification and a timed presentation. Do not approve release until those material gaps are resolved. No automatic restart is configured.

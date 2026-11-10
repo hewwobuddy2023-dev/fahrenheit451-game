@@ -1,5 +1,7 @@
 # Work development and QA report
 
+**Historical Sprint 1 report. For November 10 additions and current browser evidence, read `DAY2_QA_REPORT.md` first.**
+
 Audit date: November 9, 2026, America/Phoenix. Deadline: Friday, November 13. This report describes verified development progress, not school-project completion.
 
 ## A. Starting condition

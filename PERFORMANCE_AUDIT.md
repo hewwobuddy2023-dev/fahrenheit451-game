@@ -30,3 +30,27 @@ No real Chromebook FPS, GPU memory, school-network transfer, sustained thermal b
 3. Repeat with `?debug&lowres`; complete the timed escape and dive crossing at both resolutions.
 4. Leave one demanding scene active five minutes and retest movement, pause, journal and Continue.
 5. If below 30 FPS or the timer becomes unfair, prioritize effect/render cost and actual elapsed-time movement review before more decorative work. Do not change challenge timing as an undocumented quality setting.
+
+## Day 2 — November 10
+
+Measured local production output at `7691f07`: about **2,007,352 bytes** total (22 files, including license notices). Main JS **1,637,967 bytes**; Vite reports about **394.07 kB gzip**. A separate Python gzip level-9 calculation yields 389,193 bytes; compression settings differ. These are file measurements, not a school-Wi-Fi transfer measurement. No audio files or runtime audio requests are added.
+
+Audio: one two-second mono Float32 buffer (~172 KiB at 22.05 kHz / 375 KiB at 48 kHz), one ambience oscillator and at most eight short cue oscillators. Buffer generated once after first gesture. Settings, diagnostics and sound add no framework. Cast/trim changes reuse existing texture dimensions; the distant forest adds roughly 2.4 MiB raw RGBA for the larger river scene, excluding browser/GPU copies. Static ground geometry adds no per-frame allocations or particles. Duplicate sky draws removed.
+
+Initial actual CI browser captures at `baa0771` showed about **3 FPS Chromium** and **7 FPS WebKit** with trace screencast enabled, at 1366×768 or 844×390 / DPR 3, WebGL renderer type 2, render zoom 1.5. WebKit version reported 27.2. This instrumentation/headless environment is not a physical Chromebook or iPhone benchmark. GPU ReadPixels stall warnings appeared in the Chromium trace. Routine tracing is now off; input assertions wait for observed engine progress. Native rerun frame distributions are recorded in `DAY2_QA_REPORT.md` after inspection.
+
+The original governor only sampled room play after 180 frames and reduced resolution once. It now checks sustained time windows across title and cinematics and can step down to 960×540. A deterministic regression forces low reported FPS and verifies both cosmetic reductions, unchanged save data and correct touch input afterward. Timed escape passes at 30 and 20 FPS deterministic deltas. Neither result measures hardware throughput. No claim is made for fair gameplay at the initial traced CI's 3 FPS.
+
+Still required: real Chromebook cold-load, school Wi-Fi, browser/version/model, 30-second scene samples, one five-minute session, lowres comparison, timed chase and actual presentation rehearsal.
+
+Final audio/config code checkpoint `80f1cb0`: main JS 1,638,602 bytes; Python gzip level 9 389,385 bytes; full dist 2,007,987 bytes including notices. Vite reports approximately 394.26 kB gzip. Earlier figures above are retained with their exact checkpoint.
+
+
+Low-FPS fairness correction at `95837d3`: the previous 50 ms movement cap made the 10 FPS timed escape repeatedly time out, while its timer used full delta. Movement now uses the supplied Phaser delta and exponential velocity easing. The 10, 20 and 30 FPS deterministic escape cases pass without changing base speed, hazard periods or timer limit. This addresses fairness, not a 10 FPS quality target.
+
+Completed native run `42805025544` at `7691f07`: 16/16 PASS. Median/95th-percentile frame intervals for 120-frame WebGL samples at 960×540 were 150.0/166.7 ms Chromium desktop, 150.1/166.7 ms Chromium touch, 41/48 ms WebKit landscape and 34/43 ms WebKit portrait. Runtime observed 10 same-origin requests and no external/audio requests. These are headless CI data; actual Chromebook hardware remains unmeasured. Exact resource timing arrays are in the review archive.
+
+Final implementation `95837d3`: main JS 1,638,645 bytes; Python gzip level 9 389,385 bytes; dist 2,008,030 bytes. Vite estimates about 394.26 kB gzip. Build-metrics JSON in the archive identifies these exact bytes and source SHA.
+
+
+Final native run `42808394871` at `95837d3`: 20/20 PASS. The 120-RAF median/p95 intervals were Chromium desktop 83.3/100.0 ms, Chromium touch 66.7/83.4 ms, WebKit landscape 30/35 ms, WebKit portrait 23/25 ms. Browser versions/viewports match the Day 2 QA report; WebGL, canvas 960×540. The variation between CI runs is another reason not to infer school-device throughput. Full resource and frame arrays are included in the archive.

@@ -29,3 +29,10 @@ Check against low-effect preset; check menus/dialogue at Chromebook size; inspec
 - River: a small 8-frame surface silhouette, arm stroke, bob and wake replaces the upright walk cycle until the shore flag. Contact shadow returns on land. Movement speed, hazard rules, timers and collision positions are unchanged.
 - Wider touch rows, wrapped choices, explicit per-target fixed scroll factors, DIVE and mobile-specific control wording. Title no longer asks for a nonexistent room sky texture. Latin-only font CSS reduces unused font output.
 - Comparison captures in `docs/qa/` are Canvas simulations using fallback fonts, not browser/WebGL or iPhone screenshots. Real-device visual approval is outstanding.
+
+
+## Day 2 composition pass
+
+Reusable baked cast details and interior trim, static ground planes/reflections, branching tree silhouettes and a distant forest layer improve separation across five chapters. Foreground fades use both sprite widths so the swimmer remains visible. Scripted walk/pole-slide/fall poses own their animation/position instead of being overwritten by normal frame updates. Fresh opening now creates its truck texture before display. Existing flame atlas and float/wake remain intact.
+
+No interactive decorative layers, new particle density, full 3D or external art. Reduced motion suppresses decorative grain, camera shake/flash and fast subway background scrolling. Original synthesized room ambience and bounded interaction cues follow this palette without a loud soundtrack. Review native WebGL color captures; Canvas fixtures ignore some tints.
