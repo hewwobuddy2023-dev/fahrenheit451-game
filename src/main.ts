@@ -11,7 +11,7 @@ import { paintFx } from './art/fx.ts';
 import { EndScene } from './scenes/EndScene.ts';
 import { MenuScene } from './scenes/MenuScene.ts';
 import { RoomScene } from './scenes/RoomScene.ts';
-import { C, H, K, W, params } from './view.ts';
+import { C, H, K, W, params, installQualityGovernor } from './view.ts';
 import { diagnostics } from './diagnostics.ts';
 import { guardFocus } from './focus.ts';
 import { installAudio, sound } from './audio.ts';
@@ -51,6 +51,7 @@ const game = new Phaser.Game({
 diagnostic.attach(game);
 game.events.once('ready', () => {
   guardFocus(game);
+  installQualityGovernor(game);
   const cleanup = installAudio();
   game.events.once('destroy', cleanup);
 });

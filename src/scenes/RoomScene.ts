@@ -12,7 +12,7 @@ import { Hud } from '../ui/Hud.ts';
 import { openJournal } from '../ui/Journal.ts';
 import { MenuList } from '../ui/MenuList.ts';
 import { buildFloor, darkness, lightTint, scrollFloor, shadowFor, stageDetails } from '../world/stage.ts';
-import { addAtmosphere, C, FONT, H, W, WALK_Y, lowerK, onActions, params, setupCamera, text, type Act } from '../view.ts';
+import { addAtmosphere, C, FONT, H, W, WALK_Y, onActions, params, setupCamera, text, type Act } from '../view.ts';
 
 type Mode = 'play' | 'dialogue' | 'cutscene' | 'journal' | 'pause' | 'exit';
 
@@ -61,8 +61,6 @@ export class RoomScene extends Phaser.Scene {
   // Scene Clock.now is wall time and jumps after suspension. Encounter deadlines
   // use accumulated active deltas, so a background tab cannot consume a retry.
   private activeTime = 0;
-  private fps: number[] = [];
-  private governed = false;
   private stillWatch?: { until: number; x: number; ms: number; moving?: boolean };
   private promptWait?: { until: number; hit: boolean };
 
@@ -80,7 +78,7 @@ export class RoomScene extends Phaser.Scene {
     // destroyed emitter when a later chapter starts its next hold interaction.
     this.spray = undefined;
     this.wake = undefined;
-    this.fps = []; this.governed = false; this.stillWatch = undefined; this.promptWait = undefined;
+    this.stillWatch = undefined; this.promptWait = undefined;
   }
 
   create() {
@@ -232,7 +230,6 @@ export class RoomScene extends Phaser.Scene {
     this.updateTimer(time);
     if (playing && !this.stillWatch) { this.updateNear(); this.updateHold(dtMs); } else { this.meter.clear(); this.spray?.stop(); }
     if (this.promptWait && this.keys.act.some((k) => Phaser.Input.Keyboard.JustDown(k))) this.promptWait.hit = true;
-    if (playing && !this.governed) this.govern(time);
   }
 
   private animate(s: Phaser.GameObjects.Sprite, vx: number, face: number, key: string) {
@@ -384,16 +381,6 @@ export class RoomScene extends Phaser.Scene {
     const t = text(this, W / 2, 150, s, { fontFamily: FONT.display, fontSize: '18px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 14, y: 8 } })
       .setOrigin(0.5).setLetterSpacing(3).setScrollFactor(0).setDepth(1150);
     this.tweens.add({ targets: t, alpha: 0, delay: 1300, duration: 500, onComplete: () => t.destroy() });
-  }
-
-  /** Performance governor: if the frame rate stays low, render at a lower resolution (cosmetic only). */
-  private govern(time: number) {
-    if (time - this.timerStart < 4000) return;
-    this.fps.push(this.game.loop.actualFps);
-    if (this.fps.length < 180) return;
-    const avg = this.fps.reduce((a, b) => a + b, 0) / this.fps.length;
-    this.governed = true;
-    if (avg < 45 && lowerK(this.game)) this.hud.note('LOWER RESOLUTION FOR SMOOTHER PLAY');
   }
 
   // ---------- input ----------
