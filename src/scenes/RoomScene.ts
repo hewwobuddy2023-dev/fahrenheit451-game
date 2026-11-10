@@ -54,6 +54,9 @@ export class RoomScene extends Phaser.Scene {
   private overlay?: { destroy: () => void; list?: MenuList };
   private caughtAt = 0;
   private timerStart = 0;
+  // Scene Clock.now is wall time and jumps after suspension. Encounter deadlines
+  // use accumulated active deltas, so a background tab cannot consume a retry.
+  private activeTime = 0;
   private fps: number[] = [];
   private governed = false;
   private stillWatch?: { until: number; x: number; ms: number; moving?: boolean };
@@ -66,6 +69,7 @@ export class RoomScene extends Phaser.Scene {
     this.mode = 'play';
     this.vx = 0; this.facing = 1; this.near = undefined; this.holdMs = 0;
     this.camTarget = null; this.overlay = undefined; this.caughtAt = 0;
+    this.activeTime = 0;
     this.npcs = []; this.glows = new Map(); this.beams = new Map(); this.eyes = new Map();
     // Scene restarts destroy its objects, but retain class fields. Never reuse a
     // destroyed emitter when a later chapter starts its next hold interaction.
@@ -142,14 +146,16 @@ export class RoomScene extends Phaser.Scene {
     this.refresh(false);
     cam.scrollX = Phaser.Math.Clamp(x - W / 2, 0, this.room.width - W);
     cam.fadeIn(600, 0, 0, 0);
-    this.timerStart = this.time.now;
+    this.timerStart = this.activeTime;
     if (params.has('debug')) Object.assign(window, { __qa: this.qa() });
     void this.runEnter();
   }
 
   // ---------- frame loop ----------
 
-  update(time: number, dtMs: number) {
+  update(_time: number, dtMs: number) {
+    this.activeTime += dtMs;
+    const time = this.activeTime;
     const dt = Math.min(dtMs, 50) / 1000;
     const f = this.session.flags;
     const p = this.player;
@@ -305,7 +311,7 @@ export class RoomScene extends Phaser.Scene {
     }
   }
 
-  private isWatching(n: Npc, time = this.time.now) {
+  private isWatching(n: Npc, time = this.activeTime) {
     const w = n.watch!;
     return ((time + (w.phase ?? 0) * w.period) % w.period) < w.on;
   }
@@ -354,8 +360,8 @@ export class RoomScene extends Phaser.Scene {
   }
 
   private caught(x: number, msg: string) {
-    this.caughtAt = this.time.now;
-    this.timerStart = this.time.now;
+    this.caughtAt = this.activeTime;
+    this.timerStart = this.activeTime;
     this.cameras.main.flash(300, 240, 240, 255);
     this.player.x = x;
     this.vx = 0;
@@ -536,8 +542,8 @@ export class RoomScene extends Phaser.Scene {
       this.mode = 'play';
       this.hud.showTouch(true);
       this.hud.setTimer(s.label);
-      this.stillWatch = { until: this.time.now + s.still, x: this.player.x, ms: s.still };
-      while (this.time.now < this.stillWatch.until) await sleep(this, 100);
+      this.stillWatch = { until: this.activeTime + s.still, x: this.player.x, ms: s.still };
+      while (this.activeTime < this.stillWatch.until) await sleep(this, 100);
       this.stillWatch = undefined;
       this.hud.setTimer(null);
       this.mode = 'cutscene';
@@ -548,8 +554,8 @@ export class RoomScene extends Phaser.Scene {
         const t = text(this, W / 2, 210, this.touch ? s.prompt.replace('PRESS E', 'TAP ACT') : s.prompt, { fontFamily: FONT.display, fontSize: '30px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 18, y: 10 } })
           .setOrigin(0.5).setLetterSpacing(6).setScrollFactor(0).setDepth(1150);
         this.hud.showTouch(true);
-        this.promptWait = { until: this.time.now + s.ms, hit: false };
-        while (this.time.now < this.promptWait.until && !this.promptWait.hit && !this.hud.touchAct) await sleep(this, 30);
+        this.promptWait = { until: this.activeTime + s.ms, hit: false };
+        while (this.activeTime < this.promptWait.until && !this.promptWait.hit && !this.hud.touchAct) await sleep(this, 30);
         const hit = this.promptWait.hit || this.hud.touchAct;
         this.promptWait = undefined;
         t.destroy();

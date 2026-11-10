@@ -127,3 +127,13 @@ Latest verified implementation: **`46129d63ac2b41c48581fbe91e19883dbc6827f9`**. 
 All local checks passed; 01–15 and three endings pass simulation. Real Work-build browser/WebKit/iPhone acceptance remains open. Two actual people, verified printed quotations/pages and a timed school-device rehearsal remain undone. No deployment, merge or automatic five-hour continuation was configured. Next exact task: Claude fetches PR #1 in a separate worktree, reviews diff/checks, then runs the patched build in real browsers and verifies the owner’s iPhone failure before recommending integration.
 
 Final implementation PR CI: run `42751743738` at `46129d6` **PASS** (unit, simulation, campaign, regression, build). Latest documentation head and its check are shown on PR #1.
+
+## Day 2 — November 10, 2026 — browser and focus checkpoint
+
+Verified PR #1 is draft/unmerged at `19b9328313510be02d6b017639bba746c0a5dfbf`; M2 remains `94c45a3`. New branch `work/day2-quality-sprint` starts exactly at the Work head. Live Pages unchanged.
+
+Reproduced focus-loss failure in the timed escape: scene clock advanced 40 seconds after blur. Added an explicit DOM resume curtain that suspends complete active scenes, and accumulated active encounter time so Clock.now jumps cannot consume a Hound response or escape timer after resuming. Existing key/touch release remains in place. New regression fails before the repair and passes after it. Full 01–15 and all three ending simulations pass again.
+
+Added opt-in `?diagnostics` (no transmission/storage; bounded recent errors, DOM/input counts, scene, viewport and canvas metrics), including a safe font API fallback. Added pinned dev-only Playwright 1.65.0 and native Chromium/WebKit PR validation for startup taps, scrolled targets, rotation, held interaction, delayed fonts and all five demo chapter starts. Local Chromium launch still fails at socket creation (EPERM); browser results must be taken from the PR job, not inferred from the test code. Existing unit/type/build and simulation results are recorded in the Day 2 report at completion.
+
+Next: inspect actual browser CI results; add original synthesized ambience with mute, reusable visual improvements and deeper regression cases. No merge/deploy authorization implied.
