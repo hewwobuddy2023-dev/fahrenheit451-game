@@ -274,6 +274,7 @@ export class RoomScene extends Phaser.Scene {
       this.session.set({ [h.hold.flag]: true });
       this.holdMs = 0;
       this.near = undefined;
+      this.prompt.setVisible(false);
       this.refresh(true);
     }
   }
@@ -294,18 +295,32 @@ export class RoomScene extends Phaser.Scene {
     return ((time + (w.phase ?? 0) * w.period) % w.period) < w.on;
   }
 
-  /** T4: telegraphed sweeps. Inside a beam = caught (unless diving where allowed). */
+  /**
+   * T4: telegraphed hazards. Sweep: a beam patrols between from and to (only fair where diving hides you).
+   * Pulse (lane): the stretch [from, to] is lit for `pulse` ms each period; the gaps between lanes are safe.
+   */
   private updateHazards(time: number, diving: boolean) {
     for (const hz of this.room.hazards ?? []) {
       const img = this.beams.get(hz.id)!;
       const on = !hz.when || hz.when(this.session.flags);
-      img.setVisible(on);
-      if (!on) continue;
+      if (!on) { img.setVisible(false); continue; }
       const t = ((time / hz.period) + (hz.phase ?? 0)) % 1;
-      const bx = hz.from + (hz.to - hz.from) * (t < 0.5 ? t * 2 : 2 - t * 2);
-      img.setX(bx);
-      if (this.mode === 'play' && time - this.caughtAt > 1200 && Math.abs(this.player.x - bx) < hz.width / 2 && !(hz.dive && diving)) {
-        this.caught(hz.reset, hz.look === 'headlights' ? 'THE HEADLIGHTS FIND YOU.' : 'THE LIGHT FINDS YOU.');
+      let hit = false;
+      if (hz.pulse) {
+        const k = t * hz.period;
+        const lit = k < hz.pulse;
+        const warn = !lit && k > hz.period - 700; // brief glow before the lane lights up
+        img.setVisible(lit || warn).setAlpha(lit ? 0.8 : 0.25);
+        img.setX(hz.from + (hz.to - hz.from) * (lit ? k / hz.pulse : 0.5));
+        hit = lit && this.player.x > hz.from - 14 && this.player.x < hz.to + 14;
+      } else {
+        img.setVisible(true);
+        const bx = hz.from + (hz.to - hz.from) * (t < 0.5 ? t * 2 : 2 - t * 2);
+        img.setX(bx);
+        hit = Math.abs(this.player.x - bx) < hz.width / 2;
+      }
+      if (hit && this.mode === 'play' && time - this.caughtAt > 1200 && !(hz.dive && diving)) {
+        this.caught(hz.reset, hz.look === 'headlights' ? 'THE HEADLIGHTS FIND YOU.' : hz.look === 'doorlight' ? 'SOMEONE AT A DOOR SEES YOU.' : 'THE LIGHT FINDS YOU.');
       }
     }
   }
