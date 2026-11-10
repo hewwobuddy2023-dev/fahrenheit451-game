@@ -36,7 +36,7 @@ function nightSky(s: Phaser.Scene, key = 'k:sky', moon = true, glow = 0.35) {
     [[420, glow], [1050, glow * 0.8], [1400, glow * 0.6]].forEach(([x, a]) => radial(c, x, 430, 280, 'rgba(232,104,46,A)', a));
   });
   const sky = s.add.image(0, 0, key).setOrigin(0).setScrollFactor(0.12).setDepth(0);
-  if (s.textures.exists('phoenix:city')) s.add.image(0, -15, 'phoenix:city').setOrigin(0).setDisplaySize(1600, 534).setScrollFactor(0.18).setAlpha(0.85).setDepth(0.2);
+  if (!key.includes('wild') && s.textures.exists('phoenix:city')) s.add.image(0, -15, 'phoenix:city').setOrigin(0).setDisplaySize(1600, 534).setScrollFactor(0.18).setAlpha(0.85).setDepth(0.2).setName('phoenix-city-layer');
   return sky;
 }
 
@@ -363,7 +363,7 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
     let update: ((f: Flags) => void) | undefined;
     if (variant === 'burn') {
       truckTexture(s);
-      s.add.image(380, 470, 'k:truck').setOrigin(0.5, 1).setDepth(3).setFlipX(true);
+      s.add.image(380, 470, 'k:truck').setOrigin(0.5, 1).setDepth(3);
       const piles = [900, 1060, 1220].map((x) => s.add.image(x, 472, 'k:pile').setOrigin(0.5, 1).setDepth(4.4));
       paint(s, 'k:pile', 120, 50, (c) => {
         const r = rng(12);

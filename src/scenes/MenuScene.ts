@@ -31,6 +31,7 @@ export class MenuScene extends Phaser.Scene {
     this.busy = false;
     // The room-specific sky texture does not exist at boot. Keep the title's
     // procedural glow backdrop rather than displaying Phaser's missing texture.
+    if (this.textures.exists('phoenix:city')) this.add.image(0, 0, 'phoenix:city').setOrigin(0).setDisplaySize(W, H).setAlpha(0.4);
     const fire = this.add.image(W * 0.62, H + 60, 'glow').setScale(9, 3).setTint(C.emberN).setAlpha(0.45).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({ targets: fire, alpha: 0.3, scaleX: 8.4, yoyo: true, repeat: -1, duration: 900, ease: 'Sine.easeInOut' });
     this.add.particles(0, 0, 'dot', {

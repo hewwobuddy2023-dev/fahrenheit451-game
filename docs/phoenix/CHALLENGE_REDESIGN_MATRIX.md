@@ -21,3 +21,8 @@ All IDs, earned flags and broad chronology remain. This table separates intended
 | 15 War/morning | Understand three choices and shared destruction | Consequences described, all endings offered, no secret score gate | Preservation canonical direction; other paths identified as adaptations | 2 / choice / no timer / three full ending campaigns |
 
 Budget: 24.5 minutes of challenge activity plus short transitions and optional exploration, approximately 25–30 minutes overall if human observations support it. This must not be achieved by slowing movement. Current actual duration remains unmeasured; reject the estimate if playtests disagree.
+
+
+## Candidate status versus ambition
+
+01 pressure control, 02 deliberate observations, 04 watched concealment, 08 ordered recall, 11–12 hazard feedback, 13 finite dive, and 14 ordered preservation are implemented. 03 has clearer broadcast staging and visible script; 06/07 have visible investigation props and retain their existing prerequisite chain. 05/09 retain their dialogue structure, 10 retains its object-burn/Hound sequence, and 15 retains all three meaningful endings. These retained scenes are not advertised as newly rebuilt puzzles. Stronger Faber trust/inference and more cinematic social staging remain review opportunities, rather than rushed unrelated minigames.

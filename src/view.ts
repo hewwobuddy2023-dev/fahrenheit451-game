@@ -75,12 +75,12 @@ export function onActions(scene: Phaser.Scene, handler: (a: Act) => void): void 
 }
 
 /** Vignette + scanlines (one texture) and moving grain. Sits below UI so text is never obscured. */
-export function addAtmosphere(scene: Phaser.Scene): void {
-  const overlay = scene.add.image(0, 0, 'overlay').setOrigin(0).setScrollFactor(0).setDepth(900);
+export function addAtmosphere(scene: Phaser.Scene, strength = 1): void {
+  const overlay = scene.add.image(0, 0, 'overlay').setOrigin(0).setScrollFactor(0).setDepth(900).setAlpha(strength);
   // Broad, slow tracking line below UI; no flashing or full-screen shader pass.
   const tracking = scene.add.rectangle(0, 0, W, 2, 0xc2dad2, 0.025).setOrigin(0).setScrollFactor(0).setDepth(903);
-  const grain = scene.add.tileSprite(0, 0, W, H, 'grain').setOrigin(0).setScrollFactor(0).setDepth(902).setAlpha(0.045);
-  scene.time.addEvent({ delay: 90, loop: true, callback: () => { overlay.setVisible(settings.analog); tracking.setVisible(settings.analog && !settings.reducedMotion && K > 1); if (tracking.visible) tracking.y = (tracking.y + 3) % H; grain.setVisible(settings.analog && !settings.reducedMotion && K > 1); if (grain.visible) grain.setTilePosition(Math.random() * 128, Math.random() * 128); } });
+  const grain = scene.add.tileSprite(0, 0, W, H, 'grain').setOrigin(0).setScrollFactor(0).setDepth(902).setAlpha(0.045 * strength);
+  scene.time.addEvent({ delay: 90, loop: true, callback: () => { overlay.setVisible(settings.analog); tracking.setVisible(settings.analog && !settings.reducedMotion && K > 1 && strength > 0.5); if (tracking.visible) tracking.y = (tracking.y + 3) % H; grain.setVisible(settings.analog && !settings.reducedMotion && K > 1); if (grain.visible) grain.setTilePosition(Math.random() * 128, Math.random() * 128); } });
 }
 
 

@@ -31,6 +31,15 @@ export function phoenixSet(s: Phaser.Scene, room: RoomDef) {
         c.strokeStyle='#111916';c.lineWidth=3;c.beginPath();c.moveTo(x+57,291);c.bezierCurveTo(x+40,323,x+100,315,x+91,355);c.stroke();}
     }
     if(family==='home') {
+      // Actual investigation props at the content hotspots: rotary phone, file-wallet and script.
+      c.fillStyle='#28302b';c.beginPath();c.roundRect(247,337,85,26,[12,12,3,3]);c.fill();
+      c.fillStyle='#101714';c.beginPath();c.roundRect(245,318,89,15,7);c.fill();
+      c.strokeStyle='#899081';c.lineWidth=2;c.beginPath();c.arc(291,347,13,0,Math.PI*2);c.stroke();
+      for(let a=0;a<10;a++){const angle=a/10*Math.PI*2;c.fillStyle='#151d19';c.beginPath();c.arc(291+Math.cos(angle)*9,347+Math.sin(angle)*9,2,0,Math.PI*2);c.fill();}
+      c.strokeStyle='#121916';c.lineWidth=2;c.beginPath();c.moveTo(251,327);for(let y=331;y<378;y+=4)c.bezierCurveTo(238,y,259,y,248,y+4);c.stroke();
+      c.fillStyle='#40372d';poly(c,[973,348,1023,343,1028,373,977,378]);c.fillStyle='#c9b995';poly(c,[980,351,1019,347,1021,367,983,372]);
+      c.fillStyle='#4b5144';c.fillRect(985,355,11,10);c.fillStyle='#746b56';c.fillRect(1000,353,15,2);c.fillRect(1000,358,13,2);
+      c.fillStyle='#c8c5ab';poly(c,[1724,355,1758,351,1763,380,1728,385]);c.fillStyle='#676f67';for(let y=360;y<378;y+=4)c.fillRect(1732,y,20,1);
       // Hall arch and bevels read as recesses, not a wall-sized black block.
       for(const x of [215,1130,1460]){c.fillStyle='rgba(0,0,0,0.2)';poly(c,[x,85,x+34,102,x+34,F,x,F]);c.strokeStyle='#515460';c.lineWidth=2;c.beginPath();c.moveTo(x,85);c.lineTo(x+34,102);c.lineTo(x+34,F);c.stroke();}
       c.fillStyle='#43504a';c.beginPath();c.ellipse(590,334,45,9,0,0,Math.PI*2);c.fill();c.fillRect(555,334,70,36);c.fillStyle='#141c18';c.fillRect(561,370,5,22);c.fillRect(616,370,5,22);

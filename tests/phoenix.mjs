@@ -8,7 +8,7 @@ for(const [room,id,flag] of [['subway','read','c08.verse'],['camp','granger','c1
  const s=await simulate({save:{v:1,room,x:room==='camp'?1080:620,flags},lowres:true});
  try{
   await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','memory Continue');await campaign(s).settle();
-  const r=s.scene(),h=r.room.hotspots.find(h=>h.id===id);s.w.__qa.go(h.x);await s.advance(50);await s.tap(888,474);
+  const r=s.scene();if(room==='camp')assert.equal(r.children.list.some(o=>o.name==='phoenix-city-layer'),false,'city panorama must not survive the bombing horizon');const h=r.room.hotspots.find(h=>h.id===id);s.w.__qa.go(h.x);await s.advance(50);await s.tap(888,474);
   for(let n=0;n<40&&!r.dialogue.puzzle;n++)await s.tap(480,450);
   assert.equal(r.dialogue.puzzle.state.phase,'study');assert.ok(!r.session.flags[flag]);
   await s.screenshot(`docs/qa/phoenix-mechanics/${room}-study.webp`);
