@@ -43,7 +43,7 @@ export class MenuScene extends Phaser.Scene {
     text(this, 82, H - 34, "An interactive adaptation of Ray Bradbury's novel  ·  Student project", {
       fontSize: '12px', color: C.muted,
     }).setOrigin(0, 0.5);
-    text(this, W - 28, H - 34, 'ARROWS / W S  ·  ENTER', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
+    text(this, W - 28, H - 34, this.game.device.input.touch ? 'TAP A ROW  ·  LANDSCAPE RECOMMENDED' : 'ARROWS / W S  ·  ENTER', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
       .setOrigin(1, 0.5).setLetterSpacing(2);
     addAtmosphere(this);
     onActions(this, (a) => {
@@ -69,9 +69,17 @@ export class MenuScene extends Phaser.Scene {
     const save = restoreCheckpoint(loadSave());
     this.show([
       { label: 'Continue', enabled: !!save, note: save ? undefined : 'no saved game', action: () => save && this.start(new Session(save)) },
-      { label: 'New Game', action: () => this.start(this.fresh(false)) },
+      { label: 'New Game', action: () => save ? this.confirmNew() : this.start(this.fresh(false)) },
       { label: 'Presentation Mode', action: () => this.chapters() },
       { label: 'Credits', action: () => this.credits() },
+    ]);
+  }
+
+  private confirmNew() {
+    this.panel('RESTART YOUR STORY?', ['Starting again replaces your normal checkpoint. Presentation Mode lets you demonstrate chapters without changing that save.']);
+    this.show([
+      { label: 'Keep current game', action: () => this.main() },
+      { label: 'Restart from the beginning', action: () => this.start(this.fresh(false)) },
     ]);
   }
 
@@ -87,7 +95,7 @@ export class MenuScene extends Phaser.Scene {
     const g = this.add.graphics().fillStyle(C.panel, 0.94).fillRect(x, y, w, h)
       .lineStyle(1, C.emberN, 0.5).strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
     const t = text(this, x + 24, y + 18, title, { fontFamily: FONT.display, fontSize: '16px', color: C.amber }).setLetterSpacing(4);
-    const body = text(this, x + 24, y + 48, lines.join('\n\n'), { fontSize: '12px', color: C.creamDim, lineSpacing: 4, wordWrap: { width: w - 48 } });
+    const body = text(this, x + 24, y + 48, lines.join('\n\n'), { fontSize: '14px', color: C.creamDim, lineSpacing: 4, wordWrap: { width: w - 48 } });
     this.sub = this.add.container(0, 0, [g, t, body]).setDepth(1050);
   }
 

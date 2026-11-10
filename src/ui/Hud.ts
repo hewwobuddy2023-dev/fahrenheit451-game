@@ -11,6 +11,7 @@ export class Hud {
   private diveUi?: Phaser.GameObjects.Container;
   private timer?: Phaser.GameObjects.Text;
   private scene: Phaser.Scene;
+  private touch: boolean;
   private panel: Phaser.GameObjects.Graphics;
   private chapter: Phaser.GameObjects.Text;
   private objective: Phaser.GameObjects.Text;
@@ -20,10 +21,11 @@ export class Hud {
 
   constructor(scene: Phaser.Scene, chapter: string, opts: { touch: boolean; demo: boolean; onJournal: () => void; onPause: () => void; onAct: () => void }) {
     this.scene = scene;
+    this.touch = opts.touch;
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(1000);
     this.chapter = text(scene, 34, 24, chapter, { fontFamily: FONT.display, fontSize: '11px', color: C.creamDim })
       .setLetterSpacing(2).setScrollFactor(0).setDepth(1001);
-    this.objective = text(scene, 34, 42, '', { fontSize: '16px', fontStyle: '600' }).setScrollFactor(0).setDepth(1001);
+    this.objective = text(scene, 34, 42, '', { fontSize: '18px', fontStyle: '600' }).setScrollFactor(0).setDepth(1001);
 
     this.journal = text(scene, W - 24, 34, '', { fontFamily: FONT.display, fontSize: '14px', color: C.cream })
       .setOrigin(1, 0.5).setLetterSpacing(2).setScrollFactor(0).setDepth(1001)
@@ -77,7 +79,7 @@ export class Hud {
   }
 
   setObjective(s: string, done: number) {
-    this.objective.setText(s);
+    this.objective.setText(this.touch ? s.replace('Hold DOWN', 'Hold DIVE').replace('Hold E', 'Hold ACT') : s);
     this.objective.setWordWrapWidth(W - 340);
     const w = Math.max(this.objective.width, this.chapter.width) + 40;
     this.panel.clear()

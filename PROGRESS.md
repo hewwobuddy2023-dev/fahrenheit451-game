@@ -109,3 +109,13 @@ Implementation is authorized by the owner's overnight request; the preproduction
 - Local checks: 9 unit tests, typecheck, build, 4 viewport touch configurations, campaign and regression suites all PASS. Added these simulation suites to PR CI. These are deterministic DOM/native Canvas simulations; fonts use system fallbacks, timestamps are advanced by the harness, and no browser engine/hardware FPS claim follows from them.
 - Draft PR: https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/1. Initial PR CI run `42749692291` passed. No deployment.
 - Next: reusable flame/river presentation polish, school drafts, performance/source audit and final Claude handoff; then full regression/CI review.
+
+### Reusable polish checkpoint
+
+Campaign verification commit `5d4a450` is pushed. PR CI run `42750416512` passed all newly added simulation suites plus unit/build checks.
+
+- Added padded eight-frame flame cells with smoother phases and retained orange bodies; small floating surface silhouette/wake replaces walking in the water and returns to the civil walk/shadow on shore. Added real texture-edge and swim/shore regressions. Comparison captures are labeled Canvas simulations in `docs/qa`.
+- Improved mobile control wording, objective wrapping/readability, larger chapter-select rows, and a cancel-first New Game confirmation before replacing an existing save. Safe-area sizing uses an inset inner parent because Phaser measures border-box bounds; padding would produce a wrong fit.
+- Latin-only font CSS reduces production CSS from 12.50 kB to about 1.54 kB and removes unused font subsets from output. No runtime packages changed; new packages are test-only (`jsdom`, native Canvas, and explicitly declared `esbuild`).
+- A cloud Chrome view of the existing deployed Pages baseline rendered the title and reached the opening after mouse/Enter inputs. Its low/throttled reported FPS is not a Chromebook benchmark. The Work branch was not served to that browser. No true WebKit or physical iPhone testing occurred.
+- Latest local unit, typecheck, touch, campaign, regression and build checks passed before this documentation checkpoint; final CI result will be recorded in the handoff. No merge/deploy performed.

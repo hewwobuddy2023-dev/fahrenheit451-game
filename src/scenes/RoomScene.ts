@@ -28,6 +28,7 @@ export class RoomScene extends Phaser.Scene {
   private floor!: ReturnType<typeof buildFloor>;
   private player!: Phaser.GameObjects.Sprite;
   private shadow!: Phaser.GameObjects.Image;
+  private wake?: Phaser.GameObjects.Image;
   private npcs: NpcView[] = [];
   private keys!: { left: Phaser.Input.Keyboard.Key[]; right: Phaser.Input.Keyboard.Key[]; act: Phaser.Input.Keyboard.Key[]; down: Phaser.Input.Keyboard.Key[] };
   private dialogue!: Dialogue;
@@ -69,6 +70,7 @@ export class RoomScene extends Phaser.Scene {
     // Scene restarts destroy its objects, but retain class fields. Never reuse a
     // destroyed emitter when a later chapter starts its next hold interaction.
     this.spray = undefined;
+    this.wake = undefined;
     this.fps = []; this.governed = false; this.stillWatch = undefined; this.promptWait = undefined;
   }
 
@@ -85,10 +87,12 @@ export class RoomScene extends Phaser.Scene {
     if (this.room.dark) this.dark = darkness(this); else this.dark = undefined;
 
     const x = Phaser.Math.Clamp(this.session.x, 40, this.room.width - 40);
-    const fig = this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag';
+    const swimming = this.room.id === 'river' && !this.session.flags['c13.shore'];
+    const fig = swimming ? 'fig:montagFloat' : this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag';
     this.shadow = shadowFor(this, x, WALK_Y);
     this.player = this.add.sprite(x, WALK_Y + 6, fig, 0).setOrigin(0.5, 1).setDepth(5);
     this.player.play(fig + ':idle');
+    if (this.room.id === 'river') this.wake = this.add.image(x, WALK_Y + 3, 'wake').setDepth(5.1);
     for (const n of this.room.npcs ?? []) {
       const y = n.back ? 452 : WALK_Y;
       const spr = this.add.sprite(n.x, y + 6, 'fig:' + n.fig, 0).setOrigin(0.5, 1).setDepth(n.back ? 4.5 : 5 - 0.01).setFlipX(n.face === -1);
@@ -169,11 +173,13 @@ export class RoomScene extends Phaser.Scene {
     if (Math.abs(this.vx) < 3) this.vx = 0;
     p.x = Phaser.Math.Clamp(p.x + this.vx * dt, 40, this.room.width - 40);
     if (dir) this.facing = dir;
-    this.animate(p, this.vx, this.facing, this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag');
+    const swimming = this.room.id === 'river' && !f['c13.shore'];
+    this.animate(p, this.vx, this.facing, swimming ? 'fig:montagFloat' : this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag');
     const diving = playing && (this.keys.down.some((k) => k.isDown) || this.hud.touchDown) && (this.room.hazards ?? []).some((h) => h.dive);
     this.hud.showDive(this.room.id === 'river' && !f['c13.shore']);
-    p.setAlpha(diving ? 0.35 : 1).setY(WALK_Y + 6 + (diving ? 14 : 0));
-    this.shadow.setX(p.x);
+    p.setAlpha(diving ? 0.35 : 1).setY(WALK_Y + 6 + (diving ? 14 : swimming ? Math.sin(time * 0.002) * 2 : 0));
+    this.shadow.setX(p.x).setVisible(!swimming);
+    this.wake?.setX(p.x).setVisible(swimming).setAlpha(diving ? 0.18 : 0.6).setScale(1 + Math.sin(time * 0.003) * 0.08, 1);
     p.setTint(lightTint(p.x, this.roomLights));
     this.dark?.follow(p.x - this.cameras.main.scrollX, p.y);
 
@@ -539,7 +545,7 @@ export class RoomScene extends Phaser.Scene {
     }
     if ('prompt' in s) {
       for (;;) {
-        const t = text(this, W / 2, 210, s.prompt, { fontFamily: FONT.display, fontSize: '30px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 18, y: 10 } })
+        const t = text(this, W / 2, 210, this.touch ? s.prompt.replace('PRESS E', 'TAP ACT') : s.prompt, { fontFamily: FONT.display, fontSize: '30px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 18, y: 10 } })
           .setOrigin(0.5).setLetterSpacing(6).setScrollFactor(0).setDepth(1150);
         this.hud.showTouch(true);
         this.promptWait = { until: this.time.now + s.ms, hit: false };

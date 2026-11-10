@@ -24,7 +24,7 @@ for(let i=0;i<5;i++){
  const start=CHAPTER_STARTS[4];const s=await simulate({save:{v:1,...start}});try{
   await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','river Continue');await campaign(s).settle();
   const r=s.scene();await s.touch('touchstart',174,478,1);await s.touch('touchstart',776,474,2);await s.advance(100);
-  assert.ok(r.hud.touchRight&&r.hud.touchDown);assert.equal(r.player.alpha,0.35);
+  assert.ok(r.hud.touchRight&&r.hud.touchDown);assert.equal(r.player.alpha,0.35);assert.equal(r.player.texture.key,'fig:montagFloat');assert.ok(!r.shadow.visible);assert.ok(r.wake.visible);
   await s.touch('touchend',776,474,2);assert.ok(r.hud.touchRight&&!r.hud.touchDown);
   await s.touch('touchcancel',174,478,1);assert.ok(!r.hud.touchRight&&!r.hud.touchDown);
   const x=r.player.x;await s.key('KeyD');await s.advance(800);await s.key('KeyD',false);assert.ok(r.player.x>x+80);
@@ -44,5 +44,22 @@ for(let i=0;i<5;i++){
   const reload=await simulate({save:JSON.parse(before)});try{await reload.advance(700);await reload.tap(430,282);await reload.until(()=>reload.scene().sys.settings.key==='room','mid-event reload');assert.ok(!reload.scene().session.flags['c01.lit']);}finally{reload.close();}
   await campaign(s).settle();assert.equal(JSON.parse(s.save()).room,'station1');
   console.log('PASS repeated keys ignored, mid-dialogue reload rolls back safely, event commits at next room');
+ }finally{s.close();}
+}
+{
+ const checkpoint={v:1,room:'home3',x:900,flags:{'c01.tone':'deferent','e.home3':true}};
+ const s=await simulate({save:checkpoint});try{
+  const before=s.save();await s.advance(700);await s.tap(430,346);
+  assert.equal(s.scene().list.rows.length,2);assert.equal(s.save(),before);
+  await s.tap(430,282);assert.equal(s.scene().list.rows.length,4);assert.equal(s.save(),before);
+  await s.tap(430,346);await s.tap(430,346);await s.until(()=>s.scene().sys.settings.key==='room','confirmed restart');
+  assert.equal(s.scene().room.id,'burn');assert.ok(!s.scene().session.flags['c01.tone']);console.log('PASS New Game confirmation preserves save until explicit restart');
+ }finally{s.close();}
+}
+{
+ const s=await simulate();try{
+  const tex=s.game.textures.get('flame');const source=tex.getSourceImage();const rgba=source.getContext('2d').getImageData(0,0,source.width,source.height).data;
+  for(let frame=0;frame<8;frame++)for(let y=0;y<144;y++)for(const edge of [0,95])assert.equal(rgba[(y*source.width+frame*96+edge)*4+3],0,'flame atlas edges stay transparent');
+  console.log('PASS all 8 flame frames have transparent side padding');
  }finally{s.close();}
 }
