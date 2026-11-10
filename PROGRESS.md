@@ -1,7 +1,7 @@
 # LIVE PROGRESS — DO NOT INFER RESULTS
 
 **Last updated:** 2026-11-09 (evening, local) by Claude Code (desktop app, Windows PC).
-**Stage:** M1 vertical slice implemented. **M2 NOT authorized; stop and ask.**
+**Stage:** M2 in progress on `feat/m2-chapters` (authorized 2026-11-09). M1 preserved as tag `m1-complete`.
 **Local repo:** `C:\Users\gabe\Documents\Fahrenheit451Game`
 **GitHub repo:** https://github.com/hewwobuddy2023-dev/fahrenheit451-game (public). Branches: `main` (docs only), `feat/m1-vertical-slice` (M1).
 **GitHub Pages:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/ (deploy status below). The `github-pages` environment allows deploys from `main` and `feat/m1-vertical-slice`.
@@ -76,3 +76,9 @@ Live Pages URL (production build, browser pane on this PC, fresh tab, empty stor
 ## Next task
 
 User reviews M1 at the Pages URL, runs the Chromebook `?debug` check, then authorizes M2 (`PROMPTS/02` style, M2 scope).
+
+## M2 chapter log (branch `feat/m2-chapters`)
+
+| Chapter | Challenges | Commit | Tests / typecheck / build | Browser run (dev server, built-in pane, this PC) |
+|---|---|---|---|---|
+| 1 | 01–03 | `de3b88e` | 7/7 pass · tsc clean · build OK (372 KB gz JS) | New game → burn (held-E soak, real-key ignition choice) → firehouse → Clarisse walk (held-D walking, 4 choices) → home night beat → parlor (walls, 3 talks, script). Journal 3/15. Reload + Continue restored room/x/flags without replaying the night scene. Player teleports and dialogue auto-advance used a debug helper in places. |
