@@ -165,7 +165,9 @@ export class RoomScene extends Phaser.Scene {
     if (this.mode === 'pause' || this.mode === 'journal') return;
     this.activeTime += dtMs;
     const time = this.activeTime;
-    const dt = Math.min(dtMs, 50) / 1000;
+    // Phaser already supplies a smoothed/capped delta. A second 50 ms cap
+    // slowed movement relative to encounter clocks below 20 FPS.
+    const dt = dtMs / 1000;
     const f = this.session.flags;
     const p = this.player;
     let dir = 0;
@@ -184,7 +186,7 @@ export class RoomScene extends Phaser.Scene {
       dir = 0;
     }
     const speed = SPEED * (this.room.limp ? 0.72 : 1);
-    this.vx += (dir * speed - this.vx) * Math.min(1, dt * (dir ? 9 : 12));
+    this.vx += (dir * speed - this.vx) * (1 - Math.exp(-dt * (dir ? 9 : 12)));
     if (Math.abs(this.vx) < 3) this.vx = 0;
     p.x = Phaser.Math.Clamp(p.x + this.vx * dt, 40, this.room.width - 40);
     if (dir) this.facing = dir;
