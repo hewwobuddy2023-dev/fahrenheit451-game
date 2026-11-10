@@ -55,7 +55,7 @@ export class RoomScene extends Phaser.Scene {
   private timerStart = 0;
   private fps: number[] = [];
   private governed = false;
-  private stillWatch?: { until: number; x: number; ms: number };
+  private stillWatch?: { until: number; x: number; ms: number; moving?: boolean };
   private promptWait?: { until: number; hit: boolean };
 
   constructor() { super('room'); }
@@ -66,6 +66,9 @@ export class RoomScene extends Phaser.Scene {
     this.vx = 0; this.facing = 1; this.near = undefined; this.holdMs = 0;
     this.camTarget = null; this.overlay = undefined; this.caughtAt = 0;
     this.npcs = []; this.glows = new Map(); this.beams = new Map(); this.eyes = new Map();
+    // Scene restarts destroy its objects, but retain class fields. Never reuse a
+    // destroyed emitter when a later chapter starts its next hold interaction.
+    this.spray = undefined;
     this.fps = []; this.governed = false; this.stillWatch = undefined; this.promptWait = undefined;
   }
 
@@ -148,12 +151,17 @@ export class RoomScene extends Phaser.Scene {
     const p = this.player;
     let dir = 0;
     const playing = this.mode === 'play';
-    if (playing || this.stillWatch) {
+    if (playing) {
       if (this.keys.left.some((k) => k.isDown) || this.hud.touchLeft) dir -= 1;
       if (this.keys.right.some((k) => k.isDown) || this.hud.touchRight) dir += 1;
     }
     if (this.stillWatch) {
-      if (dir) { this.stillWatch.until = time + this.stillWatch.ms; this.flashNote('YOU MOVED. STAY STILL.'); }
+      if (!playing) this.stillWatch.until += dtMs;
+      else if (dir) {
+        this.stillWatch.until = time + this.stillWatch.ms;
+        if (!this.stillWatch.moving) this.flashNote('YOU MOVED. STAY STILL.');
+      }
+      this.stillWatch.moving = !!dir;
       dir = 0;
     }
     const speed = SPEED * (this.room.limp ? 0.72 : 1);

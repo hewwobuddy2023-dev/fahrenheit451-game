@@ -99,3 +99,13 @@ Implementation is authorized by the owner's overnight request; the preproduction
 - `npm test`: inherited 7 passed before edits; expanded suite pending final checkpoint. `npm run typecheck` passed after initial source edits. `npm run test:simulation`: New Game, dialogue taps, held movement, journal and pause passed at 844×390, 667×375, 390×844, and 1366×768/lowres. This is simulation, **not browser/iOS testing**.
 - Local Chromium launch blocked by socket permission; cloud browser could not reach local server; WebKit executable absent. No physical phone/Chromebook or human playtest performed. No deployment or merge.
 - Next: complete campaign simulation (all 15, Ch5 and three endings), add save/retry regressions, then review/build/push and create PR.
+
+### Campaign checkpoint (after `4155f7e`)
+
+- Actual Phaser simulation now completes an ordinary sequential 01–15 run with Preservation. Defiance and Submission each complete independently from the legitimate 14/15 campaign checkpoint. Chapter boundary saves Continue into Chapters 2–5; a completed ending reloads its ending card and returns to title.
+- Fixed destroyed spray-emitter reuse across room restarts (reproduced crash at Chapter 2 vent after Chapter 1 hose), and paused stillness waits progressing behind the pause overlay. Stillness movement notices now appear once per held movement rather than every frame.
+- Covered 15 wrong recall/dialogue picks, watching/looking-away book theft, one missed Hound prompt, stillness movement/reset plus six-second pause, boulevard capture/crossing, count-of-ten reset and full escape, river capture and two-finger dive crossing.
+- Targeted regressions pass: corrupt/unknown-room saves, blocked localStorage getter through boot/checkpoint, all 5 Presentation Mode touch starts and quits without changing the normal save, two-finger release/cancel, keyboard movement/blur, repeated Enter suppression and interrupted ignition save rollback.
+- Local checks: 9 unit tests, typecheck, build, 4 viewport touch configurations, campaign and regression suites all PASS. Added these simulation suites to PR CI. These are deterministic DOM/native Canvas simulations; fonts use system fallbacks, timestamps are advanced by the harness, and no browser engine/hardware FPS claim follows from them.
+- Draft PR: https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/1. Initial PR CI run `42749692291` passed. No deployment.
+- Next: reusable flame/river presentation polish, school drafts, performance/source audit and final Claude handoff; then full regression/CI review.
