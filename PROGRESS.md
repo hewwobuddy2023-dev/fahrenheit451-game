@@ -163,3 +163,5 @@ Implementation checkpoint `af4a49c` is pushed. Reviewed native traces expose why
 ### Settings and audio return edge cases
 
 Verified touch/keyboard preference changes do not modify the story save. M now updates the visible sound label in title settings/pause, and switching off the parlor walls changes the television ambience. Explicit return also resumes a suspended audio context: the focus curtain consumes Enter, so it must pass that gesture to audio itself. Unit/type/day2/build checks pass. No new dependency or release action.
+
+Audio initialization review confirmed Phaser would otherwise allocate its own unused Web Audio context at boot. Set `audio.noAudio` on Phaser (the independent Soundscape remains enabled), and add a native assertion that its backend has no context before the first gesture. Type/build/four-viewport simulations pass. This is resource/lifecycle cleanup, not a claimed explanation of the original phone symptom.

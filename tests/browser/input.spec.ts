@@ -110,6 +110,7 @@ test('audio unlock/mute, local offline play and browser frame sample', async ({ 
   page.on('request', r => requests.push(r.url()));
   await page.goto('/?debug&lowres'); await scene(page, 'menu');
   expect(await page.evaluate(() => (window as any).__audio.status.state)).toBe('locked');
+  expect(await page.evaluate(() => !!(window as any).__game.sound.context)).toBe(false); // unused Phaser backend stays off
   await tap(page, 430, 282, info); await scene(page, 'room'); await settle(page, info);
   await expect.poll(() => page.evaluate(() => (window as any).__audio.status.state)).toBe('running');
   await page.keyboard.press('KeyM'); expect(await page.evaluate(() => (window as any).__audio.status.muted)).toBe(true);

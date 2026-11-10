@@ -45,6 +45,7 @@ const game = new Phaser.Game({
   banner: false,
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   input: { activePointers: 3 },
+  audio: { noAudio: true }, // Soundscape owns the sole, gesture-created Web Audio context.
   render: { antialias: true, powerPreference: 'low-power' },
   scene: [BootScene, MenuScene, RoomScene, EndScene],
 });
