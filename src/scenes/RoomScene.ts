@@ -161,6 +161,7 @@ export class RoomScene extends Phaser.Scene {
     this.pressureLabel = text(this, 0, 0, 'LOW     FLOW     HIGH', { fontFamily: FONT.display, fontSize: '11px', color: C.cream }).setDepth(8).setVisible(false);
 
     this.dialogue = new Dialogue(this, this.touch);
+    this.dialogue.onPause = () => this.onAction('pause');
     this.dialogue.onSpeaker = (who) => this.frameSpeaker(who);
     this.hud = new Hud(this, `CHAPTER ${this.room.chapter}  ·  ${CHAPTERS[this.room.chapter - 1].toUpperCase()}`, {
       touch: this.touch, demo: this.session.demo,

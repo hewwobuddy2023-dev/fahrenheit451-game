@@ -121,6 +121,12 @@ test('audio unlock/mute, local offline play and browser frame sample', async ({ 
   await page.goto('/?debug&lowres'); await scene(page, 'menu');
   expect(await page.evaluate(() => (window as any).__audio.status.state)).toBe('locked');
   expect(await page.evaluate(() => !!(window as any).__game.sound.context)).toBe(false); // unused Phaser backend stays off
+  await tap(page,430,474,info);await tap(page,430,410,info);
+  await page.keyboard.press('KeyM');
+  await tap(page,430,162,info); // visible sound check explicitly unmutes
+  await expect.poll(()=>page.evaluate(()=>(window as any).__audio.status.state)).toBe('running');
+  expect(await page.evaluate(()=>(window as any).__audio.status.muted)).toBe(false);
+  await tap(page,430,462,info);await tap(page,430,474,info);
   await tap(page, 430, 282, info); await scene(page, 'room'); await settle(page, info);
   await expect.poll(() => page.evaluate(() => (window as any).__audio.status.state)).toBe('running');
   await expect.poll(()=>page.evaluate(()=>(window as any).__audio.sampleOutput().rms),{timeout:10000}).toBeGreaterThan(.0001);
@@ -200,6 +206,7 @@ test('subway: source-first reconstruction fails locally, supports rereading and 
   await page.keyboard.press('KeyE');
   for(let n=0;n<8;n++){if(await page.evaluate(()=>!!(window as any).__game.scene.getScene('room').dialogue.puzzle))break;await tap(page,480,450,info);}
   await expect.poll(()=>page.evaluate(()=>(window as any).__game.scene.getScene('room').dialogue.puzzle?.state.phase)).toBe('study');
+  await tap(page,850,63,info);expect((await state(page)).mode).toBe('pause');await tap(page,500,234,info);
   await page.screenshot({path:info.outputPath('subway-study-native.png')});
   await tap(page,480,450,info);
   for(const i of [1,0,2,3])await tap(page,220+(i%2)*425,231+Math.floor(i/2)*75,info);

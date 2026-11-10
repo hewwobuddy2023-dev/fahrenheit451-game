@@ -140,7 +140,7 @@ export class MenuScene extends Phaser.Scene {
   private audioOptions() {
     this.panel('AUDIO & ACCESS', ['Test sound at a low device volume. Audio level and assisted hose control are local preferences, separate from story saves.', 'Assisted hose: hold to flow without managing pressure. Analog effects can be disabled independently of essential hazards.']);
     this.show([
-      { label: 'Test sound', action: () => { void sound.unlock().then(() => sound.cue('complete')); } },
+      { label: 'Test sound (unmutes)', action: () => { if (settings.muted) sound.toggleMute(); void sound.unlock().then(() => sound.cue('complete')); } },
       { label: `Volume: ${Math.round(settings.volume * 100)}%`, action: () => { setSetting('volume', settings.volume >= 1 ? 0.4 : settings.volume < 0.7 ? 0.75 : 1); sound.refresh(); this.audioOptions(); } },
       { label: `Assisted hose: ${settings.assistedHose ? 'ON' : 'OFF'}`, action: () => { setSetting('assistedHose', !settings.assistedHose); this.audioOptions(); } },
       { label: `Analog effects: ${settings.analog ? 'ON' : 'OFF'}`, action: () => { setSetting('analog', !settings.analog); this.audioOptions(); } },

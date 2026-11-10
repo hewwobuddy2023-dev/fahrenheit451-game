@@ -13,8 +13,8 @@ export class SequencePuzzle {
   private attempts = 0;
   private hintLevel = 0;
   private message = '';
-  constructor(privateScene: Phaser.Scene, privateDef: SequenceDef, privateDone: () => void) {
-    this.scene = privateScene; this.def = privateDef; this.done = privateDone;
+  constructor(privateScene: Phaser.Scene, privateDef: SequenceDef, privateDone: () => void, privatePause: () => void) {
+    this.scene = privateScene; this.def = privateDef; this.done = privateDone; this.pause = privatePause;
     // Stable mixed order, deliberately unrelated to the answer order. No random unfairness on retry.
     this.cards = [...privateDef.fragments, ...privateDef.distractions];
     this.cards = [this.cards[2], this.cards[4], this.cards[0], this.cards[5], this.cards[3], this.cards[1]].filter(Boolean);
@@ -23,6 +23,7 @@ export class SequencePuzzle {
   private scene: Phaser.Scene;
   private def: SequenceDef;
   private done: () => void;
+  private pause: () => void;
   get state() { return { phase: this.phase, selected: [...this.selected], cards: [...this.cards], attempts: this.attempts }; }
   action(a: 'act' | 'up' | 'down' | 'back' | 'hint') {
     if (a === 'back') { this.phase = 'study'; this.selected = []; this.message = ''; }
@@ -59,6 +60,7 @@ export class SequencePuzzle {
       const t = text(s, x + 12, y + h / 2, value, { fontSize: '18px', color: C.cream, wordWrap: { width: w - 24 }, lineSpacing: 2 }).setOrigin(0, 0.5);
       parts.push(box, t);
     };
+    button(792, 42, 108, 44, 'PAUSE', this.pause);
     if (this.phase === 'study') {
       label(65, 145, this.def.fragments.join('\n'), 23);
       label(65, 330, 'Study at your own pace. Then rebuild the order from memory.\nYou can read this again at any time. No timer.', 16, C.creamDim);

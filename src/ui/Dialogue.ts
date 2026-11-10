@@ -18,6 +18,7 @@ const TICK = 55;  // ms per tick (~55 chars/s, ~18 text redraws/s)
 export class Dialogue {
   open = false;
   puzzle?: SequencePuzzle;
+  onPause?: () => void;
   onSpeaker?: (who: string) => void;
   private scene: Phaser.Scene;
   private touch: boolean;
@@ -113,7 +114,7 @@ export class Dialogue {
       const def = this.script.puzzle;
       this.script = { ...this.script, puzzle: undefined };
       this.root.setVisible(false);
-      this.puzzle = new SequencePuzzle(this.scene, def, () => { this.puzzle = undefined; this.root.setVisible(true); this.next(); });
+      this.puzzle = new SequencePuzzle(this.scene, def, () => { this.puzzle = undefined; this.root.setVisible(true); this.next(); }, () => this.onPause?.());
       this.scene.events.once('shutdown', () => { this.puzzle?.destroy(); this.puzzle = undefined; });
       return;
     }
