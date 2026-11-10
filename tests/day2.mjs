@@ -45,3 +45,16 @@ for(const fps of [30,20]) {
     console.log(`PASS ${fps} FPS deterministic deltas: pause > deadline then full timed escape`);
   } finally{s.close();}
 }
+
+// The governor must respond even when a slow scene remains behind its opening cinematic.
+{
+  const s=await simulate({save:{v:1,room:'burn',x:1060,flags:{'e.burn':true}}});
+  try {
+    await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','quality governor');await campaign(s).settle();
+    const before=s.save();s.game.loop.actualFps=20;await s.advance(16000);
+    assert.equal(s.game.canvas.width,960);assert.equal(s.scene().cameras.main.zoom,1);assert.equal(s.save(),before);
+    const x=s.scene().player.x;await s.touch('touchstart',174,478);await s.advance(700);await s.touch('touchend',174,478);
+    assert.ok(s.scene().player.x>x+70,'touch coordinates still map correctly after two cosmetic resolution steps');
+    console.log('PASS sustained-low-FPS governor reaches base resolution without changing saves/input');
+  }finally{s.close();}
+}
