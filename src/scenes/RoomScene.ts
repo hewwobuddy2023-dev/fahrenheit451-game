@@ -168,7 +168,7 @@ export class RoomScene extends Phaser.Scene {
     });
     this.controlHint = text(this, W / 2, 104, '', { fontFamily: FONT.display, fontSize: '15px', color: C.cream, backgroundColor: '#111315', padding: { x: 12, y: 8 }, wordWrap: { width: 620 } }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(1003);
     text(this, W - 50, 176, '?', { fontFamily: FONT.display, fontSize: '22px', backgroundColor: '#111315', padding: { x: 18, y: 10 } }).setOrigin(0.5).setScrollFactor(0).setDepth(1001).setInteractive({ useHandCursor: true }).on('pointerdown', () => { if (this.mode === 'play') this.flashNote(this.hint()); });
-    addAtmosphere(this);
+    addAtmosphere(this, this.room.chapter >= 5 ? 0.45 : 1);
     onActions(this, (a) => this.onAction(a));
 
     this.done = new Set(completedIds(RULES, this.session.flags));
@@ -230,7 +230,7 @@ export class RoomScene extends Phaser.Scene {
     if (!this.scriptedPose) p.setAlpha(diving ? 0.35 : 1).setY(WALK_Y + 6 + (diving ? 14 : swimming ? Math.sin(time * 0.002) * 2 : 0));
     this.shadow.setX(p.x).setVisible(!swimming && !this.scriptedPose);
     this.wake?.setX(p.x).setVisible(swimming).setAlpha(diving ? 0.18 : 0.6).setScale(1 + Math.sin(time * 0.003) * 0.08, 1);
-    p.setTint(lightTint(p.x, this.roomLights));
+    p.setTint(lightTint(p.x, this.roomLights, this.room.chapter >= 5 ? 0xb2c5bf : 0x8a8079));
     this.dark?.follow(p.x - this.cameras.main.scrollX, p.y);
 
     // npcs: follow, face, tint
