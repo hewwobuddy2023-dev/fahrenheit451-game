@@ -2,7 +2,7 @@
 
 ## Authority, safety, and continuity
 
-1. **STOP GATE:** This workspace is currently preproduction. Do not generate game code, install dependencies, create remote repos, deploy, or modify GitHub until the user explicitly authorizes implementation.
+1. **CURRENT AUTHORIZATION:** M2 implementation and the isolated Work mobile/QA sprint were explicitly authorized by the owner on November 9, 2026. Work changes are on `work/overnight-mobile-qa`, PR #1 into `feat/m2-chapters`. Review `WORK_TO_CLAUDE_HANDOFF.md` and `PROGRESS.md`. Do not merge or deploy without the owner’s approval; preserve other developers’ local changes.
 2. `PREPRODUCTION_MASTER.md` + `GAME_SPEC.md` + `CHALLENGES.md` are the agreed direction, except where a newer explicit user decision supersedes them. Distinguish user's confirmed requirements from the consultant's provisional technical recommendations.
 3. You are expected to exercise judgment: critique weak designs, propose simpler substitutes, optimize implementation details; **do not** silently change story structure, genre, core mechanics, performance goals, required challenge count, three endings, or hosting. Ask for approval of material changes.
 4. User wants non-patronizing, concise but exact engineering discussions; full copyable prompts/commands; report what was **actually verified**, never pretend tests/links/playtests worked.

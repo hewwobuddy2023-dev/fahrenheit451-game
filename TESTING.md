@@ -31,3 +31,20 @@ Tester alias / date / device / actual duration / number of challenges reached / 
 ## Visual bug template
 
 Device + viewport + URL + commit + reproduction steps + expected + actual + screenshot/video path + severity + fixed commit.
+
+## Work evidence and repeatable commands — November 9
+
+Run on Node 24 after `npm ci`:
+
+```sh
+npm test
+npm run typecheck
+npm run test:simulation
+npm run test:campaign
+npm run test:regression
+npm run build
+```
+
+All commands passed locally at implementation checkpoint `46129d6`. The PR workflow runs the simulation suites as well as unit/build checks. `tests/support/simulation.mjs` runs the actual bundled Phaser game under jsdom/native Canvas, with synthetic TouchManager events and deterministic time. It is not a real browser, WebKit, iPhone, human playtest or hardware benchmark. Campaign tests teleport between static hotspots, not through chase crossings; they do not set completion flags. `QA_REPORT.md` contains the per-challenge results and limitations.
+
+Do not tick the hardware/browser/human/citation hard-acceptance items above from these simulation results. Use `PLAYTEST_FORM.md`, `PERFORMANCE_AUDIT.md` and `WORK_TO_CLAUDE_HANDOFF.md` for the remaining acceptance work. Existing deployed Pages was observed rendering its title and opening in cloud Chrome; patched Work source has not been browser-tested or deployed.

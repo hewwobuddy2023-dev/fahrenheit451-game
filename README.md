@@ -1,3 +1,5 @@
+> **Current review checkpoint:** M2 plus mobile/QA work is on `work/overnight-mobile-qa`, [PR #1](https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/1) into `feat/m2-chapters`. Read [Work handoff](WORK_TO_CLAUDE_HANDOFF.md), [QA evidence](QA_REPORT.md), and [Claude resume prompt](CLAUDE_RESUME_PROMPT.md). Main remains the earlier documentation branch. No Work changes have been deployed.
+
 # FAHRENHEIT 451: THE FIREMAN'S CHOICE
 
 Status: **Milestone 1 (vertical slice) implemented on `feat/m1-vertical-slice`; M2 not authorized.** School final due **2026-11-13**. Read `AGENTS.md` and `PROGRESS.md` before any work.

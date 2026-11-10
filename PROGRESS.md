@@ -1,14 +1,14 @@
 # LIVE PROGRESS — DO NOT INFER RESULTS
 
-**Last updated:** 2026-11-09 (evening, local) by Claude Code (desktop app, Windows PC).
-**Stage:** M2 in progress on `feat/m2-chapters` (authorized 2026-11-09). M1 preserved as tag `m1-complete`.
+**Last updated:** 2026-11-09 (Phoenix) by ChatGPT Work; Claude’s historical entries are retained below.
+**Stage:** M2 campaign implemented and verified in deterministic Phaser simulation. Work fixes await browser/device review in draft PR #1, `work/overnight-mobile-qa` → `feat/m2-chapters`. M1 preserved as tag `m1-complete`. Read `WORK_TO_CLAUDE_HANDOFF.md` first.
 **Local repo:** `C:\Users\gabe\Documents\Fahrenheit451Game`
 **GitHub repo:** https://github.com/hewwobuddy2023-dev/fahrenheit451-game (public). Branches: `main` (docs only), `feat/m1-vertical-slice` (M1).
 **GitHub Pages:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/ (deploy status below). The `github-pages` environment allows deploys from `main` and `feat/m1-vertical-slice`.
 **Stack (pinned):** phaser 3.90.0, typescript 5.9.3, vite 6.4.6; fonts @fontsource/oswald, ibm-plex-sans, special-elite 5.3.0. Node 24.20.0 / npm 11.19.0 locally; CI uses Node 24.
 **Novel:** private MOBI lives outside the repo (`Documents/F451_PRIVATE_REFERENCE/`). Not tracked; checked with `git ls-files | grep -iE 'mobi|epub|azw|kfx|novel|private|\.env|settings\.local'` → nothing.
 **Playtests:** 0 human playtests.
-**Rubric writing:** not started.
+**Rubric writing:** six review drafts prepared; quotations/pages, human playtests and timed rehearsal remain incomplete. Current Work notes supersede repaired issues in historical M1 notes.
 
 ## Milestone log
 
@@ -16,9 +16,9 @@
 |---|---|---|---|---|---|
 | M0 Design/preflight | Done | — | N/A | N/A | Approved by user 2026-11-09 |
 | M1 Vertical slice | Implemented, awaiting user review | see `git log` on `feat/m1-vertical-slice` | Local + CI pass | Dev server, built-in browser pane (Chromium) | Details below |
-| M2 15 challenges + endings | Not started | — | — | — | Needs approval |
-| M3 Art and audio polish | Not started | — | — | — | — |
-| M4 Submission | Not started | — | — | — | — |
+| M2 15 challenges + endings | Implemented; browser/device acceptance pending | `46129d6` Work checkpoint | unit/typecheck/build + full Phaser simulation PASS | Work build not browser-tested | PR #1, owner approval required before integration |
+| M3 Art and audio polish | Shared flame/river polish implemented; no audio | `46129d6` | simulation/build PASS | actual browser visual review pending | no audio claim |
+| M4 Submission | Drafts prepared; not complete | handoff documentation | N/A | rehearsal/human tests pending | citations and school-device checks required |
 
 ## M1: what exists
 
@@ -73,7 +73,7 @@ Live Pages URL (production build, browser pane on this PC, fresh tab, empty stor
 3. Printed edition page numbers for the three quotations (user).
 4. Two human playtesters for Nov 12 (user).
 
-## Next task
+## Historical M1 next task (superseded by later authorization)
 
 User reviews M1 at the Pages URL, runs the Chromebook `?debug` check, then authorizes M2 (`PROMPTS/02` style, M2 scope).
 
@@ -119,3 +119,11 @@ Campaign verification commit `5d4a450` is pushed. PR CI run `42750416512` passed
 - Latin-only font CSS reduces production CSS from 12.50 kB to about 1.54 kB and removes unused font subsets from output. No runtime packages changed; new packages are test-only (`jsdom`, native Canvas, and explicitly declared `esbuild`).
 - A cloud Chrome view of the existing deployed Pages baseline rendered the title and reached the opening after mouse/Enter inputs. Its low/throttled reported FPS is not a Chromebook benchmark. The Work branch was not served to that browser. No true WebKit or physical iPhone testing occurred.
 - Latest local unit, typecheck, touch, campaign, regression and build checks passed before this documentation checkpoint; final CI result will be recorded in the handoff. No merge/deploy performed.
+
+### Final review handoff
+
+Latest verified implementation: **`46129d63ac2b41c48581fbe91e19883dbc6827f9`**. PR #1 stays draft for Claude review and owner integration approval. This documentation-only descendant contains `WORK_TO_CLAUDE_HANDOFF.md`, `CLAUDE_RESUME_PROMPT.md`, `QA_REPORT.md`, `PERFORMANCE_AUDIT.md` and all six requested school drafts. Read those current files when the owner says “I’m on PC.”
+
+All local checks passed; 01–15 and three endings pass simulation. Real Work-build browser/WebKit/iPhone acceptance remains open. Two actual people, verified printed quotations/pages and a timed school-device rehearsal remain undone. No deployment, merge or automatic five-hour continuation was configured. Next exact task: Claude fetches PR #1 in a separate worktree, reviews diff/checks, then runs the patched build in real browsers and verifies the owner’s iPhone failure before recommending integration.
+
+Final implementation PR CI: run `42751743738` at `46129d6` **PASS** (unit, simulation, campaign, regression, build). Latest documentation head and its check are shown on PR #1.
