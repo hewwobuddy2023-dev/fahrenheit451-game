@@ -1,0 +1,7 @@
+# Original assets and memory cost
+
+`src/assets/phoenix-city.webp`: original built-in image generation for this project, not downloaded from another game or film. Prompt: wide side-on ink/gouache 1950s retro-futurist city, brick tenements, water tanks, aerials, ducts, amber windows, charcoal/olive/blue; no characters, UI, readable signage or interaction targets; dark lower edge for procedural overlap. Generated November 10, 2026, inspected, downsampled/compressed for integration (1536×512, 44,774 bytes). Original full PNG is retained in the review archive. No promise of exclusivity or a third-party license is made for generated output.
+
+Used as a distant, non-interactive parallax layer in city scenes. It never defines walkability or hit areas. Existing procedural skyline remains a fallback if loading fails. One shared decoded RGBA layer is about 3 MiB before driver/browser copies. The added working Montag sheet is about 1.16 MiB before copies. Shared set dressing uses room-family texture cleanup. No runtime art service or new package. The public build adds one same-origin image request.
+
+All new facade, pipe, panel, broadcast, furniture, book and vegetation details are original code painting in `src/art/phoenix.ts` and `kits.ts`. No protected film frames, commercial game screenshots, external sample packs or complete novel content. All audio remains original synthesis. Existing engine/font license notices are preserved.

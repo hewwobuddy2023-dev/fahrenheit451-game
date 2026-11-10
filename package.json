@@ -16,7 +16,8 @@
     "test:browser": "playwright test",
     "test:campaign:all": "node tests/campaign-all.mjs",
     "test:gallery": "node tests/gallery.mjs",
-    "test:cinematics": "node tests/cinematics.mjs"
+    "test:cinematics": "node tests/cinematics.mjs",
+    "test:phoenix": "node tests/phoenix.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans": "5.3.0",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@napi-rs/canvas": "1.1.0",
     "@playwright/test": "1.65.0",
+    "@types/node": "24.19.2",
     "esbuild": "0.25.12",
     "jsdom": "31.0.0",
     "typescript": "5.9.3",

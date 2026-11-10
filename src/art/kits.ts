@@ -35,7 +35,9 @@ function nightSky(s: Phaser.Scene, key = 'k:sky', moon = true, glow = 0.35) {
     if (moon) { radial(c, 360, 100, 80, 'rgba(236,225,200,A)', 0.18); radial(c, 360, 100, 20, 'rgba(236,225,200,A)', 0.55); }
     [[420, glow], [1050, glow * 0.8], [1400, glow * 0.6]].forEach(([x, a]) => radial(c, x, 430, 280, 'rgba(232,104,46,A)', a));
   });
-  return s.add.image(0, 0, key).setOrigin(0).setScrollFactor(0.12).setDepth(0);
+  const sky = s.add.image(0, 0, key).setOrigin(0).setScrollFactor(0.12).setDepth(0);
+  if (s.textures.exists('phoenix:city')) s.add.image(0, -15, 'phoenix:city').setOrigin(0).setDisplaySize(1600, 534).setScrollFactor(0.18).setAlpha(0.85).setDepth(0.2);
+  return sky;
 }
 
 function skyline(s: Phaser.Scene, key: string, width: number, lit: number, base = 330, col = '#120d0e') {
@@ -292,17 +294,30 @@ function truckTexture(s: Phaser.Scene) {
 
 // ---------------- streets (burn, corner, lawn, boulevard, alley) ----------------
 
+function pipeFacade(c: Ctx,x:number,y:number,h:number){c.strokeStyle='#0b1110';c.lineWidth=6;c.beginPath();c.moveTo(x,y);c.lineTo(x,y+h);c.stroke();c.strokeStyle='#5a6256';c.lineWidth=1;c.beginPath();c.moveTo(x-2,y);c.lineTo(x-2,y+h);c.stroke();for(let n=20;n<h;n+=50){c.fillStyle='#4b5148';c.fillRect(x-4,y+n,8,3);}}
+
 function facade(c: Ctx, x: number, w: number, h: number, base: number, o: { col: string; lit?: string; tvs?: boolean; old?: boolean; r: () => number }) {
-  c.fillStyle = o.col; c.fillRect(x, base - h, w, h);
-  c.fillStyle = 'rgba(0,0,0,0.35)'; c.fillRect(x, base - h, w, 6);
-  if (o.old) { c.fillStyle = 'rgba(0,0,0,0.25)'; for (let i = 0; i < 40; i++) c.fillRect(x + o.r() * w, base - h + o.r() * h, 2 + o.r() * 8, 1); }
-  const rows = Math.floor((h - 40) / 70);
-  for (let ry = 0; ry < rows; ry++) for (let wx = x + 24; wx < x + w - 50; wx += 70) {
-    const lit = o.lit && o.r() > 0.35;
-    windowGlow(c, wx, base - h + 30 + ry * 70, 40, 46, lit ? o.lit! : 'rgba(10,10,14,0.9)');
+  const top=base-h;
+  c.fillStyle=hgrad(c,x,x+w,[[0,'#0b1112'],[.18,o.col],[.82,o.col],[1,'#10191a']]);c.fillRect(x,top,w,h);
+  c.fillStyle='#0a1010';poly(c,[x-5,top,x+w/2,top-24,x+w+5,top,x+w+5,top+5,x-5,top+5]);
+  c.strokeStyle='rgba(122,140,124,0.18)';c.lineWidth=1;
+  for(let y=top+17;y<base;y+=15){c.beginPath();c.moveTo(x,y);c.lineTo(x+w,y);c.stroke();for(let b=x+((Math.round(y/15)%2)*22);b<x+w;b+=44){c.beginPath();c.moveTo(b,y-15);c.lineTo(b,y);c.stroke();}}
+  c.fillStyle='#555b4e';c.fillRect(x-5,top+2,w+10,5);c.fillStyle='#161d1a';c.fillRect(x+w-15,top+7,15,h-7);
+  pipeFacade(c,x+w-10,top+20,h-25);
+  const rows=Math.floor((h-40)/70);
+  for(let ry=0;ry<rows;ry++)for(let wx=x+24;wx<x+w-50;wx+=70){
+    const y=top+30+ry*70,lit=o.lit&&o.r()>.35;
+    c.fillStyle='#080c0d';c.beginPath();c.roundRect(wx-4,y-7,48,57,[12,12,0,0]);c.fill();
+    windowGlow(c,wx,y,40,46,lit?o.lit!:'rgba(10,16,19,0.9)');
+    c.strokeStyle='rgba(169,167,139,.28)';c.lineWidth=2;c.strokeRect(wx-2,y-2,44,50);c.fillStyle='#51534b';c.fillRect(wx-6,y+48,52,4);
+    if(!lit){c.fillStyle='rgba(65,97,101,.3)';poly(c,[wx+2,y+3,wx+15,y+3,wx+4,y+39]);}
   }
-  if (o.tvs) for (let wx = x + 24; wx < x + w - 50; wx += 140) windowGlow(c, wx, base - 76, 40, 46, 'rgba(110,170,200,0.55)');
-  c.fillStyle = '#0b0807'; c.fillRect(x + w / 2 - 16, base - 70, 32, 70); // flat front door, no porch
+  if(o.tvs)for(let wx=x+24;wx<x+w-50;wx+=140)windowGlow(c,wx,base-76,40,46,'rgba(90,155,170,0.5)');
+  c.fillStyle='#080e0e';c.beginPath();c.roundRect(x+w/2-23,base-83,46,83,[16,16,0,0]);c.fill();
+  c.strokeStyle='#4c5149';c.lineWidth=3;c.stroke();c.fillStyle='#997952';c.beginPath();c.arc(x+w/2+12,base-36,2,0,Math.PI*2);c.fill();
+  c.fillStyle='#2c342e';poly(c,[x+w/2-29,base-2,x+w/2+30,base-2,x+w/2+40,base+6,x+w/2-38,base+6]);
+  if(o.old)for(let i=0;i<80;i++){c.fillStyle='rgba(7,11,10,.3)';c.fillRect(x+o.r()*w,top+o.r()*h,2+o.r()*14,1+o.r()*4);}
+
 }
 
 function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Kit {

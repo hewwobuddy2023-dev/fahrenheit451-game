@@ -186,3 +186,11 @@ Next exact task: Claude reviews both diffs in the separate PC worktree, then the
 ### Quick review launch follow-up
 
 Inspected final documentation CI `42810221687` at `ed9fa87`: build/browser SUCCESS, deploy SKIPPED. Added a dependency-free local static server, Windows launcher and `TEST_IT_FIRST.md` for immediate supplied-build/phone review. Server HTTP smoke checks cover root/assets/base-prefix/HEAD/404/method restrictions; this does not constitute testing Windows double-click or real iPhone networking. Game runtime unchanged.
+
+## Phoenix isolated candidate — November 10
+
+Verified Day 2 `74f0b2c`, PRs #1/#2 still draft/unmerged. New `work/cinematic-gameplay-rebuild` and remote backup branch `backup/pre-cinematic-rebuild-20261110` start exactly there; matching local tag included in the review bundle. Audit checkpoint `5867dca`; draft PR #3 targets Day 2. Baseline build/captures preserved. See docs/PROJECT_PHOENIX_ROLLBACK.md.
+
+First candidate: pulse/vent hose with assisted alternative; deliberate Clarisse observations; source-first ordered subway/camp recall with local failure, reference and hints; contextual control help; hybrid original city backdrop and editable facade/interior/broadcast/working-pose details; stronger bounded audio mix with test/volume controls and analyser sample inspection; adjustable analog effects and explicit build identity. Story flags/15 challenges/three endings unchanged. This is a candidate, not owner-approved art, fun, duration or physical-device acceptance. Original recording unavailable.
+
+Local 13 unit tests, typecheck/build, four touch viewports, three separate full 15/15 ending simulations, storage/focus/pause/cinematic and new mechanic regressions pass after fixes. Native candidate browser run is required; do not inherit baseline native results as candidate proof. Separate preview creation is blocked by absent repository/Pages tool actions and signed-out cloud UI. Production unchanged.

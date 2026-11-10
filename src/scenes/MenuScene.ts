@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { BUILD } from '../build.ts';
 import { sound } from '../audio.ts';
 import { settings, setSetting } from '../settings.ts';
 import { CHAPTERS, CHAPTER_STARTS } from '../content.ts';
@@ -11,7 +12,7 @@ import { addAtmosphere, C, FONT, H, W, onActions, setupCamera, text } from '../v
 const CREDITS = [
   "An interactive adaptation of Ray Bradbury's Fahrenheit 451 (1953). Dialogue is original or paraphrased, not text from the novel; alternate endings are adaptations.",
   'Engine: Phaser 3 (MIT). Fonts: Oswald, IBM Plex Sans (SIL OFL 1.1), Special Elite (Apache 2.0).',
-  'All artwork and atmospheric audio are generated in code for this project. Student project, 2026.',
+  'Artwork combines original code paintings and an original generated city backdrop. Atmospheric audio is synthesized for this project. Student project, 2026.',
 ];
 
 export class MenuScene extends Phaser.Scene {
@@ -50,6 +51,7 @@ export class MenuScene extends Phaser.Scene {
     }).setOrigin(0, 0.5);
     text(this, W - 28, H - 34, this.game.device.input.touch ? 'TAP A ROW  ·  LANDSCAPE RECOMMENDED' : 'ARROWS / W S  ·  ENTER', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
       .setOrigin(1, 0.5).setLetterSpacing(2);
+    text(this, W - 24, H - 12, `PHOENIX CANDIDATE · ${BUILD.sha.slice(0, 7)}`, { fontSize: '10px', color: C.creamDim }).setOrigin(1);
     addAtmosphere(this);
     onActions(this, (a) => {
       if (this.busy) return;
@@ -128,10 +130,22 @@ export class MenuScene extends Phaser.Scene {
     this.show([
       { label: `Sound: ${settings.muted ? 'OFF' : 'ON'} [M]`, action: () => { sound.toggleMute(); this.settings(0); } },
       { label: `Reduced motion: ${settings.reducedMotion ? 'ON' : 'OFF'}`, action: () => { setSetting('reducedMotion', !settings.reducedMotion); this.settings(1); } },
-      { label: 'Credits', action: () => this.credits() },
+      { label: 'Audio & accessibility', action: () => this.audioOptions() },
       { label: 'Back', action: () => this.main() },
     ]);
     this.list?.select(selected);
+  }
+
+  private audioOptions() {
+    this.panel('AUDIO & ACCESS', ['Test sound at a low device volume. Audio level and assisted hose control are local preferences, separate from story saves.', 'Assisted hose: hold to flow without managing pressure. Analog effects can be disabled independently of essential hazards.']);
+    this.show([
+      { label: 'Test sound', action: () => { void sound.unlock().then(() => sound.cue('complete')); } },
+      { label: `Volume: ${Math.round(settings.volume * 100)}%`, action: () => { setSetting('volume', settings.volume >= 1 ? 0.4 : settings.volume < 0.7 ? 0.75 : 1); sound.refresh(); this.audioOptions(); } },
+      { label: `Assisted hose: ${settings.assistedHose ? 'ON' : 'OFF'}`, action: () => { setSetting('assistedHose', !settings.assistedHose); this.audioOptions(); } },
+      { label: `Analog effects: ${settings.analog ? 'ON' : 'OFF'}`, action: () => { setSetting('analog', !settings.analog); this.audioOptions(); } },
+      { label: 'Credits', action: () => this.credits() },
+      { label: 'Back', action: () => this.settings() },
+    ], 162, 60, 21);
   }
 
   private credits() {

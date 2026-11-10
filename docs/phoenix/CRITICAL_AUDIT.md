@@ -36,3 +36,11 @@ Compare: procedural assets retain deterministic layering and tiny downloads but 
 - Synthesized signal measurements cannot establish real speaker loudness or aesthetics. Owner listening remains necessary.
 - 25–30 minutes is a design target, not a measured result. No automated elapsed-time report can substitute for first-time human play.
 - Separate preview is authorized; production deployment is not. Current tool permissions may not permit repository/Pages creation; document the actual limitation rather than touch production hosting.
+
+## First candidate implementation checkpoint
+
+Active hose regulation with a marked FLOW band and retained partial progress; assisted hold option. Clarisse observations now require the player to stop/interact instead of auto-triggering every line. Source-first ordered reconstruction replaces the subway/camp recognition chains, with wrong-order local reset, reference replay, three hint levels, and pause support. Existing earned flags/save schema preserved. A generic context hint and opening controls strip teach the actual inputs.
+
+Hybrid city layer and editable facades/interior set dressing add depth; broadcast faces, curved screen surrounds, original industrial panels, book bindings and a working-hose cast pose. Analog tracking remains below UI and can be disabled. Mix is raised conservatively; sound-test/volume/access controls and explicit analyser inspection are available. Owner listening/first-time comprehension remain open.
+
+Native preview setup inspection found the cloud browser signed out of GitHub; connected GitHub tools expose no repository creation or Pages configuration action. This does not authorize changing production. Continue implementation/CI and deliver a self-contained build plus exact owner preview setup instructions if no safe authenticated route becomes available.

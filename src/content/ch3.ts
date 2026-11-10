@@ -4,7 +4,6 @@ import type { RoomDef, Script } from './types.ts';
 
 const N = '';
 const EAR = 'FABER (IN YOUR EAR)';
-const lost = [{ who: N, text: 'The jingle drowns it out. Sand through a sieve. Try again.' }];
 
 export const SCRIPTS3: Record<string, Script> = {
   f_open: { lines: [
@@ -35,29 +34,11 @@ export const SCRIPTS3: Record<string, Script> = {
 
   // ---- 08 The Sieve and the Sand (untimed recall) ----
   sb_1: { lines: [
-    { who: N, text: 'When you were small, a cousin dared you to fill a sieve with sand. The faster you poured, the faster it ran through.' },
-    { who: N, text: 'You open the Bible on your knees. If you read fast enough, maybe some of it will stay.' },
-    { who: 'TRAIN RADIO', text: "Denham's Dentifrice! Denham's does it!" },
-  ], choices: [
-    { text: 'Consider the lilies of the field,', next: 'sb_2' },
-    { text: "Denham's Dentifrice,", again: true, reply: lost },
-    { text: "Denham's does it!", again: true, reply: lost },
-  ] },
-  sb_2: { lines: [{ who: 'TRAIN RADIO', text: "Denham's! Spelled D-E-N..." }], choices: [
-    { text: 'Dandy dental detergent,', again: true, reply: lost },
-    { text: 'how they grow;', next: 'sb_3' },
-    { text: 'one two, one two three,', again: true, reply: lost },
-  ] },
-  sb_3: { lines: [{ who: 'TRAIN RADIO', text: "Denham's Dentifrice, Dentifrice, Dentifrice!" }], choices: [
-    { text: 'Dentifrice!', again: true, reply: lost },
-    { text: 'Denham\'s does it,', again: true, reply: lost },
-    { text: 'they toil not,', next: 'sb_4' },
-  ] },
-  sb_4: { lines: [{ who: N, text: 'The people in the carriage are tapping their feet in time.' }], choices: [
-    { text: 'neither do they spin.', next: 'sb_end' },
-    { text: 'Denham\'s! Denham\'s! Denham\'s!', again: true, reply: lost },
-    { text: 'Spelled D-E-N-H-A-M,', again: true, reply: lost },
-  ] },
+    { who: N, text: 'You open the Bible on your knees. The advertisement keeps cutting across the words.' },
+  ], puzzle: { title: 'The sieve and the sand', source: 'KJV Matthew 6:28 · Study the passage before the broadcast returns.',
+    fragments: ['Consider the lilies of the field,', 'how they grow;', 'they toil not,', 'neither do they spin.'],
+    distractions: ["Denham's Dentifrice!", 'Dandy dental detergent!'], interference: true },
+    choices: [{ text: 'Hold on to the words.', next: 'sb_end' }] },
   sb_end: { set: { 'c08.verse': true }, lines: [
     { who: N, text: '"Consider the lilies of the field, how they grow; they toil not, neither do they spin." You have it. All of it.' },
     { who: 'TRAIN RADIO', text: "DENHAM'S DENTIFRICE!" },

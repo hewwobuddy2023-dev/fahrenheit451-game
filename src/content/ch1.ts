@@ -119,7 +119,7 @@ export const SCRIPTS1: Record<string, Script> = {
 
 const pile = (n: number, x: number) => ({
   id: `pile${n}`, x, label: 'Soak the books', py: 330, required: true,
-  hold: { flag: `c01.p${n}`, ms: 1500, fx: 'hose' as const, target: x },
+  hold: { flag: `c01.p${n}`, ms: 1500, pressure: true, fx: 'hose' as const, target: x },
 });
 
 export const ROOMS1: Record<string, RoomDef> = {
@@ -132,7 +132,7 @@ export const ROOMS1: Record<string, RoomDef> = {
     ],
     objective: (f) => {
       const n = ['c01.p1', 'c01.p2', 'c01.p3'].filter((k) => f[k]).length;
-      return n === 0 ? 'Move right. Hold E at each book pile (0/3)' : n < 3 ? `Soak the book piles with kerosene (${n}/3)` : f['c01.lit'] ? '' : 'Take the igniter from Captain Beatty';
+      return n === 0 ? 'Move right to the books. Hold E to build pressure (0/3)' : n < 3 ? `Pulse E: hold in FLOW, release before HIGH (${n}/3)` : f['c01.lit'] ? '' : 'Take the igniter from Captain Beatty';
     },
     enter: [{ key: 'e.burn', steps: [{ title: 'PART ONE', sub: 'The Hearth and the Salamander' }, { say: 'b_open' }] }],
     hotspots: [
@@ -167,9 +167,9 @@ export const ROOMS1: Record<string, RoomDef> = {
     objective: (f) => !f['c02.meet'] ? 'Walk home' : !f['c02.asked'] ? 'Walk home with Clarisse' : 'Go inside',
     hotspots: [
       { id: 'meet', x: 640, label: '', auto: true, when: (f) => !f['c02.meet'], steps: [], script: 'c_meet' },
-      { id: 'moon', x: 1000, label: '', auto: true, when: (f) => !!f['c02.meet'] && !f['c02.n1'], script: 'c_moon' },
-      { id: 'dew', x: 1380, label: '', auto: true, when: (f) => !!f['c02.n1'] && !f['c02.n2'], script: 'c_dew' },
-      { id: 'signs', x: 1760, label: '', auto: true, when: (f) => !!f['c02.n2'] && !f['c02.n3'], script: 'c_signs' },
+      { id: 'moon', x: 1000, label: 'Look up at the moon', required: true, when: (f) => !!f['c02.meet'] && !f['c02.n1'], script: 'c_moon' },
+      { id: 'dew', x: 1380, label: 'Notice the grass', required: true, when: (f) => !!f['c02.n1'] && !f['c02.n2'], script: 'c_dew' },
+      { id: 'signs', x: 1760, label: 'Look at the billboards', required: true, when: (f) => !!f['c02.n2'] && !f['c02.n3'], script: 'c_signs' },
       { id: 'house', x: 2020, label: '', auto: true, when: (f) => !!f['c02.n3'] && !f['c02.asked'], script: 'c_happy',
         steps: [{ npc: 'clarisse', x: 2140, ms: 700 }, { npc: 'clarisse', show: false }, { set: { 'c02.gone': true } }, { say: 'c_after' }] },
       { id: 'home', x: 2240, label: 'Go home', required: true, requires: ['c02.asked'], exit: { room: 'home1', x: 200 } },
