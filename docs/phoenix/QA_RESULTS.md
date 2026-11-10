@@ -38,7 +38,7 @@ Actual Playwright protocol taps/keys/CDP held touches serve the production build
 | Visual descendant `509f723`, 42871113523 | PASS | **32/32 PASS**, browser job 130022335558 | SKIPPED |
 | Access checkpoint `c98d127`, 42872448765 | PASS | **32/32 PASS**, browser job 130026935226 | SKIPPED |
 | Startup intermediate `8a70ce3`, 42874990407 | FAIL: required image XHR response type omitted | Not run: build failed | SKIPPED |
-| Corrected runtime `98e5aa2`, 42875205788 | PASS, job 130036548760 | Final inspection below | SKIPPED |
+| Corrected runtime `98e5aa2`, 42875205788 | PASS, job 130036548760 | **29 passed / 2 failed / 1 skipped**, job 130036548385 | SKIPPED |
 
 Initial failures were test defects: CDP cleanup sent touchEnd twice, and origin enforcement rejected Phaser's same-origin image decoder blob. Fixed held-state cleanup and allow only same-origin HTTP plus same-origin blob URLs; actual request origins are logged. Initial failure screenshots/results are retained, not relabeled as passes.
 
@@ -95,3 +95,9 @@ Fable/Opus review and continuation prompts plus full handoff, rollback instructi
 The local execution environment became unavailable during final upload. The assembled 31.8 MB local ZIP could not be uploaded; do not treat its scratch path as a durable download. All runtime commits are safe on GitHub. The documentation tree was also preserved before the interruption. A dedicated branch-limited, read-only Actions workflow now reconstructs the review archive from committed current/baseline source, fresh builds, regenerated eleven-pair composition fixtures, and recorded native artifacts/logs. It never invokes Pages or publishes the game. Its artifact is retained for 30 days; download it promptly.
 
 The recovered archive includes the exact compressed generated game asset, but the full original PNG and scratch-only local logs could not be recovered. Independent source-specific CI build/regression logs and native evidence replace those local logs. The actual final native result is recorded by the packager in FINAL_NATIVE_RUN.json, FINAL_NATIVE_STATS.json and MANIFEST.json (including the report source). If final native evidence is unavailable, the preserved c98d127 report is explicitly labeled instead. The last complete native checkpoint known when this document was committed was c98d127, 32/32; 98e5aa2 had a successful build/full simulation job and a still-running native rerun. Never relabel that pending rerun as a pass.
+
+## Final observed native outcome
+
+Run 42875205788 at 98e5aa2 completed with **29 passes, two failures, one skipped case**, and an error outside an individual test. Both failed cases were WebKit landscape/portrait in the new stalled decorative-image test: the title was reached, but the city texture existed where the test expected it absent. A blocked menu was not demonstrated; reliable forced-fallback timing under this intercepted request remains unproven. Full source-specific logs/results are retained. Do not erase the failures or call this 32/32. The earlier c98d127 checkpoint had 32/32 native passes and includes all new gameplay/art/audio; it is supplied as a separate prebuilt choice on port 4175. Current build/unit/all three 15/15 simulations still pass.
+
+The first recovered archive omitted hidden tracked files due to the upload action default. The follow-up explicitly includes them; all package paths originate from tracked source or named evidence, never credentials or .git. Use the newest complete archive. The packaging manifest is verified before upload.

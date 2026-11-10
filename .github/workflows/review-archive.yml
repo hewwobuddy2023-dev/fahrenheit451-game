@@ -35,6 +35,12 @@ jobs:
           cd ../f451-baseline
           F451_BUILD_SHA=74f0b2c78294b6dbbe94f1069a7f347654fb0f18 npm run build > "$GITHUB_WORKSPACE/baseline-build.log" 2>&1
           node tests/gallery.mjs phoenix-baseline > "$GITHUB_WORKSPACE/baseline-gallery.log" 2>&1
+      - name: Build the last fully native-verified Phoenix checkpoint
+        run: |
+          git worktree add --detach ../f451-native-verified c98d1270c5948cc97e09a0baa962420fe0eb66e0
+          ln -s "$GITHUB_WORKSPACE/node_modules" ../f451-native-verified/node_modules
+          cd ../f451-native-verified
+          F451_BUILD_SHA=c98d1270c5948cc97e09a0baa962420fe0eb66e0 npm run build > "$GITHUB_WORKSPACE/native-verified-build.log" 2>&1
       - name: Await the already-running final native evidence
         run: |
           for attempt in $(seq 1 30); do
@@ -71,3 +77,4 @@ jobs:
           path: review-package/
           retention-days: 30
           if-no-files-found: error
+          include-hidden-files: true

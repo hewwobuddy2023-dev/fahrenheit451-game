@@ -230,3 +230,8 @@ Scope is frozen. The review ZIP contains current and preserved baseline source/b
 ### Workspace interruption: preserve through GitHub-only packaging
 
 Local execution became unavailable after the provisional 31.8 MB ZIP passed integrity/source-build/server checks, before its final upload. Do not claim that scratch ZIP was made downloadable. Preserve the prepared documentation and add a branch-only non-deploying review-artifact workflow. It rebuilds current and exact Day 2 source/builds, eleven before/after fixtures, complete Git bundle/diffs, school/Claude materials and source-specific CI artifacts. The original generated PNG/scratch-only logs were not recovered; the exact game WebP and independently recorded CI evidence are retained. Inspect the packaging job and actual native stats before reporting success. This interruption does not authorize production deployment or merging.
+
+
+### Final native result and complete recovery archive
+
+98e5aa2 native run 42875205788: 29 passes, 2 WebKit stalled-image texture-presence assertion failures, 1 skipped and an outside-test error. The title was reached; forced fallback timing remains unproven. c98d127 remains 32/32 and is supplied prebuilt separately for review. First recovered artifact excluded hidden tracked files due to upload defaults; the follow-up includes them and preserves the full manifest/source/workflow set. All source changes remain isolated and no deployment occurred.

@@ -64,3 +64,7 @@ Read QA_RESULTS.md first for current blockers. Next: owner/Fable judges actual c
 ## Final archive recovery
 
 The local workspace became unavailable before the assembled ZIP could be uploaded. A branch-limited review-archive workflow reconstructs the package on GitHub without any Pages permission or deployment step. Download its 30-day artifact and verify its MANIFEST and actual native stats. Original full generated PNG/scratch-only logs were not recovered; game WebP and CI recordings are included. All runtime source was already pushed; the prepared documentation is preserved in this commit. Do not call an unfinished native run successful. See QA_RESULTS.md for exact checkpoint distinctions.
+
+## Final native review priority
+
+98e5aa2 finished at 29 passed / 2 WebKit stalled-image assertion failures / 1 skipped, plus an outside-test error retained in logs. Title was reached with the city texture loaded; no blocked-menu result is claimed. Investigate real-server delayed-response timing versus Playwright interception semantics before modifying game input. c98d127 is the last fully native-verified Phoenix checkpoint (32/32) and is included prebuilt on 4175 for deadline review. The newest archive includes hidden tracked workflow files; reject the earlier incomplete artifact. Source remains fully reviewable and nothing was deployed.
