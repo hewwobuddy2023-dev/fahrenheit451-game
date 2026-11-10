@@ -8,7 +8,7 @@ Use your own phrasing. Rehearse it against `DEMO_ROUTE.md`; the route’s timing
 
 **Opening burn and choice**
 
-“The opening has Montag enjoying his work as a fireman. I kept that because he does not start the book already understanding everything that is wrong with his society. Here, I hold the interaction key to soak the book piles. Then I return to Beatty and choose a response. The action is part of Montag’s ordinary routine before Clarisse makes him question it.”
+“The opening has Montag enjoying his work as a fireman. I kept that because he does not start the book already understanding everything that is wrong with his society. Here, I hold to build hose pressure and release to vent, keeping the flow steady. Then I return to Beatty and choose a response. The action is part of Montag’s ordinary routine before Clarisse makes him question it.”
 
 [Demonstrate a hold action and the ignition response. Do not say the choice changes the novel’s whole plot.]
 
@@ -18,7 +18,7 @@ Use your own phrasing. Rehearse it against `DEMO_ROUTE.md`; the route’s timing
 
 **River and preservation**
 
-“I’m jumping to Chapter 5 now. The river escape uses searchlights. On a keyboard I hold Down to dive; on a phone there is a DIVE button. Getting caught gives a local retry. After the river, Granger’s group preserves books by remembering them. The recall challenge connects the player’s action directly to that idea.”
+“I’m jumping to Chapter 5 now. The river escape uses searchlights. I make short dives under lights, then release to breathe; on a phone there is a DIVE button. Getting caught gives a local retry. After the river, Granger’s group preserves books by remembering them. I study a passage and reconstruct its order. The memory action connects directly to that idea.”
 
 [Show a searchlight crossing, then Granger’s recall.]
 
@@ -33,4 +33,4 @@ Use your own phrasing. Rehearse it against `DEMO_ROUTE.md`; the route’s timing
 **Before presenting:** replace the last sentence if the quotations are already finalized. Report human playtesting only after the two real sessions occur.
 
 
-Delivery check: the quoted speaking text has 331 words; budget about two and a half minutes of speech at 130 words per minute, with demonstrations overlapping the explanation. The actual 3–5-minute total still requires a timed rehearsal. M mutes the new ambience if the room needs silence. Explain any chapter jump as Presentation Mode, and press Enter on the return curtain after changing tabs.
+Delivery check: the current quoted speaking text has 342 words; count it again after personal edits; budget about two and a half minutes of speech at 130 words per minute, with demonstrations overlapping the explanation. The actual 3–5-minute total still requires a timed rehearsal. M mutes the new ambience if the room needs silence. Explain any chapter jump as Presentation Mode, and press Enter on the return curtain after changing tabs.

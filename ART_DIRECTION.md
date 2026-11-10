@@ -36,3 +36,10 @@ Check against low-effect preset; check menus/dialogue at Chromebook size; inspec
 Reusable baked cast details and interior trim, static ground planes/reflections, branching tree silhouettes and a distant forest layer improve separation across five chapters. Foreground fades use both sprite widths so the swimmer remains visible. Scripted walk/pole-slide/fall poses own their animation/position instead of being overwritten by normal frame updates. Fresh opening now creates its truck texture before display. Existing flame atlas and float/wake remain intact.
 
 No interactive decorative layers, new particle density, full 3D or external art. Reduced motion suppresses decorative grain, camera shake/flash and fast subway background scrolling. Original synthesized room ambience and bounded interaction cues follow this palette without a loud soundtrack. Review native WebGL color captures; Canvas fixtures ignore some tints.
+
+
+## Phoenix candidate direction
+
+The new isolated branch tests hybrid original city backdrop + editable architecture/props, retaining the existing walk plane and non-interactive parallax layers. Detailed facades, practical industrial fittings, curved parlor frames/broadcast figures, books and visible investigation props support the charcoal/olive/cyan/ember palette. A working hose pose adds context; the cast remains stylized and requires owner/art-direction review. Forest uses gentler analog strength and a brighter cast tint; the generated city layer is deliberately absent from its bombing horizon.
+
+`docs/phoenix/VISUAL_DIRECTION.md` and `ASSET_PROVENANCE.md` define the intended standard and original generation prompt. Review the actual eleven-scene and native captures; a standalone generated image is not evidence of the final game. Optional analog effects are disabled/scaled down independently of essential hazards. No claim of a complete professional art overhaul is made without owner review.

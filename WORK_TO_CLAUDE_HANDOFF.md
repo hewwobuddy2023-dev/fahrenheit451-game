@@ -1,3 +1,7 @@
+# Phoenix continuation — read docs/phoenix first
+
+Current candidate is on `work/cinematic-gameplay-rebuild`, draft PR #3 into Day 2. The baseline is preserved at `74f0b2c` and `backup/pre-cinematic-rebuild-20261110`. See `docs/phoenix/WORK_TO_CLAUDE_FINAL_HANDOFF.md`, `QA_RESULTS.md`, `FABLE_REVIEW_PROMPT.md` and `OPUS_IMPLEMENTATION_CONTINUATION.md`. Earlier Work handoffs below are historical; no automatic acceptance or production release is authorized.
+
 # Work → Claude Code handoff
 
 **Current continuation: read the Day 2 section below and `DAY2_QA_REPORT.md` first. Sprint 1 sections are retained as history.**
@@ -81,10 +85,10 @@ Merge recommendation: **review candidate, not automatic approval**. Automated ev
 Use PowerShell. First inspect the existing PC checkout; do not overwrite it. Prefer a separate review worktree. If the destination already exists, inspect it instead of recreating it.
 
 ```powershell
-git -C "C:\Projects\Fahrenheit451Game" status --short
-git -C "C:\Projects\Fahrenheit451Game" fetch origin
-git -C "C:\Projects\Fahrenheit451Game" worktree add --detach "C:\Projects\Fahrenheit451Game-WorkReview" origin/work/overnight-mobile-qa
-Set-Location "C:\Projects\Fahrenheit451Game-WorkReview"
+git -C "EXISTING_CHECKOUT_DIRECTORY" status --short
+git -C "EXISTING_CHECKOUT_DIRECTORY" fetch origin
+git -C "EXISTING_CHECKOUT_DIRECTORY" worktree add --detach "NEW_SPRINT1_REVIEW_DIRECTORY" origin/work/overnight-mobile-qa
+Set-Location "NEW_SPRINT1_REVIEW_DIRECTORY"
 git rev-parse HEAD
 git log --oneline 94c45a3..HEAD
 git diff --stat 94c45a3..HEAD
@@ -171,10 +175,10 @@ If both reviews pass and the owner approves integration: **merge PR #2 into the 
 In PowerShell, first inspect the original checkout; use a new destination for a worktree. If it exists, inspect it instead of overwriting it.
 
 ```powershell
-git -C "C:\Projects\Fahrenheit451Game" status --short
-git -C "C:\Projects\Fahrenheit451Game" fetch origin
-git -C "C:\Projects\Fahrenheit451Game" worktree add --detach "C:\Projects\Fahrenheit451Game-Day2Review" origin/work/day2-quality-sprint
-Set-Location "C:\Projects\Fahrenheit451Game-Day2Review"
+git -C "EXISTING_CHECKOUT_DIRECTORY" status --short
+git -C "EXISTING_CHECKOUT_DIRECTORY" fetch origin
+git -C "EXISTING_CHECKOUT_DIRECTORY" worktree add --detach "NEW_DAY2_REVIEW_DIRECTORY" origin/work/day2-quality-sprint
+Set-Location "NEW_DAY2_REVIEW_DIRECTORY"
 git rev-parse HEAD
 git log --oneline 19b9328..HEAD
 git diff --stat 19b9328..HEAD

@@ -54,3 +54,8 @@ For each tester, record whether the first objective made sense without help, whe
 For a phone failure, append `?diagnostics` to the reviewed build URL (or `&diagnostics` if a query already exists). Capture the local panel showing viewport, canvas rectangle, DOM events, Phaser downs, active scene/input and recent errors. Note the commit, iOS/browser version, orientation and whether the game is in Safari or an in-app browser. This panel transmits nothing. The old live site does not contain these new diagnostics until a release is explicitly approved.
 
 For audio acceptance: fresh visit starts silently until interaction; sound begins after the first gesture; M or the menu mutes; room changes do not stack loops; no sound continues after locking/backgrounding; the return gesture restores normal sound if unmuted. Repeat with the phone's silent switch and media volume recorded. Do not treat Linux WebKit as a physical iPhone test.
+
+
+## Phoenix first-time questions
+
+Without coaching, ask the tester to explain the FLOW band, how to vent, where to recover breath, what WATCHING means, and how to reread a memory source. Record exact confusing words and retries. Can they use hints/assisted hose without losing their save? Could they actually hear ambience and distinguish feedback at a comfortable level? Record an honest first-time start/end duration and idle interruptions; the 25–30-minute target is not yet measured. Compare baseline and candidate preference without telling them which should be better.

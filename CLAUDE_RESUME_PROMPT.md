@@ -1,3 +1,7 @@
+# Phoenix continuation supersedes the historical Day 2 prompt below
+
+Read `docs/phoenix/FABLE_REVIEW_PROMPT.md`, `OPUS_IMPLEMENTATION_CONTINUATION.md`, `WORK_TO_CLAUDE_FINAL_HANDOFF.md` and `QA_RESULTS.md`. Review draft PR #3 into Day 2 as well as #2 and #1; preserve the baseline and do not blindly merge. The earlier two-sprint prompt is retained below as history.
+
 # Ready-to-paste Claude Code prompt — review both Work sprints
 
 Resume my existing **Fahrenheit 451: The Fireman's Choice** game. Deadline: Friday, November 13, 2026. Preserve my game, Phaser/TypeScript/Vite stack, 15 mandatory challenges, three endings, novel event order and GitHub Pages hosting. Do not restart or blindly merge.
@@ -6,7 +10,7 @@ Repository: https://github.com/hewwobuddy2023-dev/fahrenheit451-game
 Original M2: `feat/m2-chapters`, verified checkpoint `94c45a3`.
 Sprint 1: `work/overnight-mobile-qa`, verified base/head `19b9328`, draft PR #1 into M2: https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/1
 Day 2: `work/day2-quality-sprint`, draft PR #2 into the Sprint 1 branch: https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/2
-My expected original PC checkout: `C:\Users\gabe\Documents\Fahrenheit451Game`.
+Inspect your existing checkout without overwriting it; local PC state is unobserved.
 
 Read `AGENTS.md`, the **Day 2 section of `WORK_TO_CLAUDE_HANDOFF.md`**, `DAY2_QA_REPORT.md`, `QA_REPORT.md` (historical Sprint 1), `PERFORMANCE_AUDIT.md`, `TESTING.md` and both PR diffs/checks. Fetch actual current remote heads. Inspect my original checkout for uncommitted/unpushed work and preserve it. Use an isolated review worktree as the handoff describes; never reset/clean my checkout or force-push.
 
@@ -37,6 +41,6 @@ Separate evidence types. Deterministic Phaser simulations complete three full Ne
 
 Inspect representative all-five-chapter native captures and staged before/after gallery. Canvas fallback omits some tints; staged flags/effect triggers are art fixtures, not earned challenge evidence. Preserve working fire/float systems. Do not add unrelated systems or untested dependencies under the deadline.
 
-School requirements are not finished: two actual people must playtest; three exact short quotations need verified printed page numbers/edition; final statement must be 300–400 words after insertion; a 3–5-minute presentation must be rehearsed. Current prose is 308 words before quotations and the script has 331 quoted spoken words. Never claim these human tasks occurred. Do not publish the private MOBI or full novel.
+School requirements are not finished: two actual people must playtest; three exact short quotations need verified printed page numbers/edition; final statement must be 300–400 words after insertion; a 3–5-minute presentation must be rehearsed. Current prose is 308 words before quotations and the current script has 342 quoted spoken words. Never claim these human tasks occurred. Do not publish the private MOBI or full novel.
 
 After review, give a clear merge recommendation and the highest-priority remaining task. If both PRs pass and I approve: integrate #2 into the Work branch first, then review #1's expanded cumulative result. **Only merge #1 into M2 after my explicit release approval: pushes/merges to M2 can deploy Pages.** Do not merge or deploy automatically. If M2 or either Work base advanced, compare all heads and resolve conflicts on a separate review branch, rerun checks and preserve everyone else's work.

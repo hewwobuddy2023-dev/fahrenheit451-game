@@ -218,3 +218,15 @@ Added an explicit PAUSE button inside both memory panels so touch players can pa
 Source audit found Phaser's XHR timeout defaults to zero. The new decorative city request therefore needs an explicit bound so a stalled connection cannot gate the title indefinitely. Set its timeout to 4 seconds; native failure coverage now exercises both immediate failure and a 6.5-second delayed request before starting ordinary play with procedural fallback. Normal assets remain unchanged. This is a startup guarantee for the new optional layer, not a claimed explanation of the original physical-iPhone report.
 
 Reproduced the source ZIP metadata build failing outside Git. Build-only metadata now accepts explicit SHA or a local Git checkout, otherwise truthfully labels source-archive. Full archived source without .git builds successfully using installed exact-lock dependencies.
+
+
+### Phoenix final verification and packaging
+
+Access checkpoint c98d127 completed 32/32 native Chromium/WebKit cases (run 42872448765), build PASS and deploy SKIPPED. Startup intermediate 8a70ce3 failed typecheck/build because the image XHR timeout object omitted a required response type. Successor 98e5aa2 explicitly selects blob; local type/build and the complete CI unit/simulation/campaign/regression/build job pass (42875205788). History remains linear and both deployment jobs were skipped. Final native fallback evidence is recorded separately in docs/phoenix/QA_RESULTS.md.
+
+Scope is frozen. The review ZIP contains current and preserved baseline source/build, all meaningful code/history/diffs, before/after and native renderer screenshots, initial failures and final test evidence, an actual synthesized sound-graph WAV, school drafts, rollback and independent Claude/Fable review prompts. No private novel, credentials or dependencies/browser binaries. Physical-device and human acceptance, printed citation pages and isolated public preview remain explicitly unperformed.
+
+
+### Workspace interruption: preserve through GitHub-only packaging
+
+Local execution became unavailable after the provisional 31.8 MB ZIP passed integrity/source-build/server checks, before its final upload. Do not claim that scratch ZIP was made downloadable. Preserve the prepared documentation and add a branch-only non-deploying review-artifact workflow. It rebuilds current and exact Day 2 source/builds, eleven before/after fixtures, complete Git bundle/diffs, school/Claude materials and source-specific CI artifacts. The original generated PNG/scratch-only logs were not recovered; the exact game WebP and independently recorded CI evidence are retained. Inspect the packaging job and actual native stats before reporting success. This interruption does not authorize production deployment or merging.

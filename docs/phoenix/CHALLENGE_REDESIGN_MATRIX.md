@@ -20,7 +20,7 @@ All IDs, earned flags and broad chronology remain. This table separates intended
 | 14 Book people | Reconstruct preserved seasons/time passage, meet people | Quiet ordered memory with full reference; local retry | Knowledge carried by people | 2 / reflective memory / untimed/reference / wrong order, all fragments, met flag |
 | 15 War/morning | Understand three choices and shared destruction | Consequences described, all endings offered, no secret score gate | Preservation canonical direction; other paths identified as adaptations | 2 / choice / no timer / three full ending campaigns |
 
-Budget: 24.5 minutes of challenge activity plus short transitions and optional exploration, approximately 25–30 minutes overall if human observations support it. This must not be achieved by slowing movement. Current actual duration remains unmeasured; reject the estimate if playtests disagree.
+Budget: 25 minutes of challenge activity plus short transitions and optional exploration, approximately 25–30 minutes overall if human observations support it. This must not be achieved by slowing movement. Current actual duration remains unmeasured; reject the estimate if playtests disagree.
 
 
 ## Candidate status versus ambition

@@ -1,0 +1,73 @@
+name: Package Phoenix review (no deployment)
+on:
+  push:
+    branches: [work/cinematic-gameplay-rebuild]
+    paths:
+      - .github/workflows/review-archive.yml
+      - tools/package-review.py
+permissions:
+  contents: read
+  actions: read
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      F451_BUILD_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build candidate and regenerate composition evidence
+        run: |
+          npm run build > candidate-build.log 2>&1
+          node tests/gallery.mjs phoenix-candidate > candidate-gallery.log 2>&1
+      - name: Build preserved baseline and its composition evidence
+        run: |
+          git worktree add --detach ../f451-baseline 74f0b2c78294b6dbbe94f1069a7f347654fb0f18
+          ln -s "$GITHUB_WORKSPACE/node_modules" ../f451-baseline/node_modules
+          cd ../f451-baseline
+          F451_BUILD_SHA=74f0b2c78294b6dbbe94f1069a7f347654fb0f18 npm run build > "$GITHUB_WORKSPACE/baseline-build.log" 2>&1
+          node tests/gallery.mjs phoenix-baseline > "$GITHUB_WORKSPACE/baseline-gallery.log" 2>&1
+      - name: Await the already-running final native evidence
+        run: |
+          for attempt in $(seq 1 30); do
+            status=$(gh api repos/hewwobuddy2023-dev/fahrenheit451-game/actions/runs/42875205788 --jq .status)
+            if [ "$status" = completed ]; then exit 0; fi
+            sleep 10
+          done
+          echo "Final native evidence not completed within packaging wait" >&2
+          exit 0
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: browser-evidence
+          run-id: 42875205788
+          github-token: ${{ github.token }}
+          path: review-native/final-98e5aa2
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-evidence
+          run-id: 42872448765
+          github-token: ${{ github.token }}
+          path: review-native/access-c98d127
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-evidence
+          run-id: 42868739775
+          github-token: ${{ github.token }}
+          path: review-native/initial-dea9294
+      - name: Create and verify complete review package
+        run: python3 tools/package-review.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: F451_PHOENIX_COMPLETE_REVIEW
+          path: review-package/
+          retention-days: 30
+          if-no-files-found: error
