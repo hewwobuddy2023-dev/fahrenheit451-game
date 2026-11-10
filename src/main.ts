@@ -14,6 +14,7 @@ import { RoomScene } from './scenes/RoomScene.ts';
 import { C, H, K, W, params } from './view.ts';
 import { diagnostics } from './diagnostics.ts';
 import { guardFocus } from './focus.ts';
+import { installAudio, sound } from './audio.ts';
 
 const diagnostic = diagnostics(params.has('diagnostics'));
 
@@ -48,11 +49,15 @@ const game = new Phaser.Game({
   scene: [BootScene, MenuScene, RoomScene, EndScene],
 });
 diagnostic.attach(game);
-game.events.once('ready', () => guardFocus(game));
+game.events.once('ready', () => {
+  guardFocus(game);
+  const cleanup = installAudio();
+  game.events.once('destroy', cleanup);
+});
 
 if (params.has('debug')) {
   // QA hook: ?debug exposes the game and shows a frame-rate readout.
-  Object.assign(window, { __game: game });
+  Object.assign(window, { __game: game, __audio: sound });
   const el = Object.assign(document.createElement('div'), { id: 'fps' });
   el.style.cssText = 'position:fixed;left:6px;bottom:6px;color:#f2a54a;font:12px monospace;z-index:9;pointer-events:none';
   document.body.append(el);

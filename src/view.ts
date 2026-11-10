@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { settings } from './settings.ts';
 
 // Logical layout is always 960x540. The canvas renders at zoom K so text stays sharp on the real screen.
 export const W = 960;
@@ -77,5 +78,5 @@ export function onActions(scene: Phaser.Scene, handler: (a: Act) => void): void 
 export function addAtmosphere(scene: Phaser.Scene): void {
   scene.add.image(0, 0, 'overlay').setOrigin(0).setScrollFactor(0).setDepth(900);
   const grain = scene.add.tileSprite(0, 0, W, H, 'grain').setOrigin(0).setScrollFactor(0).setDepth(902).setAlpha(0.045);
-  scene.time.addEvent({ delay: 90, loop: true, callback: () => grain.setTilePosition(Math.random() * 128, Math.random() * 128) });
+  scene.time.addEvent({ delay: 90, loop: true, callback: () => { grain.setVisible(!settings.reducedMotion); if (!settings.reducedMotion) grain.setTilePosition(Math.random() * 128, Math.random() * 128); } });
 }

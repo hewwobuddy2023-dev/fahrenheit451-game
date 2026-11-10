@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { sound } from './audio.ts';
 
 /** Opt-in, on-device diagnostics. Bounded in memory; never sent or stored. No save contents. */
 export function diagnostics(enabled: boolean) {
@@ -18,7 +19,8 @@ export function diagnostics(enabled: boolean) {
     const t = (e as TouchEvent).changedTouches?.[0];
     last = `${e.type} ${Math.round(t?.clientX ?? p.clientX ?? 0)},${Math.round(t?.clientY ?? p.clientY ?? 0)} on ${(e.target as Element)?.tagName ?? '?'}`;
   };
-  for (const type of ['pointerdown', 'pointerup', 'pointercancel', 'touchstart', 'touchend', 'touchcancel', 'mousedown']) document.addEventListener(type, record, { capture: true, passive: true });
+  const types = ['pointerdown', 'pointerup', 'pointercancel', 'touchstart', 'touchend', 'touchcancel', 'mousedown'];
+  for (const type of types) document.addEventListener(type, record, { capture: true, passive: true });
   const error = (message: string) => { errors.push(message.replace(/https?:\/\/\S+/g, '[url]').slice(0, 180)); if (errors.length > 4) errors.shift(); };
   window.addEventListener('error', (e) => error(e.message));
   window.addEventListener('unhandledrejection', (e) => error(String(e.reason?.message ?? e.reason)));
@@ -35,6 +37,7 @@ export function diagnostics(enabled: boolean) {
       `scene ${scenes.map(s => `${s.sys.settings.key} input:${s.input.enabled}`).join(', ') || 'none'} | manager ${game?.input.enabled ?? '?'}`,
       `Phaser downs ${phaser} | pointer ${pointer ? `${pointer.x.toFixed(0)},${pointer.y.toFixed(0)} down:${pointer.isDown}` : 'none'} | touch ${game?.device.input.touch ?? '?'}`,
       `DOM ${JSON.stringify(events)}\nlast ${last}`,
+      `audio ${sound.status.state} | muted ${sound.status.muted} | voices ${sound.status.voices}`,
       ...errors.map(e => `ERROR ${e}`),
     ].join('\n');
   };
@@ -43,15 +46,13 @@ export function diagnostics(enabled: boolean) {
   return { attach(g: Phaser.Game) {
     game = g;
     g.events.on('ready', () => {
-      // InputManager emits its global POINTER_DOWN via its events emitter.
-      g.input.events.on('pointerdown', () => { phaser++; });
       g.scene.scenes.forEach(s => s.sys.events.on('start', () => {
         s.input.on('pointerdown', () => { phaser++; });
       }));
     });
     g.events.once('destroy', () => {
       clearInterval(timer); panel.remove();
-      for (const type of Object.keys(events)) document.removeEventListener(type, record, true);
+      for (const type of types) document.removeEventListener(type, record, true);
     });
   } };
 }

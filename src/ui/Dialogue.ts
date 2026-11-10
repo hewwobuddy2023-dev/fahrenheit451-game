@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { sound } from '../audio.ts';
 import { C, FONT, W, text } from '../view.ts';
 import type { Choice, Line, Script } from '../content/types.ts';
 import type { Flags } from '../state.ts';
@@ -114,6 +115,7 @@ export class Dialogue {
   }
 
   private show(line: Line) {
+    sound.cue('page');
     this.paintPanel(BOX.y);
     this.name.setY(BOX.y - 13);
     this.nameBg.setY(BOX.y - 26);
@@ -187,6 +189,7 @@ export class Dialogue {
   }
 
   private pick() {
+    sound.cue('ui');
     const list = this.choices!;
     const c = list[this.sel];
     this.choices = undefined;

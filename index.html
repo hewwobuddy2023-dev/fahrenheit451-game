@@ -13,12 +13,18 @@
          inner parent instead so safe areas cannot offset or crop the canvas. */
       #game { position: absolute; inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
       canvas { display: block; touch-action: none; -webkit-touch-callout: none; }
+      #rotate-hint { display: none; pointer-events: none; }
+      @media (orientation: portrait) and (max-width: 600px) {
+        #rotate-hint { display: block; position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); left: 20px; right: 20px; color: #ece1c8; font: 14px/1.5 system-ui; text-align: center; }
+      }
       #boot { position: fixed; inset: 0; display: grid; place-items: center; color: #8a7b68;
         font: 14px/1 system-ui, sans-serif; letter-spacing: .3em; pointer-events: none; }
     </style>
   </head>
   <body>
-    <div id="boot">LOADING</div>
+    <div id="boot" role="status">LOADING</div>
+    <div id="rotate-hint">Turn your phone sideways for larger text and controls.</div>
+    <noscript>This game needs JavaScript enabled in your browser.</noscript>
     <div id="viewport"><div id="game"></div></div>
     <script type="module" src="./src/main.ts"></script>
   </body>

@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { sound } from '../audio.ts';
+import { settings, setSetting } from '../settings.ts';
 import { CHAPTERS, CHAPTER_STARTS } from '../content.ts';
 import { loadSave, Session } from '../state.ts';
 import { restoreCheckpoint } from '../checkpoints.ts';
@@ -9,7 +11,7 @@ import { addAtmosphere, C, FONT, H, W, onActions, setupCamera, text } from '../v
 const CREDITS = [
   "An interactive adaptation of Ray Bradbury's Fahrenheit 451 (1953). Dialogue is original or paraphrased, not text from the novel; alternate endings are adaptations.",
   'Engine: Phaser 3 (MIT). Fonts: Oswald, IBM Plex Sans (SIL OFL 1.1), Special Elite (Apache 2.0).',
-  'All artwork is drawn procedurally in code for this project. Student project, 2026.',
+  'All artwork and atmospheric audio are generated in code for this project. Student project, 2026.',
 ];
 
 export class MenuScene extends Phaser.Scene {
@@ -22,6 +24,8 @@ export class MenuScene extends Phaser.Scene {
 
   create() {
     setupCamera(this);
+    sound.useScene('menu');
+    sound.setQuiet(false);
     this.busy = false;
     // The room-specific sky texture does not exist at boot. Keep the title's
     // procedural glow backdrop rather than displaying Phaser's missing texture.
@@ -71,7 +75,7 @@ export class MenuScene extends Phaser.Scene {
       { label: 'Continue', enabled: !!save, note: save ? undefined : 'no saved game', action: () => save && this.start(new Session(save)) },
       { label: 'New Game', action: () => save ? this.confirmNew() : this.start(this.fresh(false)) },
       { label: 'Presentation Mode', action: () => this.chapters() },
-      { label: 'Credits', action: () => this.credits() },
+      { label: 'Settings & credits', action: () => this.settings() },
     ]);
   }
 
@@ -110,6 +114,17 @@ export class MenuScene extends Phaser.Scene {
       })),
       { label: 'Back', action: () => this.main() },
     ], 154, 64, 18);
+  }
+
+  private settings(selected = 0) {
+    this.panel('SETTINGS', ['Sound starts after your first tap or key press. Press M at any time to mute.', 'Reduced motion removes moving grain and camera shake/flash. Story fades and essential hazards stay visible. Preferences are saved on this device.']);
+    this.show([
+      { label: `Sound: ${settings.muted ? 'OFF' : 'ON'} [M]`, action: () => { sound.toggleMute(); this.settings(0); } },
+      { label: `Reduced motion: ${settings.reducedMotion ? 'ON' : 'OFF'}`, action: () => { setSetting('reducedMotion', !settings.reducedMotion); this.settings(1); } },
+      { label: 'Credits', action: () => this.credits() },
+      { label: 'Back', action: () => this.main() },
+    ]);
+    this.list?.select(selected);
   }
 
   private credits() {

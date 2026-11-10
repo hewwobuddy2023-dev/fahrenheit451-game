@@ -8,7 +8,7 @@ import { writeFile } from 'node:fs/promises';
 const bundle = await build({ entryPoints: ['src/main.ts'], bundle: true, write: false,
   format: 'esm', loader: { '.css': 'empty' }, define: { 'process.env.NODE_ENV': '"test"' } });
 
-export async function simulate({ width = 844, height = 390, dpr = 3, lowres = false, save, blocked = false } = {}) {
+export async function simulate({ width = 844, height = 390, dpr = 3, lowres = false, save, blocked = false, frameMs = 1000 / 60 } = {}) {
   const dom = new JSDOM('<!doctype html><div id="boot"></div><div id="game"></div>', {
     url: `https://simulation.invalid/?debug${lowres ? '&lowres' : ''}`, pretendToBeVisual: true, runScripts: 'outside-only',
   });
@@ -66,7 +66,7 @@ export async function simulate({ width = 844, height = 390, dpr = 3, lowres = fa
     (render ? game.step : game.headlessStep).call(game, now, ms);
     await Promise.resolve(); await Promise.resolve();
   };
-  const advance = async (ms) => { for (let left = ms; left > 0; left -= 1000 / 60) await frame(Math.min(1000 / 60, left)); };
+  const advance = async (ms) => { for (let left = ms; left > 0; left -= frameMs) await frame(Math.min(frameMs, left)); };
   const render = () => frame(0, true);
   const until = async (predicate, label, ms = 60000) => {
     for (let elapsed = 0; elapsed < ms; elapsed += 50) { if (predicate()) return; await advance(50); }
