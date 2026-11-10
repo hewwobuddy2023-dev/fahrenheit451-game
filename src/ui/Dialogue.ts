@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { SequencePuzzle } from './SequencePuzzle.ts';
 import { sound } from '../audio.ts';
 import { C, FONT, W, text } from '../view.ts';
 import type { Choice, Line, Script } from '../content/types.ts';
@@ -16,6 +17,7 @@ const TICK = 55;  // ms per tick (~55 chars/s, ~18 text redraws/s)
  */
 export class Dialogue {
   open = false;
+  puzzle?: SequencePuzzle;
   onSpeaker?: (who: string) => void;
   private scene: Phaser.Scene;
   private touch: boolean;
@@ -71,12 +73,14 @@ export class Dialogue {
 
   advance() {
     if (!this.open) return;
+    if (this.puzzle) return this.puzzle.action('act');
     if (this.choices) return this.pick();
     if (this.shown < this.full.length) return this.finishLine();
     this.next();
   }
 
   move(d: number) {
+    if (this.puzzle) return this.puzzle.action(d < 0 ? 'up' : 'down');
     if (!this.choices) return;
     this.sel = (this.sel + d + this.choices.length) % this.choices.length;
     this.paintChoices();
@@ -105,6 +109,14 @@ export class Dialogue {
   private next() {
     const line = this.queue.shift();
     if (line) return this.show(line);
+    if (this.script?.puzzle) {
+      const def = this.script.puzzle;
+      this.script = { ...this.script, puzzle: undefined };
+      this.root.setVisible(false);
+      this.puzzle = new SequencePuzzle(this.scene, def, () => { this.puzzle = undefined; this.root.setVisible(true); this.next(); });
+      this.scene.events.once('shutdown', () => { this.puzzle?.destroy(); this.puzzle = undefined; });
+      return;
+    }
     if (this.retry) return this.showChoices(this.retry);
     if (this.script?.choices) {
       const list = this.script.choices.filter((c) => !c.when || c.when({ ...this.flags, ...this.acc }));

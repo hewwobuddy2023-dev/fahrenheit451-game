@@ -10,6 +10,7 @@ export const IDLE = [0, 1, 2, 3];
 export const WALK = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
 export interface Fig {
+  work?: boolean;
   coat: string;
   rim: string;
   skin?: string;
@@ -60,7 +61,7 @@ function body(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim' |
   const tail = moving ? -Math.abs(Math.sin(p)) * 4 - 2 : -1;
   const sl = -15 * bulk, sr = 13 * bulk, top = -146 - chest;
   // back arm
-  const arm = (q: number) => (moving ? -Math.sin(q) * 0.42 : 0.07 + breath * 0.02);
+  const arm = (q: number) => o.work ? -1.0 + breath * 0.03 : (moving ? -Math.sin(q) * 0.42 : 0.07 + breath * 0.02);
   const drawArm = (a: number, ox: number) => {
     const ex = ox + Math.sin(a) * 31, ey = top + 6 + Math.cos(a) * 31;
     const b = a + 0.28;
@@ -161,6 +162,7 @@ const COLD = 'rgba(150,190,205,0.7)';
 /** The cast. Distinct silhouettes: helmet brim, captain's cap and pipe, white dress, straw hair, stoop, beard. */
 export const CAST: Record<string, Fig> = {
   montag: { coat: '#1a1615', rim: WARM, hat: 'helmet', stripe: true, badge: '#c98a3a' },
+  montagWork: { coat: '#262422', rim: WARM, hat: 'helmet', stripe: true, badge: '#c98a3a', work: true },
   montagCivil: { coat: '#1f1b1a', rim: WARM, hat: 'none', hair: 'short', coatLen: 70 },
   beatty: { coat: '#141111', rim: 'rgba(232,104,46,0.85)', hat: 'cap', pipe: true, bulk: 1.18, tall: 1.06, stripe: true },
   fireman: { coat: '#171313', rim: 'rgba(242,165,74,0.55)', hat: 'helmet', stripe: true, bulk: 1.08 },

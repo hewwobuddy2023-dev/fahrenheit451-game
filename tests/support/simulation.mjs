@@ -6,7 +6,7 @@ import { build } from 'esbuild';
 import { writeFile } from 'node:fs/promises';
 
 const bundle = await build({ entryPoints: ['src/main.ts'], bundle: true, write: false,
-  format: 'esm', loader: { '.css': 'empty' }, define: { 'process.env.NODE_ENV': '"test"' } });
+  format: 'esm', loader: { '.css': 'empty', '.webp': 'dataurl' }, define: { 'process.env.NODE_ENV': '"test"' } });
 
 export async function simulate({ width = 844, height = 390, dpr = 3, lowres = false, save, blocked = false, frameMs = 1000 / 60 } = {}) {
   const dom = new JSDOM('<!doctype html><div id="boot"></div><div id="game"></div>', {

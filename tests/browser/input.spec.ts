@@ -9,6 +9,23 @@ async function tap(page: Page, x: number, y: number, info: TestInfo) {
   if (info.project.use.hasTouch) await page.touchscreen.tap(px, py);
   else await page.mouse.click(px, py);
 }
+async function hose(page: Page, info: TestInfo) {
+  const cdp = info.project.name === 'chromium-touch' ? await page.context().newCDPSession(page) : undefined;
+  const r = (await page.locator('canvas').boundingBox())!;
+  const held = async (on: boolean) => {
+    if (cdp) await cdp.send('Input.dispatchTouchEvent', { type: on ? 'touchStart' : 'touchEnd', touchPoints: on ? [{x:r.x+888/960*r.width,y:r.y+474/540*r.height,id:1}] : [] });
+    else if (on) await page.keyboard.down('KeyE'); else await page.keyboard.up('KeyE');
+  };
+  try {
+    for(let n=0;n<12 && !(await state(page)).flags['c01.p2'];n++) {
+      await held(true);
+      await expect.poll(()=>page.evaluate(()=>{const r=(window as any).__game.scene.getScene('room');return !!r.session.flags['c01.p2'] || r.hose.pressure>=.7;}),{timeout:30000}).toBe(true);
+      await held(false);
+      if(!(await state(page)).flags['c01.p2']) await expect.poll(()=>page.evaluate(()=>(window as any).__game.scene.getScene('room').hose.pressure),{timeout:15000}).toBeLessThan(.36);
+    }
+    expect((await state(page)).flags['c01.p2']).toBe(true);
+  } finally {await held(false);await cdp?.detach();}
+}
 async function scene(page: Page, key: string) {
   await page.waitForFunction(k => (window as any).__game?.scene.isActive(k), key);
 }
@@ -69,18 +86,7 @@ test('prior checkpoint: rotation, scrolled hit targets and a real held interacti
     await tap(page, 860, 34, info); expect((await state(page)).mode).toBe('journal');
     await tap(page, 480, 300, info); expect((await state(page)).mode).toBe('play');
   }
-  if (info.project.name === 'chromium-touch') {
-    const cdp = await page.context().newCDPSession(page);
-    const r = (await page.locator('canvas').boundingBox())!;
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: r.x + 888 / 960 * r.width, y: r.y + 474 / 540 * r.height, id: 1 }] });
-    try { await expect.poll(async () => (await state(page)).flags['c01.p2'], { timeout: 30000 }).toBe(true); }
-    finally { await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); }
-    await cdp.detach();
-  } else {
-    await page.keyboard.down('KeyE');
-    try { await expect.poll(async () => (await state(page)).flags['c01.p2'], { timeout: 30000 }).toBe(true); }
-    finally { await page.keyboard.up('KeyE'); }
-  }
+  await hose(page, info);
   expect((await state(page)).flags['c01.p2']).toBe(true);
 });
 
@@ -113,13 +119,16 @@ test('audio unlock/mute, local offline play and browser frame sample', async ({ 
   expect(await page.evaluate(() => !!(window as any).__game.sound.context)).toBe(false); // unused Phaser backend stays off
   await tap(page, 430, 282, info); await scene(page, 'room'); await settle(page, info);
   await expect.poll(() => page.evaluate(() => (window as any).__audio.status.state)).toBe('running');
+  await expect.poll(()=>page.evaluate(()=>(window as any).__audio.sampleOutput().rms),{timeout:10000}).toBeGreaterThan(.0001);
+  const signal=await page.evaluate(()=>(window as any).__audio.sampleOutput());
+  console.log(JSON.stringify({label:'Actual Web Audio analyser signal, not a speaker listening test',signal}));
+  expect(signal.peak).toBeLessThan(.95);
   await page.keyboard.press('KeyM'); expect(await page.evaluate(() => (window as any).__audio.status.muted)).toBe(true);
+  await expect.poll(()=>page.evaluate(()=>(window as any).__audio.sampleOutput().rms),{timeout:10000}).toBeLessThan(.00005);
   await page.keyboard.press('KeyM'); expect(await page.evaluate(() => (window as any).__audio.status.muted)).toBe(false);
   await page.evaluate(() => document.fonts.ready);
   await context.setOffline(true);
-  await page.keyboard.down('KeyE');
-  try { await expect.poll(async () => (await state(page)).flags['c01.p2'], { timeout: 30000 }).toBe(true); }
-  finally { await page.keyboard.up('KeyE'); }
+  await hose(page, info);
   expect((await state(page)).flags['c01.p2']).toBe(true);
   await context.setOffline(false);
   const timing = await page.evaluate(async () => {
@@ -158,4 +167,21 @@ test('native pause freezes searchlight phase; DOM focus loss waits for explicit 
   if (info.project.use.hasTouch) await button.tap(); else await page.keyboard.press('Enter');
   await expect(button).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => (window as any).__game.scene.getScene('room').activeTime)).toBeGreaterThan(active);
+});
+
+
+test('subway: source-first reconstruction fails locally, supports rereading and succeeds through native cards', async ({page}, info) => {
+  await seed(page,'subway',620,{});await page.goto('/?debug&lowres');await scene(page,'menu');await tap(page,430,282,info);await scene(page,'room');await settle(page,info);
+  await page.keyboard.press('KeyE');
+  for(let n=0;n<8;n++){if(await page.evaluate(()=>!!(window as any).__game.scene.getScene('room').dialogue.puzzle))break;await tap(page,480,450,info);}
+  await expect.poll(()=>page.evaluate(()=>(window as any).__game.scene.getScene('room').dialogue.puzzle?.state.phase)).toBe('study');
+  await page.screenshot({path:info.outputPath('subway-study-native.png')});
+  await tap(page,480,450,info);
+  for(const i of [1,0,2,3])await tap(page,220+(i%2)*425,231+Math.floor(i/2)*75,info);
+  expect(await page.evaluate(()=>(window as any).__game.scene.getScene('room').dialogue.puzzle.state.attempts)).toBe(1);
+  expect((await state(page)).flags['c08.verse']).toBeUndefined();
+  await tap(page,180,470,info);await tap(page,480,450,info);
+  for(const i of [2,5,0,4])await tap(page,220+(i%2)*425,231+Math.floor(i/2)*75,info);
+  await settle(page,info);expect((await state(page)).room).toBe('faber1');expect((await state(page)).flags['c08.verse']).toBe(true);
+  await page.screenshot({path:info.outputPath('subway-complete-native.png')});
 });

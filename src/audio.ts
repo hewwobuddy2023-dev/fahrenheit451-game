@@ -7,6 +7,7 @@ const PROFILES: Record<string, Profile> = {
   industrial: { noise: 0.13, cutoff: 460, hum: 62, tone: 0.06 },
   television: { noise: 0.1, cutoff: 1400, hum: 110, tone: 0.025 },
   fire: { noise: 0.22, cutoff: 1800, hum: 48, tone: 0.03 },
+  subway: { noise: 0.38, cutoff: 1900, hum: 82, tone: 0.06 },
   pursuit: { noise: 0.16, cutoff: 780, hum: 73, tone: 0.06 },
   river: { noise: 0.2, cutoff: 1000, hum: 92, tone: 0.008 },
   camp: { noise: 0.12, cutoff: 2200, hum: 146, tone: 0.018 },
@@ -25,6 +26,7 @@ const CUES: Record<Cue, [number, number, number, number]> = {
 export class Soundscape {
   private context?: AudioContext;
   private master?: GainNode;
+  private analyser?: AnalyserNode;
   private noiseGain?: GainNode;
   private toneGain?: GainNode;
   private filter?: BiquadFilterNode;
@@ -45,7 +47,7 @@ export class Soundscape {
   }) { this.makeContext = makeContext; }
 
   get status() {
-    return { scene: this.scene, profile: this.profile, muted: settings.muted, state: this.context?.state ?? (this.failed ? 'unavailable' : 'locked'), voices: this.voices.size };
+    return { scene: this.scene, profile: this.profile, muted: settings.muted, volume: settings.volume, state: this.context?.state ?? (this.failed ? 'unavailable' : 'locked'), voices: this.voices.size };
   }
 
   /** Called only from a gesture listener. Rejections never block game initialization/input. */
@@ -65,6 +67,7 @@ export class Soundscape {
     const c = this.context = this.makeContext();
     this.master = c.createGain(); this.master.gain.value = 0;
     this.master.connect(c.destination);
+    if (c.createAnalyser) { this.analyser = c.createAnalyser(); this.analyser.fftSize = 2048; this.master.connect(this.analyser); }
     this.filter = c.createBiquadFilter(); this.filter.type = 'lowpass'; this.filter.Q.value = 0.45;
     this.noiseGain = c.createGain(); this.noiseGain.gain.value = 0;
     this.filter.connect(this.noiseGain); this.noiseGain.connect(this.master);
@@ -88,7 +91,7 @@ export class Soundscape {
     if (this.scene === scene && this.context) return;
     this.scene = scene;
     this.profile = scene === 'menu' ? 'menu' : scene === 'end' ? 'ending' : scene === 'river' ? 'river'
-      : scene === 'camp' ? 'camp' : ['lawn2', 'boulevard', 'run'].includes(scene) ? 'pursuit'
+      : scene === 'camp' ? 'camp' : scene === 'subway' ? 'subway' : ['lawn2', 'boulevard', 'run'].includes(scene) ? 'pursuit'
       : ['home1', 'home4'].includes(scene) ? 'television' : ['burn', 'attic', 'home5'].includes(scene) ? 'fire' : 'industrial';
     for (const voice of this.voices) { try { voice.stop(); } catch { /* already ended */ } }
     this.apply();
@@ -100,15 +103,26 @@ export class Soundscape {
     if (this.profile !== profile) { this.profile = profile; this.apply(); }
   }
 
+  refresh() { this.apply(); }
+
+  /** Local, explicit sample inspection for QA/sound check; no recording or transmission. */
+  sampleOutput() {
+    if (!this.analyser) return { rms: 0, peak: 0 };
+    const data = new Float32Array(this.analyser.fftSize); this.analyser.getFloatTimeDomainData(data);
+    let sum = 0, peak = 0;
+    for (const n of data) { sum += n * n; peak = Math.max(peak, Math.abs(n)); }
+    return { rms: Math.sqrt(sum / data.length), peak };
+  }
+
   toggleMute() { setSetting('muted', !settings.muted); this.apply(); }
   setQuiet(quiet: boolean) { if (quiet !== this.quiet) { this.quiet = quiet; this.apply(); } }
 
   private apply() {
     if (!this.context || !this.master) return;
     const now = this.context.currentTime, p = PROFILES[this.profile];
-    this.master.gain.setTargetAtTime(settings.muted || this.quiet ? 0 : 0.18, now, 0.06);
+    this.master.gain.setTargetAtTime(settings.muted || this.quiet ? 0 : 0.55 * settings.volume, now, 0.06);
     this.filter!.frequency.setTargetAtTime(p.cutoff, now, 0.3);
-    this.noiseGain!.gain.setTargetAtTime(p.noise, now, 0.3);
+    this.noiseGain!.gain.setTargetAtTime(p.noise * 3, now, 0.3);
     this.drone!.frequency.setTargetAtTime(p.hum, now, 0.4);
     this.toneGain!.gain.setTargetAtTime(p.tone, now, 0.3);
   }
@@ -122,7 +136,7 @@ export class Soundscape {
     const osc = c.createOscillator(), gain = c.createGain();
     osc.type = kind === 'hound' || kind === 'caught' ? 'triangle' : 'sine';
     osc.frequency.setValueAtTime(start, now); osc.frequency.exponentialRampToValueAtTime(end, now + duration);
-    gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(kind === 'step' ? 0.1 : 0.18, now + 0.008);
+    gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(kind === 'step' ? 0.15 : 0.26, now + 0.008);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
     osc.connect(gain); gain.connect(this.master!); this.voices.add(osc);
     osc.onended = () => { this.voices.delete(osc); osc.disconnect(); gain.disconnect(); };

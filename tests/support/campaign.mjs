@@ -10,7 +10,15 @@ export function campaign(s, { ending = 'preservation' } = {}) {
       const r = s.scene();
       if (r.sys.settings.key === 'end') return;
       if (r.mode === 'play' && !r.stillWatch) return;
-      if (r.dialogue?.open) {
+      if (r.dialogue?.puzzle) {
+        const puzzle = r.dialogue.puzzle;
+        if (puzzle.state.phase === 'study') await s.tap(480,450);
+        else {
+          const next = puzzle.def.fragments[puzzle.state.selected.length];
+          const index = puzzle.state.cards.indexOf(next);
+          await s.tap(60 + (index % 2) * 425 + 160, 201 + Math.floor(index / 2) * 75 + 30);
+        }
+      } else if (r.dialogue?.open) {
         heard.add(r.dialogue.current);
         if (r.dialogue.choosing) {
           const choices = r.dialogue.choices;
@@ -46,7 +54,9 @@ export function campaign(s, { ending = 'preservation' } = {}) {
     s.w.__qa.go(h.x); await s.advance(50);
     if (!h.auto) {
       if (h.hold) {
-        await s.touch('touchstart',888,474); await s.advance(h.hold.ms+100); await s.touch('touchend',888,474);
+        if (h.hold.pressure) {
+          for (let n = 0; n < 12 && !r.session.flags[h.hold.flag]; n++) { await s.touch('touchstart',888,474); await s.advance(1000); await s.touch('touchend',888,474); await s.advance(250); }
+        } else { await s.touch('touchstart',888,474); await s.advance(h.hold.ms+100); await s.touch('touchend',888,474); }
         assert.ok(r.session.flags[h.hold.flag],`hold completed ${h.hold.flag}`);
       } else await s.tap(888,474);
     }

@@ -28,7 +28,7 @@ try {
     await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','quota Continue');await campaign(s).settle();
     const before=s.save();
     s.w.Storage.prototype.setItem=function(){throw new s.w.DOMException('Quota exceeded','QuotaExceededError');};
-    await s.touch('touchstart',888,474);await s.advance(1700);await s.touch('touchend',888,474);
+    await campaign(s).visit('pile2');
     assert.ok(s.scene().session.flags['c01.p2']);assert.equal(s.save(),before);
     assert.ok(s.scene().children.list.some(o=>o.text==='SAVE UNAVAILABLE IN THIS BROWSER'));
     console.log('PASS quota failure preserves prior save, warning appears, live gameplay progresses');
