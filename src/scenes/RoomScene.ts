@@ -161,6 +161,7 @@ export class RoomScene extends Phaser.Scene {
 
   update(_time: number, dtMs: number) {
     sound.setQuiet(this.mode === 'pause' || this.mode === 'journal');
+    if (this.mode === 'pause') this.overlay?.list?.setLabel(3, `Sound: ${settings.muted ? 'OFF' : 'ON'} [M]`);
     this.activeTime += dtMs;
     const time = this.activeTime;
     const dt = Math.min(dtMs, 50) / 1000;
@@ -648,6 +649,8 @@ export class RoomScene extends Phaser.Scene {
     this.done = new Set(now);
     this.hud.setObjective(this.room.objective(f), now.length);
     this.kit.update?.(f);
+    if (this.room.id === 'home1') sound.setTelevision(!!f['h1.day']);
+    if (this.room.id === 'home4') sound.setTelevision(!f['c09.off']);
     if (this.room.dark) this.dark?.set(this.room.dark(f), 0);
     for (const n of this.npcs) if (n.def.when) n.spr.setVisible(n.def.when(f));
     for (const h of this.room.hotspots) {

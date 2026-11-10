@@ -159,3 +159,7 @@ The native opening capture also exposed `k:truck` missing on a fresh boot (it wa
 ### Sustained slow-render fallback
 
 Implementation checkpoint `af4a49c` is pushed. Reviewed native traces expose why the old governor was too slow to help an already slow title/cinematic: it sampled only during room play, after 180 rendered frames, and lowered resolution only once. Moved that cosmetic check to the game loop, using sustained time windows across scenes and repeated steps down to the existing 960×540 base. No gameplay timing/difficulty changes. A regression forces sustained low reported FPS, verifies the 1.5 → 1.25 → 1 resolution steps, an unchanged save and correct touch coordinates afterward. Typecheck/build pass. Native run `42804548431` is pending; its results will be recorded separately from these source/simulation findings.
+
+### Settings and audio return edge cases
+
+Verified touch/keyboard preference changes do not modify the story save. M now updates the visible sound label in title settings/pause, and switching off the parlor walls changes the television ambience. Explicit return also resumes a suspended audio context: the focus curtain consumes Enter, so it must pass that gesture to audio itself. Unit/type/day2/build checks pass. No new dependency or release action.

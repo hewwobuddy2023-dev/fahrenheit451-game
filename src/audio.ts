@@ -94,6 +94,12 @@ export class Soundscape {
     this.apply();
   }
 
+  setTelevision(on: boolean) {
+    if (!['home1', 'home4'].includes(this.scene)) return;
+    const profile = on ? 'television' : 'industrial';
+    if (this.profile !== profile) { this.profile = profile; this.apply(); }
+  }
+
   toggleMute() { setSetting('muted', !settings.muted); this.apply(); }
   setQuiet(quiet: boolean) { if (quiet !== this.quiet) { this.quiet = quiet; this.apply(); } }
 

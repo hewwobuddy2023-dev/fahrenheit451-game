@@ -18,6 +18,7 @@ export class MenuScene extends Phaser.Scene {
   private list?: MenuList;
   private sub?: Phaser.GameObjects.Container;
   private busy = false;
+  private panelTitle = '';
   private branding!: Phaser.GameObjects.Container;
 
   constructor() { super('menu'); }
@@ -61,12 +62,17 @@ export class MenuScene extends Phaser.Scene {
     this.main();
   }
 
+  update() {
+    if (this.panelTitle === 'SETTINGS') this.list?.setLabel(0, `Sound: ${settings.muted ? 'OFF' : 'ON'} [M]`);
+  }
+
   private show(items: Item[], y = 282, gap = 64, size = 24) {
     this.list?.destroy();
     this.list = new MenuList(this, 104, y, items, gap, size);
   }
 
   private main() {
+    this.panelTitle = '';
     this.sub?.destroy();
     this.sub = undefined;
     this.branding.setVisible(true);
@@ -93,6 +99,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private panel(title: string, lines: string[]) {
+    this.panelTitle = title;
     this.sub?.destroy();
     this.branding.setVisible(false);
     const x = W * 0.54, y = 94, w = W - x - 36, h = H - y - 64;
