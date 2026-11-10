@@ -12,6 +12,10 @@ import { EndScene } from './scenes/EndScene.ts';
 import { MenuScene } from './scenes/MenuScene.ts';
 import { RoomScene } from './scenes/RoomScene.ts';
 import { C, H, K, W, params } from './view.ts';
+import { diagnostics } from './diagnostics.ts';
+import { guardFocus } from './focus.ts';
+
+const diagnostic = diagnostics(params.has('diagnostics'));
 
 class BootScene extends Phaser.Scene {
   constructor() { super('boot'); }
@@ -27,7 +31,7 @@ class BootScene extends Phaser.Scene {
 const fonts = ['500 20px Oswald', '600 20px Oswald', '700 20px Oswald', '400 20px "IBM Plex Sans"',
   'italic 400 20px "IBM Plex Sans"', '600 20px "IBM Plex Sans"', '400 20px "Special Elite"'];
 await Promise.race([
-  Promise.all(fonts.map((f) => document.fonts.load(f))),
+  Promise.all(fonts.map((f) => document.fonts?.load(f))),
   new Promise((r) => setTimeout(r, 4000)),
 ]).catch(() => undefined);
 
@@ -43,6 +47,8 @@ const game = new Phaser.Game({
   render: { antialias: true, powerPreference: 'low-power' },
   scene: [BootScene, MenuScene, RoomScene, EndScene],
 });
+diagnostic.attach(game);
+game.events.once('ready', () => guardFocus(game));
 
 if (params.has('debug')) {
   // QA hook: ?debug exposes the game and shows a frame-rate readout.

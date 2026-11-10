@@ -29,7 +29,7 @@ export function campaign(s) {
         assert.ok(r.stillWatch.until>before,'movement resets only stillness wait'); stillResets++;
         await s.tap(914,112); assert.equal(r.mode,'pause');
         await s.advance(6000); assert.equal(r.mode,'pause'); assert.ok(r.stillWatch,'pause must not finish the encounter');
-        await s.tap(500,234); assert.equal(r.mode,'play'); assert.ok(r.stillWatch.until>r.time.now);
+        await s.tap(500,234); assert.equal(r.mode,'play'); assert.ok(r.stillWatch.until>r.activeTime);
       } else await s.advance(100);
     }
     throw new Error(`Unsettled ${s.scene().room?.id}/${s.scene().mode}/${s.scene().dialogue?.current}`);
@@ -64,7 +64,7 @@ export function campaign(s) {
         if(r.player.x<edge && edge-r.player.x<30){
           const speed=175*(r.room.limp?0.72:1);
           const duration=(h.to+28-r.player.x)/speed*1000+150;
-          for(let t=0;t<duration;t+=50){if(((r.time.now+t)/h.period+(h.phase??0))%1*h.period<h.pulse){safe=false;break;}}
+          for(let t=0;t<duration;t+=50){if(((r.activeTime+t)/h.period+(h.phase??0))%1*h.period<h.pulse){safe=false;break;}}
         }
       }
       if(!safe){await release();await s.advance(100);continue;}
