@@ -1,0 +1,28 @@
+# Fifteen-challenge design matrix
+
+All IDs, earned flags and broad chronology remain. This table separates intended targets from implementation status, which is recorded in the handoff. Duration budgets are estimates for a first-time player, not measurements. Common controls: A/D or arrows / touch movement; E/ACT interact; arrows/Enter or tap puzzle cards; Escape pause. No timed reading. Local retries preserve earlier work. Hints offer observation → direction → actionable help; reference replay is always allowed in memory panels.
+
+| ID / event | Objective and mechanic target | Observation / failure / retry | Narrative consequence | Minutes / difficulty / access / tests |
+|---|---|---|---|---|
+| 01 Opening burn | Control the hose at three piles, then accept igniter | Pressure band communicates when flow is effective; vent/release above band; no progress while unsafe | Eager/deferent tone; Montag enjoys competence | 1.5 / teaching / relaxed flow alternative / pressure, release, cancel, old-save flags |
+| 02 Clarisse | Notice moon, grass and oversized billboards before choosing how to answer | Inspect environmental details; no punishable moral answer | Existing look/walk flags affect later reflection | 1.5 / reflective / no timer / each observation and response |
+| 03 Parlor | Read three broadcast channels and attempt contact | Distinguish repeated staged speech from Mildred; avoid unrelated code locks | Disconnect and lost memory become concrete | 1.5 / low / text alternatives for audio / three walls, script, exit gate |
+| 04 Old woman | Conceal a falling book while Beatty turns away | Eye/watching state and turn cycle; watched attempt blocked, immediate retry | Book taken; woman's decision remains fixed and non-graphic | 1.5 / medium / readable meter / watched/unwatched, no death minigame |
+| 05 Beatty | Listen, keep hidden book concealed and answer | Existing rhetorical beat retries; no reflex reading | Beatty's conformity argument retained | 1.5 / reasoning / hints / all branches and retry |
+| 06 Vent | Position chair, recover books, remain still at door | Visible prerequisites, movement restarts only sniff wait | Mildred sees the collection | 1.5 / observation / gentle wait, no mash / pause and movement reset |
+| 07 Find Faber | Inspect file-wallet and infer which contact matters | Evidence linked to earlier encounter; call requires file | Cautious Faber refuses by phone | 1 / investigation / replay evidence / missing clue, correct contact |
+| 08 Subway | Study phrase, reconstruct ordered fragments among distractions | Sequence memory with station interference; wrong complete sequence locally resets; reference always available | Concentration competes with advertising; shout/silent choice | 2 / memory / untimed/reference/hints / wrong order, repeat fragment, native touch, pause |
+| 09 Poetry | Silence walls, navigate conversation, read, see aftermath | Social decisions are not a timing minigame | Phelps crying, Bowles rejection, book burned | 2 / emotional / readable text / both tones and prerequisites |
+| 10 Own house | Burn personal objects, Beatty cinematic, Hound response | Existing object gates; telegraphed leap repeats fairly | Loss, confrontation and injury remain | 2.5 / medium / no mashing / every object and missed prompt |
+| 11 Boulevard | Observe headlight warnings and cross safe gaps | Warning/active windows and safe kerbs; capture returns locally | Plant or leave books at Black's house | 1.5 / action / text+shape cues / deliberate failure, safe crossing |
+| 12 Count of ten | Mask scent then navigate toward river | Explain scent sequence; readable urgency, full local timer reset | City turns watcher; reach escape | 1.5 / high / pause and fair low-delta movement / wrong mask and 10–30 FPS |
+| 13 River | Drift/dive past light, find land and rail | Light position and DIVE teaching; short upstream retry | City recedes; deer mistaken for Hound | 1.5 / medium / hold rather than mash / multitouch, dive, shore pose |
+| 14 Book people | Reconstruct preserved seasons/time passage, meet people | Quiet ordered memory with full reference; local retry | Knowledge carried by people | 2 / reflective memory / untimed/reference / wrong order, all fragments, met flag |
+| 15 War/morning | Understand three choices and shared destruction | Consequences described, all endings offered, no secret score gate | Preservation canonical direction; other paths identified as adaptations | 2 / choice / no timer / three full ending campaigns |
+
+Budget: 25 minutes of challenge activity plus short transitions and optional exploration, approximately 25–30 minutes overall if human observations support it. This must not be achieved by slowing movement. Current actual duration remains unmeasured; reject the estimate if playtests disagree.
+
+
+## Candidate status versus ambition
+
+01 pressure control, 02 deliberate observations, 04 watched concealment, 08 ordered recall, 11–12 hazard feedback, 13 finite dive, and 14 ordered preservation are implemented. 03 has clearer broadcast staging and visible script; 06/07 have visible investigation props and retain their existing prerequisite chain. 05/09 retain their dialogue structure, 10 retains its object-burn/Hound sequence, and 15 retains all three meaningful endings. These retained scenes are not advertised as newly rebuilt puzzles. Stronger Faber trust/inference and more cinematic social staging remain review opportunities, rather than rushed unrelated minigames.

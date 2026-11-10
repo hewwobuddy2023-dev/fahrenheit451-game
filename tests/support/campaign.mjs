@@ -10,7 +10,15 @@ export function campaign(s, { ending = 'preservation' } = {}) {
       const r = s.scene();
       if (r.sys.settings.key === 'end') return;
       if (r.mode === 'play' && !r.stillWatch) return;
-      if (r.dialogue?.open) {
+      if (r.dialogue?.puzzle) {
+        const puzzle = r.dialogue.puzzle;
+        if (puzzle.state.phase === 'study') await s.tap(480,450);
+        else {
+          const next = puzzle.def.fragments[puzzle.state.selected.length];
+          const index = puzzle.state.cards.indexOf(next);
+          await s.tap(60 + (index % 2) * 425 + 160, 201 + Math.floor(index / 2) * 75 + 30);
+        }
+      } else if (r.dialogue?.open) {
         heard.add(r.dialogue.current);
         if (r.dialogue.choosing) {
           const choices = r.dialogue.choices;
@@ -46,7 +54,10 @@ export function campaign(s, { ending = 'preservation' } = {}) {
     s.w.__qa.go(h.x); await s.advance(50);
     if (!h.auto) {
       if (h.hold) {
-        await s.touch('touchstart',888,474); await s.advance(h.hold.ms+100); await s.touch('touchend',888,474);
+        if (h.hold.pressure) {
+          for (let n = 0; n < 12 && !r.session.flags[h.hold.flag]; n++) { await s.touch('touchstart',888,474); await s.advance(1000); await s.touch('touchend',888,474); await s.advance(250); }
+        } else { await s.touch('touchstart',888,474); await s.advance(h.hold.ms+100); await s.touch('touchend',888,474); }
+        if (h.watcher) await settle(opts);
         assert.ok(r.session.flags[h.hold.flag],`hold completed ${h.hold.flag}`);
       } else await s.tap(888,474);
     }
@@ -54,8 +65,8 @@ export function campaign(s, { ending = 'preservation' } = {}) {
   }
   async function walkTo(target, { dive = false, avoid = true, maxMs = 180000 } = {}) {
     const roomId=s.scene().room.id;
-    let pressed=false;
-    const release=async()=>{ if(pressed){await s.touch('touchend',174,478,1);if(dive)await s.touch('touchend',776,474,2);pressed=false;} };
+    let pressed=false, diving=false;
+    const release=async()=>{ if(pressed){await s.touch('touchend',174,478,1);if(diving)await s.touch('touchend',776,474,2);pressed=false;diving=false;} };
     for(let elapsed=0;elapsed<maxMs;elapsed+=100){
       const r=s.scene();
       if(r.room.id!==roomId || r.player.x>=target){await release();return;}
@@ -71,7 +82,12 @@ export function campaign(s, { ending = 'preservation' } = {}) {
         }
       }
       if(!safe){await release();await s.advance(100);continue;}
-      if(!pressed){await s.touch('touchstart',174,478,1);if(dive)await s.touch('touchstart',776,474,2);pressed=true;}
+      if(!pressed){await s.touch('touchstart',174,478,1);pressed=true;}
+      if (dive) {
+        const needed = !r.breath.exhausted && (r.room.hazards??[]).some(h=>{if(!h.dive || (h.when&&!h.when(r.session.flags)))return false;const t=(r.activeTime/h.period+(h.phase??0))%1;const x=h.from+(h.to-h.from)*(t<.5?t*2:2-t*2);return Math.abs(r.player.x-x)<h.width/2+55;});
+        if(needed&&!diving){await s.touch('touchstart',776,474,2);diving=true;}
+        if(!needed&&diving){await s.touch('touchend',776,474,2);diving=false;}
+      }
       await s.advance(100);
     }
     await release();throw new Error(`Walk timed out ${roomId} x=${s.scene().player.x}`);

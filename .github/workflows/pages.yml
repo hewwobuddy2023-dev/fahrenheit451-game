@@ -6,6 +6,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  F451_BUILD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
 permissions:
   contents: read
 
@@ -20,7 +23,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npm run test:simulation && npm run test:campaign:all && npm run test:regression && npm run test:day2 && npm run test:cinematics
+      - run: npm run test:simulation && npm run test:campaign:all && npm run test:regression && npm run test:day2 && npm run test:cinematics && npm run test:phoenix
       - run: npm run build # runs tsc --noEmit first
       - uses: actions/upload-pages-artifact@v5
         if: github.event_name != 'pull_request'

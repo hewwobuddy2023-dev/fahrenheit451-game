@@ -1,74 +1,66 @@
-> **Current review checkpoint:** M2 plus mobile/QA work is on `work/overnight-mobile-qa`, [PR #1](https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/1) into `feat/m2-chapters`. Read [Work handoff](WORK_TO_CLAUDE_HANDOFF.md), [QA evidence](QA_REPORT.md), and [Claude resume prompt](CLAUDE_RESUME_PROMPT.md). Main remains the earlier documentation branch. No Work changes have been deployed.
+# Fahrenheit 451: The Fireman's Choice
 
-# FAHRENHEIT 451: THE FIREMAN'S CHOICE
+A Phaser 3 / TypeScript narrative adventure: five chapters, fifteen required challenges and three endings. The broad chronology follows Ray Bradbury's novel; Defiance and Submission are alternate adaptations. School deadline: November 13, 2026.
 
-Status: **Milestone 1 (vertical slice) implemented on `feat/m1-vertical-slice`; M2 not authorized.** School final due **2026-11-13**. Read `AGENTS.md` and `PROGRESS.md` before any work.
+**Current development is the reversible Phoenix candidate**, `work/cinematic-gameplay-rebuild`, draft [PR #3](https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/3) into Day 2. Read [Phoenix handoff](docs/phoenix/WORK_TO_CLAUDE_FINAL_HANDOFF.md), [QA results](docs/phoenix/QA_RESULTS.md), [rollback](docs/PROJECT_PHOENIX_ROLLBACK.md) and [progress](PROGRESS.md). Passing automation does not establish fun, a physical-device benchmark or school-submission readiness.
 
-**Play:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/
+[Production game](https://hewwobuddy2023-dev.github.io/fahrenheit451-game/) remains the older deployed version. **No Phoenix preview has been deployed.** The review ZIP contains ready-built candidate and Day 2 baseline versions. See [separate preview instructions](docs/phoenix/PREVIEW_SETUP.md); never overwrite production as a shortcut.
 
-## Controls
+## Play and controls
 
 | Action | Keyboard | Touch |
 |---|---|---|
-| Move | A / D or arrow keys | on-screen arrow buttons |
-| Interact / advance dialogue | E, Enter or Space (one press = one action; held keys don't repeat) | ACT button, or tap the dialogue box |
-| Choose a response | Up / Down (or W / S), then E / Enter | tap the response |
-| Journal | J (or the JOURNAL chip) | tap the JOURNAL chip |
-| Pause | Esc or P | II button |
+| Move | A/D or left/right | Hold arrow buttons |
+| Interact / dialogue | E, Enter or Space | ACT or dialogue panel |
+| Hose | Hold to build FLOW; release to vent | Pulse ACT; same pressure gauge |
+| Response / memory card | Up/down, then E/Enter | Tap a full row/card |
+| Read memory source again | Backspace during puzzle | READ AGAIN |
+| Optional hint | H | ? or HINT |
+| River dive | Short Down/S holds; release to recover breath | DIVE, plus movement with second finger |
+| Journal / pause | J / Esc or P | JOURNAL / II |
+| Mute | M | Sound in title settings/pause |
 
-URL flags: `?debug` shows an fps readout and exposes `window.__game` for QA. `?lowres` forces 1× render resolution (use it to compare performance on a weak Chromebook).
+Settings → Audio & accessibility includes sound check, volume presets, assisted hose and analog-effect toggle. Reduced motion is in title/pause settings. Sound requires a tap/key gesture; unsupported audio never prevents play. Checkpoints commit whole events, and interrupted conversations restart from the previous safe checkpoint. All five Presentation Mode starts preserve the normal save and label seeded demo progress.
 
-## Develop
+## Develop and verify
 
-Requires Node 24 (tested with 24.20.0 / npm 11.19.0).
+Node 24 and npm. No runtime network service, account, commercial music or external audio IDs.
 
-```bash
+```sh
 npm ci
-npm run dev        # http://localhost:5173
-npm test           # save/challenge/content unit tests (node:test)
-npm run build      # typecheck + production build into dist/
+npm test
+npm run typecheck
+npm run test:simulation
+npm run test:campaign:all
+npm run test:regression
+npm run test:day2
+npm run test:cinematics
+npm run test:phoenix
+npm run build
+npx playwright install chromium webkit
+npm run test:browser
+npm run dev -- --host 0.0.0.0
 ```
 
-Pushing to `main` or `feat/m1-vertical-slice` runs `.github/workflows/pages.yml`: tests, typecheck, build, deploy to GitHub Pages.
+Linux may need Playwright's `--with-deps`. Tests distinguish pure units, deterministic Phaser/Canvas simulation and native Chromium/Linux-WebKit input. The latter is not physical iOS. `npm run test:gallery` produces staged fixtures, not earned-progress evidence.
 
-### Code map
+The review ZIP's Windows launcher serves its prebuilt candidate without npm install. In a source checkout, `node tools/serve-review.cjs` serves `dist` after building. Add a root path and optional port to compare a separate baseline. Opening `index.html` as a file is unsupported.
 
-- `src/content.ts`: the 15-challenge journal list, completion rules, dialogue scripts and room data. **M2 content goes here.**
-- `src/state.ts`: versioned save, checkpoints, challenge rules (pure, unit-tested).
-- `src/art.ts`: all art, painted once at boot with Canvas 2D (no image files). `src/stage.ts` places it.
-- `src/scenes/`: title, room (movement, hotspots, dialogue flow, pause, journal), end card.
-- `src/ui/`: dialogue box, HUD and touch buttons, journal, menu list.
+`?diagnostics`: local-only build/input/viewport/audio/error readout. `?debug`: QA hooks and FPS. `?lowres`: 960×540 base rendering. None grants normal challenge completion. Preferences and story progress use separate local browser keys; no telemetry is transmitted.
 
-## Working game concept
+## Source map
 
-A 10–15-minute 2D side-view cinematic narrative adventure in which Guy Montag explores compact environments, interacts with key objects/characters, makes choices, solves short thematic puzzles, and survives limited scripted surveillance/Mechanical Hound encounters. Five gameplay chapters, three mandatory novel-linked challenges each, three distinct endings (two alternate, one aligned with the novel's preservation motif). All 15 challenges must be encountered in an ordinary complete run, all flag as completed, and all be visible in a journal.
+- `src/content/`: room/event/script data, all fifteen rules and three endings.
+- `src/state.ts`, `checkpoints.ts`: v1 saves, event checkpoints and legacy recovery.
+- `src/scenes/`: title, room interpreter, ending.
+- `src/ui/`: touch HUD, dialogue, journal, menus and ordered recall.
+- `src/gameplay/`: time-based hose pressure and finite dive state.
+- `src/art/`, `world/`, `assets/`: original procedural sets/cast/effects plus one compressed original generated city layer.
+- `src/audio.ts`, `settings.ts`, `focus.ts`, `diagnostics.ts`: local synthesis, preferences and browser lifecycle.
+- `tests/`: units, deterministic campaigns/regressions/fixtures and native browser tests.
 
-### Device/platform
+## Integration and school requirements
 
-- School Chromebook Chrome is **primary**. No downloads, installation, account, or powerful GPU required; aim at 960x540 logical game space, legible at 1366x768.
-- Windows PC is primary *development* device, with Claude Code and Codex locally.
-- When PC is unavailable, use Claude Code Cloud / Codex Cloud from iPhone against pushed GitHub state, NOT remote desktop.
-- GitHub Pages is sole planned production website; v.gd is an optional redirect only. School blocks Surge/Cloudflare/Vercel.
-- Browser game must work with keyboard and be secondarily touch-testable from an iPhone landscape browser.
+Stack: M2 → draft #1 / Sprint 1 → draft #2 / Day 2 → draft #3 / Phoenix. Backup branch `backup/pre-cinematic-rebuild-20261110` preserves Day 2 `74f0b2c`. Owner/Claude can reject the candidate or cherry-pick reviewed improvements. No force push, tag deletion or automatic merge.
 
-### Technology proposal, awaiting implementer's preflight
-
-Phaser + TypeScript + Vite with lightweight static assets, simple localStorage state, optional automatic *cosmetic-only* quality scaling. Confirm chosen stable version during preflight; don't automatically switch major Phaser versions. No backend. GitHub Actions should build and deploy to GitHub Pages once explicitly authorized. Correct Vite `base` for `/<REPO>/` URLs.
-
-## Before any code
-
-1. Review `GAME_SPEC.md`, `STORY.md`, `CHALLENGES.md`, `ART_DIRECTION.md`, `TESTING.md`, `RUBRIC_AND_SUBMISSION.md`, and `AGENTS.md`.
-2. Check `PROGRESS.md` and environment (Node/npm/Git/Claude/Codex/GitHub auth). **Do not silently install anything.**
-3. Identify blockers and ask focused questions. Decide on asset style that a small team can execute by Nov 13.
-4. Wait for user's **explicit permission to code**.
-
-## Repo scaffold
-
-See "Code map" above. `.gitignore` excludes `node_modules/`, `dist/`, env files, ebook formats (`*.mobi`, `*.epub`, `*.azw*`, `*.kfx`), the private reference folders and `.claude/settings.local.json`. The novel stays outside this repository.
-
-
-## Day 2 review
-
-Current isolated continuation: `work/day2-quality-sprint`, stacked draft PR #2 into the first Work branch (PR #1). Read `REVIEW_START_HERE.md`, `DAY2_QA_REPORT.md`, and the Day 2 Claude handoff. No merge/deployment performed. `npm run test:campaign:all` runs three complete simulated campaigns; `npm run test:browser` runs the production build through Chromium/WebKit. Physical iPhone/Chromebook tests, two actual human playtests, printed quotation verification and rehearsal remain owner work.
-
-Press M to mute, or use title/pause settings. Reduced motion is available there. `?diagnostics` provides a local-only input/viewport/error panel for reporting phone failures. Background/focus loss pauses behind a return gesture. No audio/network service is required.
+The existing workflow deploys pushes to main/M1/M2; PR jobs skip deployment. Any production integration needs owner release approval. The fifteen-challenge campaign, rulebook, two real playtests, a 300–400-word connection statement with three verified printed-page quotations, and a timed 3–5-minute presentation are separate acceptance requirements. Human tests, quotations/pages, real Chromebook/iPhone acceptance and rehearsal remain open.

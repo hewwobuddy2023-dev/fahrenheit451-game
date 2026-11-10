@@ -6,6 +6,7 @@ import '@fontsource/ibm-plex-sans/latin-400-italic.css';
 import '@fontsource/ibm-plex-sans/latin-600.css';
 import '@fontsource/special-elite/latin-400.css';
 import Phaser from 'phaser';
+import cityUrl from './assets/phoenix-city.webp';
 import { paintCast } from './art/figures.ts';
 import { paintFx } from './art/fx.ts';
 import { EndScene } from './scenes/EndScene.ts';
@@ -20,6 +21,7 @@ const diagnostic = diagnostics(params.has('diagnostics'));
 
 class BootScene extends Phaser.Scene {
   constructor() { super('boot'); }
+  preload() { this.load.image({ key: 'phoenix:city', url: cityUrl, xhrSettings: { responseType: 'blob', timeout: 4000 } }); }
   create() {
     paintFx(this);
     paintCast(this);

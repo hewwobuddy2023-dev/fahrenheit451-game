@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { BUILD } from './build.ts';
 import { sound } from './audio.ts';
 
 /** Opt-in, on-device diagnostics. Bounded in memory; never sent or stored. No save contents. */
@@ -29,6 +30,7 @@ export function diagnostics(enabled: boolean) {
     const scenes = game?.scene.getScenes(true) ?? [];
     const pointer = game?.input.activePointer;
     panel.textContent = [
+      `BUILD ${BUILD.sha.slice(0, 12)} | ${BUILD.version} | ${BUILD.environment} | ${BUILD.date}`,
       `F451 DIAGNOSTICS — local only | ${game?.isBooted ? 'booted' : 'loading fonts / engine'}`,
       `viewport ${innerWidth}×${innerHeight} | visual ${Math.round(window.visualViewport?.width ?? innerWidth)}×${Math.round(window.visualViewport?.height ?? innerHeight)} | DPR ${devicePixelRatio}`,
       `orientation ${innerWidth > innerHeight ? 'landscape' : 'portrait'} | visibility ${document.visibilityState}`,

@@ -1,0 +1,15 @@
+# Copy into the owner's available lead planning/review model
+
+Review my existing Fahrenheit 451 Phaser/TypeScript game independently. You are reviewing a reversible Phoenix candidate, not approving another agent by default. My preferred model name is Fable 5.2 if actually available in Claude Desktop → Code; do not invent an /advisor command or model access.
+
+First inspect my current checkout without resetting it. Fetch GitHub and review in a separate worktree. Read AGENTS.md, PROGRESS.md, docs/PROJECT_PHOENIX_ROLLBACK.md, docs/phoenix/CRITICAL_AUDIT.md, CHALLENGE_REDESIGN_MATRIX.md, VISUAL_DIRECTION.md, AUDIO_DIAGNOSIS.md, QA_RESULTS.md and WORK_TO_CLAUDE_FINAL_HANDOFF.md. Review source, real screenshots/audio evidence and test results; do not trust prose claims alone.
+
+History: M2 94c45a3 → draft #1/Sprint 1 19b9328 → draft #2/Day 2 74f0b2c → draft #3/work/cinematic-gameplay-rebuild. Verify current heads and ancestry. Backup branch backup/pre-cinematic-rebuild-20261110 must remain at 74f0b2c. Do not merge, force-push, delete references, overwrite another checkout, change production Pages, or publish an official v.gd link.
+
+My target: cinematic 2.5D, detailed unsettling retro-futurism, restrained VHS/analog horror, clearly audible ambience/SFX, book-faithful broad chronology, varied challenging gameplay and a useful tutorial. Target first-time playtime 25–30 minutes without padding. Primary device weak Chromebook; secondary iPhone. Deadline Nov 13, 2026. Preserve 15 mandatory challenges, three endings, local saves, prior mobile repairs and Presentation Mode isolation.
+
+Compare baseline and candidate visually and through actual play. Assess active hose/assist, deliberate observations, watched concealment, ordered recall/reference/hints, finite river breath, hazards, character/readability, set depth, sound and camera/input. Classify findings as reproduced defects, source-confirmed limitations, design judgments or hypotheses. Do not call a game fun because simulation passes; do not call Linux WebKit a real phone test. Inspect initial browser failures separately from final results. Audio graph samples are not a speaker listening test. The original owner recording was unavailable in Work.
+
+Return prioritized findings with source lines and reproduction evidence. For each major change, recommend ACCEPT, REWRITE, REJECT or DEFER, with a concrete reason and cost/risk. Identify which mechanics remain passive or unfair and which rooms/cast still look weak. Give Opus a small dependency-ordered implementation plan and explicit acceptance tests. Keep a complete baseline option and recommend the deadline-safe release candidate, not the largest codebase.
+
+Before submission we still need two genuine human playtests, three verified short quotations with printed pages, a final 300–400-word personal statement, real-device checks and a timed 3–5-minute classroom rehearsal. Separate preview may be prepared under PREVIEW_SETUP.md; production replacement requires my approval. Do not blindly merge the three stacked PRs.

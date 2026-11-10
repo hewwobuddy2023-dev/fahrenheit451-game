@@ -34,3 +34,10 @@ Network multiplayer, account system, leaderboards, actual external AI at runtime
 ## Definition of Done
 
 All mandatory challenge IDs tested in one normal run; three endings reachable; objective journal truthful; build/test clean; no critical visual overlap on Chromebook; Pages loads via school Wi-Fi; backup/demo route tested; teacher rubric deliverables completed from actual evidence.
+
+
+## Phoenix candidate addendum — newer owner direction, Nov 10
+
+The isolated `work/cinematic-gameplay-rebuild` candidate continues Day 2 rather than replacing the engine. Owner target is cinematic 2.5D/analog horror, more active observation/pressure/stealth/memory/escape and a 25–30-minute first-time experience without padded travel. Actual duration/enjoyment remain unmeasured. Retain 15 mandatory gates, three endings, local saves, mobile repairs and non-saving Presentation Mode.
+
+Implementation status and evidence: `docs/phoenix/QA_RESULTS.md`, challenge matrix, handoff and rollback. Some original dialogue-led scenes are deliberately retained; do not claim every planned mechanic is finished. Separate preview publication is authorized only if isolated from production; current capability/authentication blocker and owner setup steps are in PREVIEW_SETUP.md. Production integration requires owner approval.

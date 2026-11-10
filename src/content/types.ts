@@ -1,4 +1,5 @@
 // Content data shapes. Chapters are pure data built from these; the engine interprets them.
+import type { SequenceDef } from '../ui/SequencePuzzle.ts';
 import type { Flags } from '../state.ts';
 
 export type Cond = (f: Flags) => boolean;
@@ -15,6 +16,7 @@ export interface Choice {
 }
 
 export interface Script {
+  puzzle?: SequenceDef;
   lines: Line[];
   choices?: Choice[];
   set?: Flags;
@@ -51,7 +53,7 @@ export interface Hotspot {
   requires?: string[];
   lockedScript?: string;
   required?: boolean;        // glows on the floor while it is part of the objective
-  hold?: { flag: string; ms: number; fx?: 'hose' | 'flame' | 'pull'; target?: number };
+  hold?: { flag: string; ms: number; fx?: 'hose' | 'flame' | 'pull'; target?: number; pressure?: boolean };
   watcher?: string;          // T2: blocked while this npc is watching
   watchedScript?: string;
   auto?: boolean;            // triggers on arrival, no key press

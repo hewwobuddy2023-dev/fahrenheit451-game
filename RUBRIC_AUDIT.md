@@ -30,3 +30,8 @@ Deadline: Friday, November 13, 2026. Draft status; no grade or completion claim 
 Three separate simulated New Game runs now reach 15/15, one for each ending. Audio, reduced motion, focus suspension, cinematic pose repair, native browser test infrastructure and an eleven-scene composition pass are implemented on the isolated Day 2 branch. Native browser results and their limits belong in `DAY2_QA_REPORT.md`; do not infer success from a test file existing.
 
 Mandatory owner work remains: **two actual people playtest**, **three accurate short quotations with verified printed pages**, personal review of the statement and **a timed Chromebook rehearsal**. No tool can substitute automated runs for these rubric requirements. A review ZIP and two draft PRs do not constitute a submitted or deployed release.
+
+
+## Phoenix candidate
+
+The isolated candidate adds active hose/stealth/breath/ordered-memory mechanics, hybrid art, audio-level evidence and a new review PR. Those improvements do not complete human/citation/hardware/rehearsal requirements. No separate preview or official short link exists yet. Use docs/phoenix/QA_RESULTS.md and PREVIEW_SETUP.md; keep the Day 2 baseline available if the candidate is weaker.

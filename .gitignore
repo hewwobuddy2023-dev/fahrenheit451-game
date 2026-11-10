@@ -35,3 +35,7 @@ npm-debug.log*
 # Reproducible staged review captures (delivered in the review ZIP, not runtime)
 docs/qa/day2-before/
 docs/qa/day2-after/
+
+# Reproducible Phoenix capture outputs (distributed with the review package)
+docs/qa/day2-phoenix-*/
+docs/qa/phoenix-mechanics/

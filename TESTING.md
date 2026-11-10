@@ -74,3 +74,8 @@ Continuous trace screenshots can stall software WebGL readback. Routine CI traci
 
 
 Final Day 2 implementation `95837d3`, CI `42808394871`: **20/20 native tests and 11/11 unit tests PASS**, with all three complete simulated ending campaigns and remaining regression/typecheck/build checks PASS. Deployment SKIPPED. Physical-device acceptance remains open; use the explicit checklist in `DAY2_QA_REPORT.md`.
+
+
+## Phoenix candidate
+
+Read `docs/phoenix/QA_RESULTS.md` for exact new head/run results; Day 2 results are inherited history. Add `npm run test:phoenix` to the prior sequence. Native tests exercise source-first recall failure/reread/success, missing-image fallback, watched hold, finite dive/recovery, actual audio analyser/mute output and a short native offline-rendered sound sample. None proves a physical phone, actual speakers, a real Chromebook, enjoyment or measured first-time duration. See the Phoenix handoff and device checklist.

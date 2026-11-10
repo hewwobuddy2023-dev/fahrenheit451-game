@@ -4,13 +4,12 @@ import type { Flags } from '../state.ts';
 import type { RoomDef, Script, Step } from './types.ts';
 
 const N = '';
-const away = (t: string) => [{ who: N, text: t }];
 const looked = (f: Flags) => ['c02.n1', 'c02.n2', 'c02.n3'].filter((k) => f[k] === 'look').length >= 2;
 
 export const SCRIPTS5: Record<string, Script> = {
   rv_open: { lines: [
     { who: N, text: 'The current takes you. Behind you, helicopters sweep the water with white light.' },
-    { who: N, text: 'Hold DOWN to go under when a light comes near.' },
+    { who: N, text: 'Hold DOWN as a light reaches you. Release in the dark to breathe. You cannot stay under forever.' },
   ] },
   rv_shore: { set: { 'c13.shore': true }, lines: [
     { who: N, text: 'Your heel touches stones. The river has carried you to the bank, far out of the city.' },
@@ -43,29 +42,12 @@ export const SCRIPTS5: Record<string, Script> = {
 
   // ---- 14 The Book People (untimed recall) ----
   cp_offer: { lines: [
-    { who: 'GRANGER', text: "I'm Granger. Will you join us? Then tell me: what do you have to offer?" },
-    { who: 'MONTAG', text: 'Nothing. I had part of the Book of Ecclesiastes. I tried so hard to hold it, and it slipped away.' },
-    { who: 'GRANGER', text: "Don't push. Let it come." },
-  ], choices: [
-    { text: 'Consider the lilies of the field,', again: true, reply: away('That is another book. Let it go.') },
-    { text: 'To every thing there is a season,', next: 'ec_2' },
-    { text: "Denham's Dentifrice,", again: true, reply: away('The old jingle. Let it pass.') },
-  ] },
-  ec_2: { lines: [], choices: [
-    { text: 'and a time to every purpose under the heaven:', next: 'ec_3' },
-    { text: 'they toil not, neither do they spin;', again: true, reply: away('Not that one. Breathe.') },
-    { text: "Denham's does it!", again: true, reply: away('Let the noise go by.') },
-  ] },
-  ec_3: { lines: [], choices: [
-    { text: 'one two, one two three,', again: true, reply: away('Let the noise go by.') },
-    { text: 'how they grow;', again: true, reply: away('Not that one. Breathe.') },
-    { text: 'a time to be born, and a time to die;', next: 'ec_4' },
-  ] },
-  ec_4: { lines: [], choices: [
-    { text: 'a time to plant, and a time to pluck up that which is planted;', next: 'ec_end' },
-    { text: 'Dental detergent!', again: true, reply: away('Let the noise go by.') },
-    { text: 'neither do they spin.', again: true, reply: away('Not that one. Breathe.') },
-  ] },
+    { who: 'GRANGER', text: 'What do you have to offer?' },
+    { who: 'MONTAG', text: 'Part of Ecclesiastes. Let me try.' },
+  ], puzzle: { title: 'What you carry', source: 'KJV Ecclesiastes 3:1–2 · Read, then preserve the sequence.',
+    fragments: ['To every thing there is a season,', 'and a time to every purpose under the heaven:', 'a time to be born, and a time to die;', 'a time to plant, and a time to pluck up that which is planted;'],
+    distractions: ['Consider the lilies of the field,', "Denham's does it!"] },
+    choices: [{ text: 'Offer the passage to Granger.', next: 'ec_end' }] },
   ec_end: { set: { 'c14.recall': true }, lines: [
     { who: N, text: '"To every thing there is a season, and a time to every purpose under the heaven..." It comes back whole, without trying.' },
     { who: 'GRANGER', text: 'There. You see? Nothing is ever really lost.' },
@@ -150,7 +132,7 @@ export const ROOMS5: Record<string, RoomDef> = {
       { id: 'sl1', from: 480, to: 980, width: 150, period: 5200, look: 'searchlight', dive: true, reset: 300, when: (f) => !f['c13.shore'] },
       { id: 'sl2', from: 1040, to: 1420, width: 150, period: 4400, phase: 0.4, look: 'searchlight', dive: true, reset: 1000, when: (f) => !f['c13.shore'] },
     ],
-    objective: (f) => !f['c13.shore'] ? 'Drift to the shore. Hold DOWN to go under when a searchlight comes' : !f['c13.track'] ? 'Find your way in the dark' : 'Follow the track',
+    objective: (f) => !f['c13.shore'] ? 'Reach shore. Short dives under lights; release DOWN in the dark to breathe' : !f['c13.track'] ? 'Find your way in the dark' : 'Follow the track',
     enter: [{ key: 'e.river', steps: [{ title: 'CHAPTER FIVE', sub: 'The Fire That Warms' }, { say: 'rv_open' }] }],
     hotspots: [
       { id: 'shore', x: 1560, label: '', auto: true, when: (f) => !f['c13.shore'], script: 'rv_shore', steps: [{ flash: 0x101820, ms: 300 }] },

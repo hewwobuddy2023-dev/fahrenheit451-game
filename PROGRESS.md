@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-11-10 (Phoenix) by ChatGPT Work; Claude’s historical entries are retained below.
 **Stage:** Day 2 continues M2 and Sprint 1 on `work/day2-quality-sprint` (draft PR #2 into the first Work branch). Three full 15/15 ending simulations pass. Final implementation CI at `95837d3`: 20/20 Chromium/WebKit tests PASS; physical iPhone/Chromebook checks remain open. PR #1 and #2 remain draft, unmerged; no deployment. Read the Day 2 handoff and `DAY2_QA_REPORT.md` first.
-**Local repo:** `C:\Projects\Fahrenheit451Game`
+**Local checkout:** inspect it separately; the cloud did not observe the owner PC state.
 **GitHub repo:** https://github.com/hewwobuddy2023-dev/fahrenheit451-game (public). Branches: `main` (older docs), `feat/m1-vertical-slice` (M1), `feat/m2-chapters` (M2), both isolated Work branches.
 **GitHub Pages:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/ (deploy status below). The workflow deploys pushes to main/M1/M2; inspect current environment rules before an owner-approved release.
 **Stack (pinned):** phaser 3.90.0, typescript 5.9.3, vite 6.4.6; fonts @fontsource/oswald, ibm-plex-sans, special-elite 5.3.0. Work uses Node 24.22.1; CI uses Node 24. The owner PC runtime is unobserved this sprint.
@@ -186,3 +186,52 @@ Next exact task: Claude reviews both diffs in the separate PC worktree, then the
 ### Quick review launch follow-up
 
 Inspected final documentation CI `42810221687` at `ed9fa87`: build/browser SUCCESS, deploy SKIPPED. Added a dependency-free local static server, Windows launcher and `TEST_IT_FIRST.md` for immediate supplied-build/phone review. Server HTTP smoke checks cover root/assets/base-prefix/HEAD/404/method restrictions; this does not constitute testing Windows double-click or real iPhone networking. Game runtime unchanged.
+
+## Phoenix isolated candidate — November 10
+
+Verified Day 2 `74f0b2c`, PRs #1/#2 still draft/unmerged. New `work/cinematic-gameplay-rebuild` and remote backup branch `backup/pre-cinematic-rebuild-20261110` start exactly there; matching local tag included in the review bundle. Audit checkpoint `5867dca`; draft PR #3 targets Day 2. Baseline build/captures preserved. See docs/PROJECT_PHOENIX_ROLLBACK.md.
+
+First candidate: pulse/vent hose with assisted alternative; deliberate Clarisse observations; source-first ordered subway/camp recall with local failure, reference and hints; contextual control help; hybrid original city backdrop and editable facade/interior/broadcast/working-pose details; stronger bounded audio mix with test/volume controls and analyser sample inspection; adjustable analog effects and explicit build identity. Story flags/15 challenges/three endings unchanged. This is a candidate, not owner-approved art, fun, duration or physical-device acceptance. Original recording unavailable.
+
+Local 13 unit tests, typecheck/build, four touch viewports, three separate full 15/15 ending simulations, storage/focus/pause/cinematic and new mechanic regressions pass after fixes. Native candidate browser run is required; do not inherit baseline native results as candidate proof. Separate preview creation is blocked by absent repository/Pages tool actions and signed-out cloud UI. Production unchanged.
+
+
+### Phoenix observed mechanics and native evidence
+
+Implementation checkpoint `dea9294`: local 13 unit tests/all original and new simulations/build pass. Native run `42868739775` recorded 6 passes and 2 failures before maxFailures stopped the run. Fresh input, desktop hose, all chapter starts, pause and native subway wrong-order/reread/success passed. Actual Chromium analyser output RMS 0.03034, peak 0.06920: real graph signal, not speaker/iPhone listening. Failures: the new harness sent touchEnd twice in cleanup; the origin assertion rejected Phaser's same-origin image decoder blob. Track held state and allow only the exact same-origin blob prefix; retain HTTP origin enforcement and log actual URLs. Do not claim unexecuted WebKit cases passed.
+
+Next checkpoint adds watched concealment with a short safe hold and atomic story flag, finite release-to-recover river breath, explicit hazard text/ground zones, shaped noise footsteps/fire/capture cues and native offline sound-graph WAV evidence. Local 14-unit/new-mechanic/full-ending/regression/type/build checks pass; expanded native suite must complete before acceptance.
+
+
+### Phoenix visual review corrections
+
+Inspected actual native opening/subway/river captures. Removed mirrored truck numerals by keeping the opening truck texture unflipped. Restricted the generated urban layer to city sky keys: otherwise it could remain behind the forest after the bombing while the original horizon faded. Added a camp regression that forbids that city layer. Forest has gentler analog strength and more readable cast tint. Title uses the shared city layer. Added recognizable rotary-phone/file-wallet/script props at existing hotspot coordinates; no hit regions or story gates changed. Local unit/type/build, mechanic and viewport regressions pass; final native rerun still required for this art descendant.
+
+
+### Phoenix final interaction/access checkpoint
+
+Added an explicit PAUSE button inside both memory panels so touch players can pause without relying on an obscured underlying control. Visible sound check now labels and performs unmute; native audio tests use that menu path. The packaged local server accepts a separate baseline port (4174), smoke-tested alongside candidate 4173. No gameplay rules changed in this checkpoint. Source scope frozen for QA; final runtime ancestor and browser results belong in QA_RESULTS.md.
+
+
+### Decorative-load and source-archive release check
+
+Source audit found Phaser's XHR timeout defaults to zero. The new decorative city request therefore needs an explicit bound so a stalled connection cannot gate the title indefinitely. Set its timeout to 4 seconds; native failure coverage now exercises both immediate failure and a 6.5-second delayed request before starting ordinary play with procedural fallback. Normal assets remain unchanged. This is a startup guarantee for the new optional layer, not a claimed explanation of the original physical-iPhone report.
+
+Reproduced the source ZIP metadata build failing outside Git. Build-only metadata now accepts explicit SHA or a local Git checkout, otherwise truthfully labels source-archive. Full archived source without .git builds successfully using installed exact-lock dependencies.
+
+
+### Phoenix final verification and packaging
+
+Access checkpoint c98d127 completed 32/32 native Chromium/WebKit cases (run 42872448765), build PASS and deploy SKIPPED. Startup intermediate 8a70ce3 failed typecheck/build because the image XHR timeout object omitted a required response type. Successor 98e5aa2 explicitly selects blob; local type/build and the complete CI unit/simulation/campaign/regression/build job pass (42875205788). History remains linear and both deployment jobs were skipped. Final native fallback evidence is recorded separately in docs/phoenix/QA_RESULTS.md.
+
+Scope is frozen. The review ZIP contains current and preserved baseline source/build, all meaningful code/history/diffs, before/after and native renderer screenshots, initial failures and final test evidence, an actual synthesized sound-graph WAV, school drafts, rollback and independent Claude/Fable review prompts. No private novel, credentials or dependencies/browser binaries. Physical-device and human acceptance, printed citation pages and isolated public preview remain explicitly unperformed.
+
+
+### Workspace interruption: preserve through GitHub-only packaging
+
+Local execution became unavailable after the provisional 31.8 MB ZIP passed integrity/source-build/server checks, before its final upload. Do not claim that scratch ZIP was made downloadable. Preserve the prepared documentation and add a branch-only non-deploying review-artifact workflow. It rebuilds current and exact Day 2 source/builds, eleven before/after fixtures, complete Git bundle/diffs, school/Claude materials and source-specific CI artifacts. The original generated PNG/scratch-only logs were not recovered; the exact game WebP and independently recorded CI evidence are retained. Inspect the packaging job and actual native stats before reporting success. This interruption does not authorize production deployment or merging.
+
+
+### Final native result and complete recovery archive
+
+98e5aa2 native run 42875205788: 29 passes, 2 WebKit stalled-image texture-presence assertion failures, 1 skipped and an outside-test error. The title was reached; forced fallback timing remains unproven. c98d127 remains 32/32 and is supplied prebuilt separately for review. First recovered artifact excluded hidden tracked files due to upload defaults; the follow-up includes them and preserves the full manifest/source/workflow set. All source changes remain isolated and no deployment occurred.

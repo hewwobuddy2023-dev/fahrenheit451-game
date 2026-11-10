@@ -5,10 +5,10 @@ Target: 3–5 minutes. This timing is a proposed route, not a completed human re
 | Time budget | Screen/action | What it demonstrates |
 |---|---|---|
 | 0:00–0:25 | Title → Presentation Mode → Chapter 1 | Name the novel, theme, and controls; explain that demo mode does not save. |
-| 0:25–1:35 | Advance the opening; soak all three piles with held ACT/E; return to Beatty and choose an ignition response | Atmospheric opening, a real hold challenge, Montag’s initial satisfaction, and dialogue choice. |
+| 0:25–1:35 | Advance the opening; pulse ACT/E through FLOW, releasing to vent, at all three piles; return to Beatty and choose an ignition response | Atmospheric opening, a pressure-control challenge, Montag’s initial satisfaction, and dialogue choice. |
 | 1:35–1:55 | Pause → Quit to title → Presentation Mode → Chapter 5 | Clearly identify the chapter jump as a demonstration shortcut. |
-| 1:55–2:35 | Advance river introduction; move right, holding DIVE/Down while crossing the searchlights | Suspense, two-finger controls or keyboard movement, and local retry if caught. |
-| 2:35–3:35 | Reach shore, track, and campfire; meet Granger; complete the recall responses | Knowledge preservation as a playable challenge. |
+| 1:55–2:35 | Advance river introduction; move right, using short DIVE/Down holds under lights and surfacing in the dark | Suspense, two-finger controls or keyboard movement, and local retry if caught. |
+| 2:35–3:35 | Reach shore, track, and campfire; meet Granger; study the passage and reconstruct its four fragments | Knowledge preservation as a playable challenge. |
 | 3:35–4:35 | Choose Preservation, advance the bombing and epilogue, show ending card | Meaningful ending, shared city destruction, and adaptation labels. |
 | 4:35–4:55 | Explain the fifteen-challenge journal and normal campaign | Full scope, without presenting seeded demo flags as earned progress. |
 
@@ -20,3 +20,5 @@ Before class: verify the exact hosted commit, fullscreen/readability, the M mute
 
 
 Day 2 rehearsal notes: set sound to a quiet level before class, or mute it with M. Use the keyboard throughout the live Chromebook demo. If switching to another slide/tab triggers the return curtain, press Enter to resume the game; timers stay paused. The opening objective now tells a new player to move right and hold E. The all-fifteen journal remains actual progress in normal mode and seeded demonstration progress in Presentation Mode. Do not report the proposed time budgets as a measured rehearsal.
+
+Phoenix rehearsal priority: the new pressure/breath/recall controls may take longer for an unfamiliar presenter. These budgets are unmeasured. Practice the route; use assisted hose if necessary, disclose it, and do not rush the old woman’s scene or turn her death into a demo game.

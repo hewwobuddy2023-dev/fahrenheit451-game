@@ -54,3 +54,12 @@ Final implementation `95837d3`: main JS 1,638,645 bytes; Python gzip level 9 389
 
 
 Final native run `42808394871` at `95837d3`: 20/20 PASS. The 120-RAF median/p95 intervals were Chromium desktop 83.3/100.0 ms, Chromium touch 66.7/83.4 ms, WebKit landscape 30/35 ms, WebKit portrait 23/25 ms. Browser versions/viewports match the Day 2 QA report; WebGL, canvas 960×540. The variation between CI runs is another reason not to infer school-device throughput. Full resource and frame arrays are included in the archive.
+
+
+## Phoenix candidate
+
+See `docs/phoenix/QA_RESULTS.md` and the review archive for source-specific native frame/resource arrays. At `2efd881` all 32 Chromium/WebKit checks passed; median/p95 RAF intervals were 66.7/83.4 ms (both Chromium views), 32/34 ms (WebKit landscape), 26/30 ms (WebKit portrait), WebGL / canvas 960×540. This is slow headless CI, not actual Chromebook throughput. Ten same-origin asset bodies totaled ~608.4–608.7 kB plus HTML; an extra same-origin decoder blob is not an external service. Actual school Wi-Fi/GPU/thermal behavior remains unknown.
+
+Final runtime local build at `98e5aa2`: JS 1,656,112 bytes, Python gzip9 396,166 bytes, full dist 2,070,271 bytes, generated city WebP 44,774 bytes. Vite reports about 401.10 kB gzip with different compression. The city adds ~3 MiB decoded texture, working cast sheet ~1.16 MiB, excluding driver copies. Room set textures follow existing family cleanup; no new full-screen shader. Audio remains one generated buffer/two ambient sources and bounded cue voices, now including short filtered buffer cues. Finite breath and hose regulation depend on elapsed deltas, not frame count.
+
+New dev-only @types/node 24.19.2 and undici-types 7.24.6; runtime packages unchanged. Source archives without Git can build with an honest metadata fallback. No claim of physical speakers, real-iOS audio, 30/60 FPS hardware acceptance or measured 25–30-minute first-time duration.

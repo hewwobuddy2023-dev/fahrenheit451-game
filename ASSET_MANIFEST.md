@@ -32,3 +32,8 @@ The source novel is **private literary reference, not a shipped asset**.
 `src/art/figures.ts`, `src/art/kits.ts` and `src/world/stage.ts`: original baked fabric/collar details, interior trim, tree silhouettes, distant forest and static ground planes. No art asset downloads. Day 2 review captures are reproducible staged fixtures, outside runtime; Canvas fallback does not reproduce all WebGL tints. See `tests/gallery.mjs` and the review ZIP.
 
 Earlier manifest wording is historical: current art lives in `src/art/`, Latin-only font imports are now used, and Day 2 includes synthesized audio. The private novel remains excluded.
+
+
+## Phoenix candidate
+
+Current art now also includes `src/assets/phoenix-city.webp`: original built-in image generation, inspected and compressed to 1536×512 / 44,774 bytes, used only as a distant city/title layer. It does not define interactions and is excluded from the forest bombing horizon. See `docs/phoenix/ASSET_PROVENANCE.md` for the prompt/provenance, original code-painted sets/props and texture estimates. Earlier “no image files” entries describe historical M1/Day 2 only. Audio remains original code synthesis; noise-based action cues reuse its buffer. No new runtime dependencies or external art/audio service.
