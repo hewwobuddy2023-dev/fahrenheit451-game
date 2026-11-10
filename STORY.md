@@ -20,13 +20,22 @@ Three source parts, in order: **The Hearth and the Salamander** (Montag, Clariss
 
 Source major-event order preserved through Chapters 1–5. Alternate endings clearly identified as invented adaptations. Do not invent canonical quotes, fake page numbers, or paste long passages from the ebook into public assets. Write short **original** dialogue informed by characters' personalities, e.g. questioning, defensive, skeptical, measured, propagandistic. Include choice consequence flags but avoid claiming large reactive story branches are implemented.
 
-## Ending design
+## Corrections approved for M2 (2026-11-09)
 
-- **Submission (alternate)** — Montag chooses conformity after his escape; consequences focus on how security undermines freedom.
-- **Defiance (alternate)** — public confrontation, possibly self-sacrificial, with unresolved political consequences; not a triumphant violence fantasy.
-- **Preservation (novel-aligned thematic direction)** — joins people remembering books; renewal requires knowledge and reflection.
+- The game opens on a burn Montag enjoys. He is content and proud; any unease is shown, never stated. He already keeps books behind the hall vent (the camera glances at the grill once, without comment).
+- Nothing announces later events: no lines about hidden books "waiting", Clarisse's importance, or Montag's future change.
+- Beatty is warm, witty and persuasive. His case (from the novel) is that censorship grew from the public's own appetite for speed and simplicity, not from orders above.
+- Mildred's overdose and Clarisse's death are short, restrained, non-interactive beats. Clarisse's death is mentioned by Mildred in passing, as in the novel.
+- Beatty's death is a brief, non-graphic in-engine cut with no combat input.
+- Event order follows the novel (see `CHALLENGES.md`).
 
-Prior choices can alter the narrator's lines and whether a persuasion line is available, but a first-time player must not become blocked from completing a full 15-objective run. The exact gating scheme needs M1/M2 design review.
+## Ending design (choice at Granger's fire; the city's destruction is shared by all three)
+
+- **Preservation (closest to the novel)** — Montag stays and offers the verse he has recovered. After the bombs, the fire is used for warmth and the group walks upstream to help.
+- **Defiance (adaptation)** — Montag leaves at once to carry out Faber's plan: plant books and turn the firehouses against themselves. The bombs fall before his act can matter; afterwards he speaks to survivors in the ruins, and the response is mixed. Earlier choices (planting books at Black's house, the Dover Beach outburst, tearing Faber's Bible) shape the wording and the consequence shown.
+- **Submission (adaptation)** — Montag stays silent. Officially dead, he walks away from the group to live unnoticed in a small town and lets the verse go. He watches the city's light die from a distance and puts a Seashell back in his ear. He does not return to the destroyed city.
+
+All three are always offered. Earlier flags change Granger's question, Montag's inner line, the order of the options and the epilogue details. The alternate endings carry an in-game note that in the novel Montag stays with the book people.
 
 ## Dialogue writing rules
 
