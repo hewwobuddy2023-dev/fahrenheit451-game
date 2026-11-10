@@ -1,10 +1,19 @@
-# ASSET MANIFEST — EMPTY UNTIL SOURCED
+# ASSET MANIFEST
 
-Record EVERY shipped image, font, music track or sound effect. This file intentionally makes no licensing claims about assets not yet obtained.
+Record EVERY shipped image, font, music track or sound effect.
 
-| File path | Purpose | Creator/source URL | License / permission | Changes | Size | Verified? |
+## Shipped assets (M1)
+
+| File path | Purpose | Creator/source URL | License / permission | Changes | Size (latin woff2 actually loaded) | Verified? |
 |---|---|---|---|---|---|---|
-| *(none)* | | | | | | |
+| `@fontsource/oswald@5.3.0` (500, 600, 700) | Display type: titles, menus, labels | Vernon Adams et al. via https://fontsource.org/fonts/oswald | SIL OFL 1.1 (npm `license` field checked) | None; bundled by Vite | ~12.7 KB per weight | License field checked 2026-11-09 |
+| `@fontsource/ibm-plex-sans@5.3.0` (400, 400 italic, 600) | Body text: dialogue, objectives | IBM via https://fontsource.org/fonts/ibm-plex-sans | SIL OFL 1.1 (npm `license` field checked) | None | 22.6–24.4 KB per style | License field checked 2026-11-09 |
+| `@fontsource/special-elite@5.3.0` (400) | Typewriter: chapter cards, journal title, end card | Astigmatic via https://fontsource.org/fonts/special-elite | Apache 2.0 (npm `license` field checked) | None | 53.3 KB | License field checked 2026-11-09 |
+| All images (sky, station, props, characters, Hound, lights, grain, vignette) | All visuals | Original, drawn procedurally at runtime in `src/art.ts` | Original work for this project | — | 0 KB (no image files) | Yes: no image files exist in the repo |
+
+No audio is shipped in M1.
+
+Fontsource CSS also lists Cyrillic/Greek/Vietnamese/latin-ext subsets in `dist/`. Browsers only download the subsets the text uses (`unicode-range`), so the English game loads the latin files above.
 
 ## Acceptable sources
 
