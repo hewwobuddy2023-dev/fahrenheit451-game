@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-11-10 (Phoenix) by ChatGPT Work; Claude’s historical entries are retained below.
 **Stage:** Day 2 continues M2 and Sprint 1 on `work/day2-quality-sprint` (draft PR #2 into the first Work branch). Three full 15/15 ending simulations pass. Final implementation CI at `95837d3`: 20/20 Chromium/WebKit tests PASS; physical iPhone/Chromebook checks remain open. PR #1 and #2 remain draft, unmerged; no deployment. Read the Day 2 handoff and `DAY2_QA_REPORT.md` first.
-**Local repo:** `C:\Projects\Fahrenheit451Game`
+**Local checkout:** inspect it separately; the cloud did not observe the owner PC state.
 **GitHub repo:** https://github.com/hewwobuddy2023-dev/fahrenheit451-game (public). Branches: `main` (older docs), `feat/m1-vertical-slice` (M1), `feat/m2-chapters` (M2), both isolated Work branches.
 **GitHub Pages:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/ (deploy status below). The workflow deploys pushes to main/M1/M2; inspect current environment rules before an owner-approved release.
 **Stack (pinned):** phaser 3.90.0, typescript 5.9.3, vite 6.4.6; fonts @fontsource/oswald, ibm-plex-sans, special-elite 5.3.0. Work uses Node 24.22.1; CI uses Node 24. The owner PC runtime is unobserved this sprint.
@@ -206,3 +206,8 @@ Next checkpoint adds watched concealment with a short safe hold and atomic story
 ### Phoenix visual review corrections
 
 Inspected actual native opening/subway/river captures. Removed mirrored truck numerals by keeping the opening truck texture unflipped. Restricted the generated urban layer to city sky keys: otherwise it could remain behind the forest after the bombing while the original horizon faded. Added a camp regression that forbids that city layer. Forest has gentler analog strength and more readable cast tint. Title uses the shared city layer. Added recognizable rotary-phone/file-wallet/script props at existing hotspot coordinates; no hit regions or story gates changed. Local unit/type/build, mechanic and viewport regressions pass; final native rerun still required for this art descendant.
+
+
+### Phoenix final interaction/access checkpoint
+
+Added an explicit PAUSE button inside both memory panels so touch players can pause without relying on an obscured underlying control. Visible sound check now labels and performs unmute; native audio tests use that menu path. The packaged local server accepts a separate baseline port (4174), smoke-tested alongside candidate 4173. No gameplay rules changed in this checkpoint. Source scope frozen for QA; final runtime ancestor and browser results belong in QA_RESULTS.md.

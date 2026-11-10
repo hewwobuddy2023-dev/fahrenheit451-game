@@ -15,7 +15,7 @@ for(const [room,id,flag] of [['subway','read','c08.verse'],['camp','granger','c1
   await s.tap(480,450);
   for(const i of [1,0,2,3])await s.tap(220+(i%2)*425,231+Math.floor(i/2)*75);
   assert.equal(r.dialogue.puzzle.state.attempts,1);assert.equal(r.dialogue.puzzle.state.selected.length,0);assert.ok(!r.session.flags[flag]);
-  await s.key('Escape');await s.key('Escape',false);assert.equal(r.mode,'pause');await s.advance(10000);assert.ok(!r.session.flags[flag]);await s.tap(500,234);assert.equal(r.mode,'dialogue');
+  await s.tap(850,63);assert.equal(r.mode,'pause');await s.advance(10000);assert.ok(!r.session.flags[flag]);await s.tap(500,234);assert.equal(r.mode,'dialogue');
   await s.tap(490,470);await s.tap(490,470);await s.tap(490,470); // graduated optional hints
   await s.screenshot(`docs/qa/phoenix-mechanics/${room}-retry.webp`);
   await s.tap(180,470);assert.equal(r.dialogue.puzzle.state.phase,'study');await s.tap(480,450);
