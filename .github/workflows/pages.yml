@@ -2,7 +2,7 @@ name: Test, build and deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, feat/m1-vertical-slice]
+    branches: [main, feat/m1-vertical-slice, feat/m2-chapters]
   pull_request:
   workflow_dispatch:
 

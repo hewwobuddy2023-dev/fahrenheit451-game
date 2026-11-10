@@ -1,12 +1,9 @@
 import Phaser from 'phaser';
-import { ROOMS } from '../content.ts';
+import { CHAPTERS, CHAPTER_STARTS } from '../content.ts';
 import { loadSave, Session } from '../state.ts';
 import { MenuList, type Item } from '../ui/MenuList.ts';
 import { addAtmosphere, C, FONT, H, W, onActions, setupCamera, text } from '../view.ts';
 
-const CHAPTERS = [
-  'The Hearth and the Salamander', 'Books and Disillusionment', 'The Sieve and the Sand', 'Burning Bright', 'Memory',
-];
 
 const CREDITS = [
   "An interactive adaptation of Ray Bradbury's Fahrenheit 451 (1953). Dialogue is original or paraphrased, not text from the novel; alternate endings are adaptations.",
@@ -73,8 +70,9 @@ export class MenuScene extends Phaser.Scene {
     ]);
   }
 
-  private fresh(demo: boolean) {
-    return new Session({ v: 1, room: 'station', x: ROOMS.station.spawnX, flags: {} }, demo);
+  private fresh(demo: boolean, chapter = 0) {
+    const st = CHAPTER_STARTS[chapter];
+    return new Session({ v: 1, room: st.room, x: st.x, flags: { ...st.flags } }, demo);
   }
 
   private panel(title: string, lines: string[]) {
@@ -91,11 +89,11 @@ export class MenuScene extends Phaser.Scene {
   private chapters() {
     this.panel('PRESENTATION MODE', [
       'A quick demonstration route for the class share. Choices work normally, but nothing is saved and it never counts as a real playthrough.',
-      'Chapters 2 to 5 arrive in Milestone 2.',
+      'Each chapter starts with the earlier choices set to defaults.',
     ]);
     this.show([
       ...CHAPTERS.map((name, i) => ({
-        label: `${i + 1}  ${name}`, enabled: i === 0, action: () => this.start(this.fresh(true)),
+        label: `${i + 1}  ${name}`, enabled: i < CHAPTER_STARTS.length, action: () => this.start(this.fresh(true, i)),
       })),
       { label: 'Back', action: () => this.main() },
     ], 286, 34, 17);
@@ -109,7 +107,7 @@ export class MenuScene extends Phaser.Scene {
   private start(session: Session) {
     if (this.busy) return;
     this.busy = true;
-    if (!session.demo && !session.flags['seen.station']) session.checkpoint(session.room, session.x); // New Game replaces the old save
+    if (!session.demo && !Object.keys(session.flags).length) session.checkpoint(session.room, session.x); // New Game replaces the old save
     this.cameras.main.fadeOut(500, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('room', { session }));
   }

@@ -3,19 +3,32 @@ import Phaser from 'phaser';
 // Logical layout is always 960x540. The canvas renders at zoom K so text stays sharp on the real screen.
 export const W = 960;
 export const H = 540;
-export const FLOOR = 470;
+export const FLOOR_TOP = 392;  // where back walls meet the floor
+export const WALK_Y = 480;     // Montag's feet: the walk line, mid-floor
 
 export const params = new URLSearchParams(location.search);
 const fit = Math.min(innerWidth / W, innerHeight / H) * (devicePixelRatio || 1);
-// shortcut: K is fixed at load, so resizing later only CSS-scales; fine for a fixed classroom window.
-export const K = params.has('lowres') ? 1 : Math.min(2, Math.max(1, Math.round(fit * 4) / 4));
+let saved = NaN;
+try { saved = Number(localStorage.getItem('f451.k')); } catch { /* storage blocked */ }
+/** Render zoom. Capped at 1.5 for Chromebooks; the governor may lower it and remembers that choice. */
+export let K = params.has('lowres') ? 1 : Math.min(1.5, Math.max(1, Math.round(fit * 4) / 4), saved > 0 ? saved : 9);
+
+/** Performance governor step: render at a lower resolution. Cosmetic only: gameplay is unchanged. */
+export function lowerK(game: Phaser.Game): boolean {
+  if (K <= 1) return false;
+  K = Math.max(1, K - 0.25);
+  try { localStorage.setItem('f451.k', String(K)); } catch { /* fine */ }
+  game.scale.setGameSize(W * K, H * K);
+  for (const s of game.scene.getScenes(true)) s.cameras.main.setZoom(K);
+  return true;
+}
 
 export const C = {
   ink: '#0b0908',
   panel: 0x0d0a09,
   cream: '#ece1c8',
   creamDim: '#a99c86',
-  muted: '#6f6457',
+  muted: '#7a6e60',
   ember: '#e8682e',
   amber: '#f2a54a',
   red: '#c22a1f',
@@ -60,10 +73,9 @@ export function onActions(scene: Phaser.Scene, handler: (a: Act) => void): void 
   });
 }
 
-/** Vignette, scanlines and grain: three static textures, no shaders. Sits below UI so text is never obscured. */
+/** Vignette + scanlines (one texture) and moving grain. Sits below UI so text is never obscured. */
 export function addAtmosphere(scene: Phaser.Scene): void {
-  scene.add.image(0, 0, 'vignette').setOrigin(0).setScrollFactor(0).setDepth(900);
-  scene.add.tileSprite(0, 0, W, H, 'scan').setOrigin(0).setScrollFactor(0).setDepth(901).setAlpha(0.07);
-  const grain = scene.add.tileSprite(0, 0, W, H, 'grain').setOrigin(0).setScrollFactor(0).setDepth(902).setAlpha(0.05);
+  scene.add.image(0, 0, 'overlay').setOrigin(0).setScrollFactor(0).setDepth(900);
+  const grain = scene.add.tileSprite(0, 0, W, H, 'grain').setOrigin(0).setScrollFactor(0).setDepth(902).setAlpha(0.045);
   scene.time.addEvent({ delay: 90, loop: true, callback: () => grain.setTilePosition(Math.random() * 128, Math.random() * 128) });
 }

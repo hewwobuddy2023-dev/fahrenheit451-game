@@ -6,7 +6,8 @@ import '@fontsource/ibm-plex-sans/400-italic.css';
 import '@fontsource/ibm-plex-sans/600.css';
 import '@fontsource/special-elite/400.css';
 import Phaser from 'phaser';
-import { paintAll } from './art.ts';
+import { paintCast } from './art/figures.ts';
+import { paintFx } from './art/fx.ts';
 import { EndScene } from './scenes/EndScene.ts';
 import { MenuScene } from './scenes/MenuScene.ts';
 import { RoomScene } from './scenes/RoomScene.ts';
@@ -15,7 +16,8 @@ import { C, H, K, W, params } from './view.ts';
 class BootScene extends Phaser.Scene {
   constructor() { super('boot'); }
   create() {
-    paintAll(this);
+    paintFx(this);
+    paintCast(this);
     document.getElementById('boot')?.remove();
     this.scene.start('menu');
   }
