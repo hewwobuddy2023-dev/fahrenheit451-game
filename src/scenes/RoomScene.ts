@@ -162,6 +162,7 @@ export class RoomScene extends Phaser.Scene {
   update(_time: number, dtMs: number) {
     sound.setQuiet(this.mode === 'pause' || this.mode === 'journal');
     if (this.mode === 'pause') this.overlay?.list?.setLabel(3, `Sound: ${settings.muted ? 'OFF' : 'ON'} [M]`);
+    if (this.mode === 'pause' || this.mode === 'journal') return;
     this.activeTime += dtMs;
     const time = this.activeTime;
     const dt = Math.min(dtMs, 50) / 1000;

@@ -1,7 +1,7 @@
 # LIVE PROGRESS — DO NOT INFER RESULTS
 
-**Last updated:** 2026-11-09 (Phoenix) by ChatGPT Work; Claude’s historical entries are retained below.
-**Stage:** M2 campaign implemented and verified in deterministic Phaser simulation. Work fixes await browser/device review in draft PR #1, `work/overnight-mobile-qa` → `feat/m2-chapters`. M1 preserved as tag `m1-complete`. Read `WORK_TO_CLAUDE_HANDOFF.md` first.
+**Last updated:** 2026-11-10 (Phoenix) by ChatGPT Work; Claude’s historical entries are retained below.
+**Stage:** Day 2 continues M2 and Sprint 1 on `work/day2-quality-sprint` (draft PR #2 into the first Work branch). Three full 15/15 ending simulations pass. Native CI at `7691f07`: 16/16 Chromium/WebKit tests PASS; physical iPhone/Chromebook checks remain open. PR #1 and #2 remain draft, unmerged; no deployment. Read the Day 2 handoff and `DAY2_QA_REPORT.md` first.
 **Local repo:** `C:\Users\gabe\Documents\Fahrenheit451Game`
 **GitHub repo:** https://github.com/hewwobuddy2023-dev/fahrenheit451-game (public). Branches: `main` (docs only), `feat/m1-vertical-slice` (M1).
 **GitHub Pages:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/ (deploy status below). The `github-pages` environment allows deploys from `main` and `feat/m1-vertical-slice`.
@@ -17,7 +17,7 @@
 | M0 Design/preflight | Done | — | N/A | N/A | Approved by user 2026-11-09 |
 | M1 Vertical slice | Implemented, awaiting user review | see `git log` on `feat/m1-vertical-slice` | Local + CI pass | Dev server, built-in browser pane (Chromium) | Details below |
 | M2 15 challenges + endings | Implemented; browser/device acceptance pending | `46129d6` Work checkpoint | unit/typecheck/build + full Phaser simulation PASS | Work build not browser-tested | PR #1, owner approval required before integration |
-| M3 Art and audio polish | Shared flame/river polish implemented; no audio | `46129d6` | simulation/build PASS | actual browser visual review pending | no audio claim |
+| M3 Art and audio polish | Shared art/cinematic/audio polish implemented on Day 2 | see Day 2 history | simulation/build PASS | native CI captures available; physical visual/audio review pending | synthesized ambience, mute, reduced motion |
 | M4 Submission | Drafts prepared; not complete | handoff documentation | N/A | rehearsal/human tests pending | citations and school-device checks required |
 
 ## M1: what exists
@@ -165,3 +165,7 @@ Implementation checkpoint `af4a49c` is pushed. Reviewed native traces expose why
 Verified touch/keyboard preference changes do not modify the story save. M now updates the visible sound label in title settings/pause, and switching off the parlor walls changes the television ambience. Explicit return also resumes a suspended audio context: the focus curtain consumes Enter, so it must pass that gesture to audio itself. Unit/type/day2/build checks pass. No new dependency or release action.
 
 Audio initialization review confirmed Phaser would otherwise allocate its own unused Web Audio context at boot. Set `audio.noAudio` on Phaser (the independent Soundscape remains enabled), and add a native assertion that its backend has no context before the first gesture. Type/build/four-viewport simulations pass. This is resource/lifecycle cleanup, not a claimed explanation of the original phone symptom.
+
+### Final pause-phase regression
+
+A focused test failed before the repair: the river searchlight moved from x=556.92 to x=518.46 while pause was open for five seconds. The room update now stops encounter/world updates during pause or journal, retaining the exact hazard phase and active deadline. Countdown/stillness no longer need to advance behind those overlays. Added a native-browser pause/DOM-blur/explicit-return test; this DOM lifecycle injection is not a physical tab/lock test. Full campaign and targeted checks are rerun before pushing.

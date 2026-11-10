@@ -72,3 +72,15 @@ for(const fps of [30,20]) {
     console.log('PASS touch/keyboard settings, visible mute state, separate persistent preferences');
   }finally{s.close();}
 }
+
+{
+  const s=await simulate({save:{v:1,room:'river',x:200,flags:{'e.river':true}}});
+  try {
+    await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','paused searchlight');await campaign(s).settle();
+    await s.advance(300);await s.tap(914,112);const r=s.scene();const phase=r.beams.get('sl1').x;const active=r.activeTime;
+    await s.advance(5000);
+    assert.equal(r.beams.get('sl1').x,phase,'pause must freeze encounter phase, not move the searchlight behind the menu');
+    assert.equal(r.activeTime,active);await s.tap(500,234);await s.advance(300);assert.ok(r.activeTime>active);
+    console.log('PASS pause freezes encounter phase and resumes without a deadline jump');
+  }finally{s.close();}
+}
