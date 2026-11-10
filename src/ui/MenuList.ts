@@ -48,6 +48,13 @@ export class MenuList {
     this.bar.setY(i * this.gap);
   }
 
+  setLabel(i: number, label: string) {
+    const row = this.rows[i];
+    if (!row || row.item.label === label) return;
+    row.item.label = label;
+    row.t.setText(label.toUpperCase());
+  }
+
   move(d: number) {
     const n = this.rows.length;
     for (let k = 1; k <= n; k++) {

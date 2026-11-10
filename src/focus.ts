@@ -10,6 +10,7 @@ export function guardFocus(game: Phaser.Game) {
     panel.remove(); panel = undefined;
     for (const key of paused) if (game.scene.isPaused(key)) game.scene.resume(key);
     paused = [];
+    void sound.unlock(); // Enter was consumed above; preserve its audio activation too.
     sound.setQuiet(false);
     game.canvas.focus({ preventScroll: true });
   };
