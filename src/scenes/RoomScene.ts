@@ -99,7 +99,7 @@ export class RoomScene extends Phaser.Scene {
       left: [kb.addKey('LEFT'), kb.addKey('A')], right: [kb.addKey('RIGHT'), kb.addKey('D')],
       act: [kb.addKey('E'), kb.addKey('ENTER'), kb.addKey('SPACE')], down: [kb.addKey('DOWN'), kb.addKey('S')],
     };
-    const release = () => kb.resetKeys();
+    const release = () => { kb.resetKeys(); this.hud?.resetTouch(); this.vx = 0; };
     this.game.events.on('blur', release);
     this.events.once('shutdown', () => this.game.events.off('blur', release));
 
@@ -162,7 +162,8 @@ export class RoomScene extends Phaser.Scene {
     p.x = Phaser.Math.Clamp(p.x + this.vx * dt, 40, this.room.width - 40);
     if (dir) this.facing = dir;
     this.animate(p, this.vx, this.facing, this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag');
-    const diving = playing && (this.keys.down.some((k) => k.isDown)) && (this.room.hazards ?? []).some((h) => h.dive);
+    const diving = playing && (this.keys.down.some((k) => k.isDown) || this.hud.touchDown) && (this.room.hazards ?? []).some((h) => h.dive);
+    this.hud.showDive(this.room.id === 'river' && !f['c13.shore']);
     p.setAlpha(diving ? 0.35 : 1).setY(WALK_Y + 6 + (diving ? 14 : 0));
     this.shadow.setX(p.x);
     p.setTint(lightTint(p.x, this.roomLights));
@@ -366,6 +367,9 @@ export class RoomScene extends Phaser.Scene {
   // ---------- input ----------
 
   private onAction(a: Act) {
+    // A quick touch may start and end between two frames. Latch it on the event,
+    // rather than requiring the Hound prompt's polling loop to observe a held finger.
+    if (a === 'act' && this.promptWait) { this.promptWait.hit = true; return; }
     switch (this.mode) {
       case 'dialogue':
         if (a === 'act') this.dialogue.advance();
@@ -407,6 +411,8 @@ export class RoomScene extends Phaser.Scene {
     const blocked = key !== h.script && key !== h.doneScript;
     const firstTime = !(h.doneFlag && f[h.doneFlag]);
     this.mode = 'cutscene';
+    this.vx = 0;
+    this.hud.showTouch(false);
     if (key) await this.say(key);
     if (!locked && !blocked && firstTime && h.steps) await this.runSteps(h.steps);
     if (this.isExit()) return;
@@ -418,6 +424,7 @@ export class RoomScene extends Phaser.Scene {
     this.mode = 'play';
     this.camTarget = null;
     this.hud.showTouch(true);
+    this.checkpoint();
   }
 
   /** Play one script; resolves when it closes. Flags apply at the end only. */
@@ -539,8 +546,8 @@ export class RoomScene extends Phaser.Scene {
     }
     if ('goto' in s) return this.transition(s.goto, s.x);
     if ('ending' in s) {
-      this.mode = 'exit';
       this.checkpoint();
+      this.mode = 'exit';
       cam.fadeOut(900, 0, 0, 0);
       await sleep(this, 950);
       this.scene.start('end', { session: this.session });
@@ -622,7 +629,9 @@ export class RoomScene extends Phaser.Scene {
       if (want && !g.getData('on')) { g.setData('on', true); g.setData('tw', this.tweens.add({ targets: g, alpha: { from: 0.15, to: 0.5 }, yoyo: true, repeat: -1, duration: 900 })); }
       if (!want && g.getData('on')) { g.setData('on', false); (g.getData('tw') as Phaser.Tweens.Tween).remove(); g.setAlpha(0); }
     }
-    if (announce && this.mode !== 'exit') this.checkpoint();
+    // Flags and their following steps form one event. Saving halfway through can
+    // hide the hotspot on reload before its transition has happened.
+    if (announce && this.mode === 'play' && !this.stillWatch) this.checkpoint();
   }
 
   // ---------- overlays ----------
@@ -634,7 +643,7 @@ export class RoomScene extends Phaser.Scene {
     const g = this.add.graphics().fillStyle(0x000000, 0.72).fillRect(0, 0, W, H)
       .fillStyle(C.panel, 0.95).fillRect(W / 2 - 200, 130, 400, 280)
       .lineStyle(1, C.emberN, 0.5).strokeRect(W / 2 - 199.5, 130.5, 399, 279);
-    const block = this.add.zone(0, 0, W, H).setOrigin(0).setInteractive();
+    const block = this.add.zone(0, 0, W, H).setOrigin(0).setScrollFactor(0).setInteractive();
     const title = text(this, W / 2, 168, 'PAUSED', { fontFamily: FONT.display, fontSize: '30px', fontStyle: '600' }).setOrigin(0.5).setLetterSpacing(8);
     const help = text(this, W / 2, 460, 'MOVE  A / D OR ARROWS     INTERACT  E / ENTER / SPACE (HOLD WHERE ASKED)     JOURNAL  J     PAUSE  ESC', {
       fontFamily: FONT.display, fontSize: '11px', color: C.creamDim,

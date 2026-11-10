@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { CHAPTERS, CHAPTER_STARTS } from '../content.ts';
 import { loadSave, Session } from '../state.ts';
+import { restoreCheckpoint } from '../checkpoints.ts';
 import { MenuList, type Item } from '../ui/MenuList.ts';
 import { addAtmosphere, C, FONT, H, W, onActions, setupCamera, text } from '../view.ts';
 
@@ -15,14 +16,15 @@ export class MenuScene extends Phaser.Scene {
   private list?: MenuList;
   private sub?: Phaser.GameObjects.Container;
   private busy = false;
+  private branding!: Phaser.GameObjects.Container;
 
   constructor() { super('menu'); }
 
   create() {
     setupCamera(this);
     this.busy = false;
-    const sky = this.add.image(0, 0, 'sky').setOrigin(0);
-    this.tweens.add({ targets: sky, x: -(sky.width - W), duration: 120000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // The room-specific sky texture does not exist at boot. Keep the title's
+    // procedural glow backdrop rather than displaying Phaser's missing texture.
     const fire = this.add.image(W * 0.62, H + 60, 'glow').setScale(9, 3).setTint(C.emberN).setAlpha(0.45).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({ targets: fire, alpha: 0.3, scaleX: 8.4, yoyo: true, repeat: -1, duration: 900, ease: 'Sine.easeInOut' });
     this.add.particles(0, 0, 'dot', {
@@ -32,10 +34,12 @@ export class MenuScene extends Phaser.Scene {
     });
     this.add.graphics().fillStyle(0x000000, 0.45).fillRect(0, 0, W * 0.55, H); // calm area behind the title
 
+    const brandStart = this.children.length;
     const t1 = text(this, 78, 150, 'FAHRENHEIT', { fontFamily: FONT.display, fontSize: '74px', fontStyle: '700' }).setOrigin(0, 0.5).setLetterSpacing(8);
     text(this, 78 + t1.width + 18, 150, '451', { fontFamily: FONT.display, fontSize: '74px', fontStyle: '700', color: C.ember }).setOrigin(0, 0.5);
     text(this, 82, 214, "THE FIREMAN'S CHOICE", { fontFamily: FONT.type, fontSize: '22px', color: C.creamDim }).setOrigin(0, 0.5).setLetterSpacing(4);
     this.add.rectangle(82, 248, 120, 2, C.emberN).setOrigin(0, 0.5);
+    this.branding = this.add.container(0, 0, this.children.list.slice(brandStart));
     text(this, 82, H - 34, "An interactive adaptation of Ray Bradbury's novel  ·  Student project", {
       fontSize: '12px', color: C.muted,
     }).setOrigin(0, 0.5);
@@ -53,7 +57,7 @@ export class MenuScene extends Phaser.Scene {
     this.main();
   }
 
-  private show(items: Item[], y = 300, gap = 46, size = 24) {
+  private show(items: Item[], y = 282, gap = 64, size = 24) {
     this.list?.destroy();
     this.list = new MenuList(this, 104, y, items, gap, size);
   }
@@ -61,7 +65,8 @@ export class MenuScene extends Phaser.Scene {
   private main() {
     this.sub?.destroy();
     this.sub = undefined;
-    const save = loadSave();
+    this.branding.setVisible(true);
+    const save = restoreCheckpoint(loadSave());
     this.show([
       { label: 'Continue', enabled: !!save, note: save ? undefined : 'no saved game', action: () => save && this.start(new Session(save)) },
       { label: 'New Game', action: () => this.start(this.fresh(false)) },
@@ -77,8 +82,8 @@ export class MenuScene extends Phaser.Scene {
 
   private panel(title: string, lines: string[]) {
     this.sub?.destroy();
-    // sits below the title block so the logo is never covered
-    const x = W * 0.52, y = 270, w = W - x - 36, h = H - y - 64;
+    this.branding.setVisible(false);
+    const x = W * 0.54, y = 94, w = W - x - 36, h = H - y - 64;
     const g = this.add.graphics().fillStyle(C.panel, 0.94).fillRect(x, y, w, h)
       .lineStyle(1, C.emberN, 0.5).strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
     const t = text(this, x + 24, y + 18, title, { fontFamily: FONT.display, fontSize: '16px', color: C.amber }).setLetterSpacing(4);
@@ -96,7 +101,7 @@ export class MenuScene extends Phaser.Scene {
         label: `${i + 1}  ${name}`, enabled: i < CHAPTER_STARTS.length, action: () => this.start(this.fresh(true, i)),
       })),
       { label: 'Back', action: () => this.main() },
-    ], 286, 34, 17);
+    ], 154, 64, 18);
   }
 
   private credits() {
@@ -109,6 +114,6 @@ export class MenuScene extends Phaser.Scene {
     this.busy = true;
     if (!session.demo && !Object.keys(session.flags).length) session.checkpoint(session.room, session.x); // New Game replaces the old save
     this.cameras.main.fadeOut(500, 0, 0, 0);
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('room', { session }));
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(session.flags['c15.seen'] ? 'end' : 'room', { session }));
   }
 }

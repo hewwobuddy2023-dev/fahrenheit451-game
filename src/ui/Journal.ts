@@ -36,7 +36,7 @@ export function openJournal(scene: Phaser.Scene, flags: Flags, onClose: () => vo
   });
   parts.push(text(scene, W / 2, H - 50, 'J / ESC / TAP TO CLOSE', { fontFamily: FONT.display, fontSize: '12px', color: C.muted })
     .setOrigin(0.5).setLetterSpacing(3));
-  const hit = scene.add.zone(0, 0, W, H).setOrigin(0).setInteractive();
+  const hit = scene.add.zone(0, 0, W, H).setOrigin(0).setScrollFactor(0).setInteractive();
   parts.splice(1, 0, hit);
   const root = scene.add.container(0, 0, parts).setScrollFactor(0, 0, true).setDepth(1300).setAlpha(0);
   scene.tweens.add({ targets: root, alpha: 1, duration: 150 });
