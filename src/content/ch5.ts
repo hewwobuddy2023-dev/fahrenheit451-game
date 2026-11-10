@@ -112,6 +112,7 @@ export const SCRIPTS5: Record<string, Script> = {
     { who: N, text: 'A few listen. More pick up stones, the way Faber said they would.' },
   ] },
   ep_def_black: { lines: [{ who: N, text: "Somewhere under the ash is Black's house, and the books you left there. You did that. It changed nothing, and you would do it again." }] },
+  ep_def_faber: { lines: [{ who: N, text: "You remember tearing Faber's pages to make him listen. In the square, you wait for an answer before you speak again." }] },
   ep_def_end: { lines: [{ who: N, text: 'You never learn whether Faber reached St. Louis. You keep talking, in a different square each day. It is not finished.' }] },
 
   ep_sub: { lines: [
@@ -133,7 +134,8 @@ const ending: Step[] = [
     { if: (f) => f['c04.plea'] === 'plead', then: [{ say: 'ep_pres_woman' }] },
   ] },
   { if: (f) => f['c15.ending'] === 'defiance', then: [
-    { say: 'ep_def' }, { if: (f) => !!f['c11.plant'], then: [{ say: 'ep_def_black' }] }, { say: 'ep_def_end' },
+    { say: 'ep_def' }, { if: (f) => !!f['c11.plant'], then: [{ say: 'ep_def_black' }] },
+    { if: (f) => f['faber.tear'] === 'tear', then: [{ say: 'ep_def_faber' }] }, { say: 'ep_def_end' },
   ] },
   { if: (f) => f['c15.ending'] === 'submission', then: [
     { say: 'ep_sub' }, { if: (f) => f['c01.tone'] === 'eager', then: [{ say: 'ep_sub_eager' }] },

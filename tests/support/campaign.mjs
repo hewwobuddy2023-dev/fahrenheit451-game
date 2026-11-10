@@ -1,18 +1,21 @@
 import assert from 'node:assert/strict';
 
 /** Teleports only between static hotspots. Events, holds, choices, retries and chases use real game logic/input. */
-export function campaign(s) {
+export function campaign(s, { ending = 'preservation' } = {}) {
   let wrongPicks = 0, missedHound = 0, stillResets = 0;
   const tried = new WeakSet();
+  const heard = new Set();
   async function settle({ missHound = false, moveStill = false } = {}) {
     for (let i = 0; i < 5000; i++) {
       const r = s.scene();
       if (r.sys.settings.key === 'end') return;
       if (r.mode === 'play' && !r.stillWatch) return;
       if (r.dialogue?.open) {
+        heard.add(r.dialogue.current);
         if (r.dialogue.choosing) {
           const choices = r.dialogue.choices;
-          let index = choices.findIndex(c => !c.again);
+          let index = choices.findIndex(c => c.set?.['c15.ending'] === ending);
+          if (index < 0) index = choices.findIndex(c => !c.again);
           if (!tried.has(choices) && choices.some(c => c.again)) {
             tried.add(choices); index = choices.findIndex(c => c.again); wrongPicks++;
           }
@@ -73,5 +76,5 @@ export function campaign(s) {
     }
     await release();throw new Error(`Walk timed out ${roomId} x=${s.scene().player.x}`);
   }
-  return { settle,visit,walkTo,stats:()=>({wrongPicks,missedHound,stillResets}) };
+  return { settle,visit,walkTo,heard:(text)=>[...heard].some(line=>line.startsWith(text)),stats:()=>({wrongPicks,missedHound,stillResets}) };
 }

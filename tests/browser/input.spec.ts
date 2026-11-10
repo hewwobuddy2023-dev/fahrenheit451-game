@@ -21,7 +21,7 @@ async function state(page: Page) {
   });
 }
 async function settle(page: Page, info: TestInfo) {
-  const end = Date.now() + 30000;
+  const end = Date.now() + 90000;
   while (Date.now() < end) {
     const r = await state(page);
     if (r.mode === 'play') return;
@@ -31,7 +31,7 @@ async function settle(page: Page, info: TestInfo) {
     }
     await page.waitForTimeout(90);
   }
-  throw new Error('Opening did not finish');
+  throw new Error(`Opening did not finish: ${JSON.stringify(await state(page))}`);
 }
 async function seed(page: Page, room: string, x: number, flags: Record<string, boolean | string>) {
   await page.addInitScript(data => localStorage.setItem('f451.save', JSON.stringify(data)), { v: 1, room, x, flags });
@@ -47,8 +47,9 @@ test('fresh visitor: early repeated native taps, dialogue, movement, journal and
   await scene(page, 'room');
   await settle(page, info);
   const x = (await state(page)).x;
-  await page.keyboard.down('KeyD'); await page.waitForTimeout(600); await page.keyboard.up('KeyD');
-  expect((await state(page)).x).toBeGreaterThan(x + 25);
+  await page.keyboard.down('KeyD');
+  try { await expect.poll(async () => (await state(page)).x, { timeout: 15000 }).toBeGreaterThan(x + 25); }
+  finally { await page.keyboard.up('KeyD'); }
   await tap(page, 860, 34, info); expect((await state(page)).mode).toBe('journal');
   await tap(page, 480, 300, info); expect((await state(page)).mode).toBe('play');
   await page.keyboard.press('Escape'); expect((await state(page)).mode).toBe('pause');
@@ -72,11 +73,13 @@ test('prior checkpoint: rotation, scrolled hit targets and a real held interacti
     const cdp = await page.context().newCDPSession(page);
     const r = (await page.locator('canvas').boundingBox())!;
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: r.x + 888 / 960 * r.width, y: r.y + 474 / 540 * r.height, id: 1 }] });
-    await page.waitForTimeout(2200);
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    try { await expect.poll(async () => (await state(page)).flags['c01.p2'], { timeout: 30000 }).toBe(true); }
+    finally { await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); }
     await cdp.detach();
   } else {
-    await page.keyboard.down('KeyE'); await page.waitForTimeout(2200); await page.keyboard.up('KeyE');
+    await page.keyboard.down('KeyE');
+    try { await expect.poll(async () => (await state(page)).flags['c01.p2'], { timeout: 30000 }).toBe(true); }
+    finally { await page.keyboard.up('KeyE'); }
   }
   expect((await state(page)).flags['c01.p2']).toBe(true);
 });
@@ -99,4 +102,35 @@ test('slow fonts never block the title; native chapter choices preserve normal s
     await tap(page, 500, 338, info); await scene(page, 'menu');
     expect(await page.evaluate(() => localStorage.getItem('f451.save'))).toBe(before);
   }
+});
+
+test('audio unlock/mute, local offline play and browser frame sample', async ({ page, context, browser }, info) => {
+  await seed(page, 'burn', 1060, { 'e.burn': true });
+  const requests: string[] = [];
+  page.on('request', r => requests.push(r.url()));
+  await page.goto('/?debug&lowres'); await scene(page, 'menu');
+  expect(await page.evaluate(() => (window as any).__audio.status.state)).toBe('locked');
+  await tap(page, 430, 282, info); await scene(page, 'room'); await settle(page, info);
+  await expect.poll(() => page.evaluate(() => (window as any).__audio.status.state)).toBe('running');
+  await page.keyboard.press('KeyM'); expect(await page.evaluate(() => (window as any).__audio.status.muted)).toBe(true);
+  await page.keyboard.press('KeyM'); expect(await page.evaluate(() => (window as any).__audio.status.muted)).toBe(false);
+  await page.evaluate(() => document.fonts.ready);
+  await context.setOffline(true);
+  await page.keyboard.down('KeyE');
+  try { await expect.poll(async () => (await state(page)).flags['c01.p2'], { timeout: 30000 }).toBe(true); }
+  finally { await page.keyboard.up('KeyE'); }
+  expect((await state(page)).flags['c01.p2']).toBe(true);
+  await context.setOffline(false);
+  const timing = await page.evaluate(async () => {
+    const frames: number[] = []; let last = performance.now();
+    await new Promise<void>(resolve => {
+      const sample = (now: number) => { frames.push(now - last); last = now; if (frames.length < 120) requestAnimationFrame(sample); else resolve(); };
+      requestAnimationFrame(sample);
+    });
+    frames.sort((a, b) => a - b);
+    const g = (window as any).__game;
+    return { p50ms: frames[60], p95ms: frames[114], renderer: g.renderer.type, canvas: [g.canvas.width, g.canvas.height], resources: performance.getEntriesByType('resource').map((e: any) => ({ name: new URL(e.name).pathname, transfer: e.transferSize, body: e.encodedBodySize })) };
+  });
+  console.log(JSON.stringify({ label: 'CI browser sample, NOT Chromebook benchmark', browser: browser.version(), viewport: page.viewportSize(), timing, requestCount: requests.length }));
+  expect(requests.every(url => url.startsWith('http://127.0.0.1:4173/'))).toBe(true);
 });

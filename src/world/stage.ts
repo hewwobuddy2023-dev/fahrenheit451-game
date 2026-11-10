@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { paint, rng, vgrad } from '../art/core.ts';
 import type { FloorStyle } from '../art/kits.ts';
-import type { Light } from '../content/types.ts';
+import type { Light, RoomDef } from '../content/types.ts';
 import { FLOOR_TOP, H, W } from '../view.ts';
 
 /** Floor bands: [top, bottom, scroll factor]. Bands in front of the walk line scroll faster: perspective. */
@@ -73,4 +73,28 @@ export function darkness(s: Phaser.Scene) {
     },
     follow(x: number, y: number) { halo.setPosition(x + 14, y - 120); },
   };
+}
+
+/** Static ground planes and reflections. No inputs, physics, extra particles or frame allocations. */
+export function stageDetails(s: Phaser.Scene, room: RoomDef, floor: FloorStyle, lights: Light[]) {
+  if (floor.kind === 'water') return; // preserve the river's existing moving surface
+  const g = s.add.graphics().setDepth(1.25);
+  const inside = ['station', 'home', 'attic', 'faber', 'subway'].includes(room.kit);
+  if (inside) {
+    g.fillStyle(0x050403, 0.45);
+    for (let x = 0; x < room.width; x += 480) {
+      g.fillPoints([{ x, y: FLOOR_TOP }, { x: x + 20, y: FLOOR_TOP }, { x: x + 120, y: 540 }, { x: x + 70, y: 540 }], true);
+    }
+    g.lineStyle(1, 0xd0b58a, 0.12);
+    g.lineBetween(0, FLOOR_TOP + 1, room.width, FLOOR_TOP + 1);
+  }
+  for (const light of lights) {
+    const cold = light.color === 0x9ad0ff || light.color === 0x9ab0c8;
+    g.fillStyle(cold ? 0x8aa8b7 : 0xc78b53, inside ? 0.045 : 0.07);
+    g.fillEllipse(light.x, 449, Math.min(light.r * 0.6, 190), 24);
+    if (!inside && floor.kind !== 'earth') {
+      // Broken reflections, rather than a large uniform bloom on the pavement.
+      for (let i = 0; i < 6; i++) g.fillRect(light.x - 38 - i * 3, 417 + i * 15, 60 + (i % 3) * 10, 1 + (i % 2));
+    }
+  }
 }

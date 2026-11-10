@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import { sound } from './audio.ts';
 
 /** Freeze the complete scene, including scripted waits, until an explicit return gesture. */
 export function guardFocus(game: Phaser.Game) {
@@ -9,6 +10,7 @@ export function guardFocus(game: Phaser.Game) {
     panel.remove(); panel = undefined;
     for (const key of paused) if (game.scene.isPaused(key)) game.scene.resume(key);
     paused = [];
+    sound.setQuiet(false);
     game.canvas.focus({ preventScroll: true });
   };
   const freeze = () => {
@@ -16,6 +18,7 @@ export function guardFocus(game: Phaser.Game) {
     paused = game.scene.getScenes(true).map(s => s.sys.settings.key);
     if (!paused.length) return;
     for (const key of paused) game.scene.pause(key);
+    sound.setQuiet(true);
     panel = document.createElement('div');
     panel.id = 'focus-guard';
     panel.style.cssText = 'position:fixed;inset:0;z-index:80;background:#080706dd;display:grid;place-items:center';

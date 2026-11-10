@@ -24,3 +24,11 @@ The source novel is **private literary reference, not a shipped asset**.
 ## Work additions — original procedural art
 
 `src/art/fx.ts`: padded eight-frame flame atlas and wake texture. `src/art/figures.ts`: eight-frame Montag surface-floating silhouette. Painted locally by project code; no downloaded third-party artwork or generated-image service. Existing cast and procedural kits retained. `docs/qa/*-simulation.webp` are test-fixture captures of project art, outside runtime assets. Font imports now load Latin CSS only; existing font licenses remain applicable.
+
+## Day 2 — original audio and art
+
+`src/audio.ts` synthesizes every sound locally with Web Audio. A seeded two-second mono noise buffer, a sine room tone and short enveloped oscillator cues are original project code. No recorded music, external audio IDs, samples, licenses from unknown sources, or runtime audio requests. Generation consumes ~176 KiB at 22.05 kHz or ~375 KiB at 48 kHz for the noise buffer (one mono Float32 channel), plus browser audio nodes. At most two continuous sources and eight short cues. No hearing-device test or real-iOS compatibility claim.
+
+`src/art/figures.ts`, `src/art/kits.ts` and `src/world/stage.ts`: original baked fabric/collar details, interior trim, tree silhouettes, distant forest and static ground planes. No art asset downloads. Day 2 review captures are reproducible staged fixtures, outside runtime; Canvas fallback does not reproduce all WebGL tints. See `tests/gallery.mjs` and the review ZIP.
+
+Earlier manifest wording is historical: current art lives in `src/art/`, Latin-only font imports are now used, and Day 2 includes synthesized audio. The private novel remains excluded.

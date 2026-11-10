@@ -3,7 +3,8 @@ import { simulate } from './support/simulation.mjs';
 import { campaign } from './support/campaign.mjs';
 
 const s=await simulate();
-const d=campaign(s);
+const targetEnding=process.env.ENDING??'preservation';
+const d=campaign(s,{ending:targetEnding});
 const chapters=[];
 function expect(room,done){assert.equal(s.scene().room.id,room);assert.equal(s.w.__qa.done().length,done);console.log(`PASS campaign ${room}: ${done}/15`);}
 try{
@@ -38,8 +39,9 @@ try{
   await d.walkTo(800);await d.settle();await d.visit('granger');expect('camp',14);
   const finalCheckpoint=s.save();
   await d.visit('choice');assert.equal(s.scene().sys.settings.key,'end');
-  assert.equal(s.scene().session.flags['c15.ending'],'preservation');assert.equal(s.scene().session.flags['c15.seen'],true);
-  console.log('PASS full normal sequential campaign 01–15 + Preservation',d.stats());
+  assert.equal(s.scene().session.flags['c15.ending'],targetEnding);assert.equal(s.scene().session.flags['c15.seen'],true);
+  if(targetEnding==='defiance' && s.scene().session.flags['faber.tear']==='tear')assert.ok(d.heard("You remember tearing Faber's pages"),'Faber choice changes the Defiance epilogue');
+  console.log(`PASS full normal sequential campaign 01–15 + ${targetEnding}`,d.stats());
   // Each alternate ending starts at the legitimate completed-campaign checkpoint, never forged flags.
   for(const ending of ['defiance','submission']){
     const t=await simulate({save:JSON.parse(finalCheckpoint)});const e=campaign(t);
