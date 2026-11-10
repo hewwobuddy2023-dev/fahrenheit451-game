@@ -81,10 +81,10 @@ Merge recommendation: **review candidate, not automatic approval**. Automated ev
 Use PowerShell. First inspect the existing PC checkout; do not overwrite it. Prefer a separate review worktree. If the destination already exists, inspect it instead of recreating it.
 
 ```powershell
-git -C "C:\Users\gabe\Documents\Fahrenheit451Game" status --short
-git -C "C:\Users\gabe\Documents\Fahrenheit451Game" fetch origin
-git -C "C:\Users\gabe\Documents\Fahrenheit451Game" worktree add --detach "C:\Users\gabe\Documents\Fahrenheit451Game-WorkReview" origin/work/overnight-mobile-qa
-Set-Location "C:\Users\gabe\Documents\Fahrenheit451Game-WorkReview"
+git -C "C:\Projects\Fahrenheit451Game" status --short
+git -C "C:\Projects\Fahrenheit451Game" fetch origin
+git -C "C:\Projects\Fahrenheit451Game" worktree add --detach "C:\Projects\Fahrenheit451Game-WorkReview" origin/work/overnight-mobile-qa
+Set-Location "C:\Projects\Fahrenheit451Game-WorkReview"
 git rev-parse HEAD
 git log --oneline 94c45a3..HEAD
 git diff --stat 94c45a3..HEAD
@@ -171,10 +171,10 @@ If both reviews pass and the owner approves integration: **merge PR #2 into the 
 In PowerShell, first inspect the original checkout; use a new destination for a worktree. If it exists, inspect it instead of overwriting it.
 
 ```powershell
-git -C "C:\Users\gabe\Documents\Fahrenheit451Game" status --short
-git -C "C:\Users\gabe\Documents\Fahrenheit451Game" fetch origin
-git -C "C:\Users\gabe\Documents\Fahrenheit451Game" worktree add --detach "C:\Users\gabe\Documents\Fahrenheit451Game-Day2Review" origin/work/day2-quality-sprint
-Set-Location "C:\Users\gabe\Documents\Fahrenheit451Game-Day2Review"
+git -C "C:\Projects\Fahrenheit451Game" status --short
+git -C "C:\Projects\Fahrenheit451Game" fetch origin
+git -C "C:\Projects\Fahrenheit451Game" worktree add --detach "C:\Projects\Fahrenheit451Game-Day2Review" origin/work/day2-quality-sprint
+Set-Location "C:\Projects\Fahrenheit451Game-Day2Review"
 git rev-parse HEAD
 git log --oneline 19b9328..HEAD
 git diff --stat 19b9328..HEAD
@@ -205,3 +205,6 @@ No automatic continuation was configured. If resuming in another chatbot, begin 
 - Final implementation `95837d3a37a3c6223e50390ef2273030a9692b14` adds the reproduced low-FPS movement repair. **Final CI run `42808394871`: 20/20 native tests PASS** (browser job `129803329207`), **11 unit tests plus all simulation/regression/typecheck/build checks PASS** (build job `129803329804`), including three separate New Game→15/15 ending campaigns and 10/20/30 FPS escape cases. Deploy `129803775011` SKIPPED. Documentary descendants do not change runtime source.
 
 Native captures are Chromium 158.0.8127.18 / WebKit 27.2 on Ubuntu 26.04.1, not real iOS. Three separate normal simulated campaigns reach all 15 challenges, one per ending. The review archive retains initial failures and completed successful evidence, with exact SHAs. No live deployment or merge.
+
+
+Final handoff CI rerun `42810221687` at `ed9fa87`: build and browser SUCCESS, deployment SKIPPED. Quick-test follow-up adds `TEST_IT_FIRST.md`, `START_GAME_WINDOWS.cmd`, and dependency-free `tools/serve-review.cjs`; no game-runtime changes. Windows double-click and physical LAN/phone networking remain owner checks. In the ZIP, launcher serves `02_PRODUCTION_BUILD/dist` using the source helper; no npm install/build is needed for that route.

@@ -2,11 +2,10 @@
 
 **Last updated:** 2026-11-10 (Phoenix) by ChatGPT Work; Claude’s historical entries are retained below.
 **Stage:** Day 2 continues M2 and Sprint 1 on `work/day2-quality-sprint` (draft PR #2 into the first Work branch). Three full 15/15 ending simulations pass. Final implementation CI at `95837d3`: 20/20 Chromium/WebKit tests PASS; physical iPhone/Chromebook checks remain open. PR #1 and #2 remain draft, unmerged; no deployment. Read the Day 2 handoff and `DAY2_QA_REPORT.md` first.
-**Local repo:** `C:\Users\gabe\Documents\Fahrenheit451Game`
+**Local repo:** `C:\Projects\Fahrenheit451Game`
 **GitHub repo:** https://github.com/hewwobuddy2023-dev/fahrenheit451-game (public). Branches: `main` (older docs), `feat/m1-vertical-slice` (M1), `feat/m2-chapters` (M2), both isolated Work branches.
 **GitHub Pages:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/ (deploy status below). The workflow deploys pushes to main/M1/M2; inspect current environment rules before an owner-approved release.
 **Stack (pinned):** phaser 3.90.0, typescript 5.9.3, vite 6.4.6; fonts @fontsource/oswald, ibm-plex-sans, special-elite 5.3.0. Work uses Node 24.22.1; CI uses Node 24. The owner PC runtime is unobserved this sprint.
-**Novel:** private MOBI lives outside the repo (`Documents/F451_PRIVATE_REFERENCE/`). Not tracked; checked with `git ls-files | grep -iE 'mobi|epub|azw|kfx|novel|private|\.env|settings\.local'` → nothing.
 **Playtests:** 0 human playtests.
 **Rubric writing:** six review drafts prepared; quotations/pages, human playtests and timed rehearsal remain incomplete. Current Work notes supersede repaired issues in historical M1 notes.
 
@@ -182,3 +181,8 @@ Verified implementation `95837d3a37a3c6223e50390ef2273030a9692b14`, CI run `4280
 Archive includes complete tracked source, production build, Git bundle/diffs, final and initial native evidence, eleven staged before/after room comparisons, six school drafts and exact continuation instructions. No private novel, credentials, node_modules or browser binaries. PR #2 remains draft into `work/overnight-mobile-qa`; PR #1 remains draft into M2. Nothing merged or deployed.
 
 Next exact task: Claude reviews both diffs in the separate PC worktree, then the owner performs the physical iPhone checklist in `DAY2_QA_REPORT.md`, real Chromebook measurements, two human playtests, printed quotation/page verification and a timed presentation. Do not approve release until those material gaps are resolved. No automatic restart is configured.
+
+
+### Quick review launch follow-up
+
+Inspected final documentation CI `42810221687` at `ed9fa87`: build/browser SUCCESS, deploy SKIPPED. Added a dependency-free local static server, Windows launcher and `TEST_IT_FIRST.md` for immediate supplied-build/phone review. Server HTTP smoke checks cover root/assets/base-prefix/HEAD/404/method restrictions; this does not constitute testing Windows double-click or real iPhone networking. Game runtime unchanged.

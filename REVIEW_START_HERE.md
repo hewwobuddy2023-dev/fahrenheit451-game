@@ -2,11 +2,12 @@
 
 This package continues the existing Claude Code project. It contains the cumulative source, review build, reproducible tests, Git history/patches, actual QA evidence, staged art comparisons, school drafts and Claude handoff. Read `DAY2_QA_REPORT.md` for results and limitations; code being present is not evidence of a passed test.
 
+For the quickest test, read `TEST_IT_FIRST.md` and double-click the top-level `START_GAME_WINDOWS.cmd` after extracting. The supplied build needs Node but no npm install.
+
 ## Source and review order
 
 - Repository: https://github.com/hewwobuddy2023-dev/fahrenheit451-game
 - Original M2: `feat/m2-chapters` at `94c45a3`.
-- Sprint 1: `work/overnight-mobile-qa` at `19b9328`; draft PR #1 into M2: https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/1
 - Day 2: `work/day2-quality-sprint`; draft PR #2 into Sprint 1: https://github.com/hewwobuddy2023-dev/fahrenheit451-game/pull/2
 - The archive's manifest records its exact final source SHA. Quick visual review is in `04_QA/FIVE_CHAPTER_STAGED_COMPARISON.jpg` and the native five-chapter contact sheet; full-resolution captures retain their source SHA/browser labels. A Git bundle and patches allow independent review even without repository access.
 
