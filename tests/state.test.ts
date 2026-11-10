@@ -5,7 +5,7 @@ import { CHALLENGES, RULES, ROOMS, SCRIPTS, CHAPTER_STARTS } from '../src/conten
 import type { Step } from '../src/content/types.ts';
 
 // Raise as chapters land. Rules up to this challenge id must be fully achievable from the content.
-const IMPLEMENTED = Number(process.env.F451_IMPLEMENTED ?? 12);
+const IMPLEMENTED = Number(process.env.F451_IMPLEMENTED ?? 15);
 
 function memStore(init: Record<string, string> = {}) {
   const m = new Map(Object.entries(init));
