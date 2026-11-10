@@ -398,7 +398,7 @@ const home: Kit = (s, room) => {
     fx: { tvOff: () => tvs.forEach((t) => t.setVisible(false)), tvOn: () => tvs.forEach((t) => t.setVisible(true)) },
     tick: (dt) => tvs.forEach((t, i) => { if (t.visible) t.tilePositionX += dt * (0.02 + i * 0.012); }),
     update: (f) => {
-      const off = !!f['c09.off'] || room.id === 'home5';
+      const off = (!!f['c09.off'] && room.id !== 'home3') || room.id === 'home5' || room.id === 'home3';
       tvs.forEach((t) => t.setVisible(!off)); tvGlow.forEach((g) => g.setVisible(!off));
       vChair.setVisible(!!f['c06.chair'] && room.id === 'home2');
       pile.setVisible(!!f['c06.vent'] && room.id === 'home2');
