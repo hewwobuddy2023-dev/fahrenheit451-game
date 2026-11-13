@@ -24,9 +24,11 @@ test('audio remains lazy, survives blocked autoplay, and creates only one contex
   const sound = new Soundscape(() => { created++; return f.ctx; });
   sound.useScene('camp'); sound.cue('step'); assert.equal(created, 0);
   assert.equal(await sound.unlock(), true); assert.equal(await sound.unlock(), true);
+  const ambient = f.counts();
+  assert.equal(ambient.sources, 3); assert.equal(ambient.oscillators, 4); // bed, crackle, hose; drone, swell LFO, two pad tones
   for (const room of ['burn', 'home1', 'river', 'camp', 'end', 'menu']) sound.useScene(room);
-  assert.equal(created, 1); assert.equal(f.counts().sources, 1);
-  assert.equal(f.counts().oscillators, 1); // single ambient tone, no duplicates on scene changes
+  sound.setSpray(1); sound.setSpray(0.4); sound.setSpray(0);
+  assert.equal(created, 1); assert.deepEqual(f.counts(), ambient, 'scene changes and the hose loop never add ambient nodes');
   sound.dispose(); assert.ok(f.counts().closed);
   const blocked = new Soundscape(() => fakeContext({ blocked: true }).ctx);
   assert.equal(await blocked.unlock(), false); blocked.dispose();

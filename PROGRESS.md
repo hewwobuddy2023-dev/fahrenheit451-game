@@ -241,3 +241,28 @@ Local execution became unavailable after the provisional 31.8 MB ZIP passed inte
 Baseline at `3985e53` (re-run locally): 14 unit tests, typecheck, simulation, regression, day2, cinematics, phoenix and all three campaigns PASS. Reproduced: holding E at the hose froze progress at 1040/1500 (pressure 1.0, overheated) for as long as E was held.
 
 M1 + start of M2 checkpoint: input mode from real input (`src/input.ts`), token-based labels, desktop hides touch UI, hose never stalls while held, dialogue choice arming, lane-hazard redesign with island checkpoints, capture cinematic. Tests: 23 unit PASS, typecheck PASS, `tests/input.mjs` 13/13 PASS, simulation/regression/day2/cinematics/phoenix PASS, campaign:all (3 endings) PASS. All in the deterministic simulation (Canvas renderer); not a physical device. See `docs/ISSUES.md`.
+
+### Final sprint M3: cinematic and audio production (2026-11-12)
+- Visuals (all original, painted once into textures; animation is sprite frames/tweens, no shaders):
+  - Parlor: three animated wall broadcasts replace the Phoenix smiley ovals.
+  - Boulevard: cars approach in perspective through each lane on the lane timing, plus Denham's billboard and loudspeaker poles.
+  - Run: a helicopter rides each searchlight.
+  - Lawn: the Hound runs across the lawn, veers off on a miss and burns on FIRE.
+  - Burn: the upper storey catches, with smoke columns and an orange wash.
+  - River and camp: layered pines, mist, moon spill and helicopters.
+  - Characters are brighter and the vignette is softer.
+- Audio (`src/audio.ts`):
+  - Compressor on the master; separate ambience and SFX buses.
+  - Fire crackle, tension pad, water/wind swell, and a hose loop tied to the spray.
+  - Multi-part cues for the Hound, car engine, siren, impact, ignite, chime and wrong answer.
+  - Evidence: `tools/audio-capture.mjs` recorded the final mix in Chromium (`docs/qa/audio/final-mix.webm`, levels in `levels.md`). Cue peaks are 0.36–0.55, above ambience at about 0.2–0.3; no clipping; mute measured silent.
+  - Not heard on a physical device.
+- Stealth reactions:
+  - Moving during the Hound's still-watch triggers a growl, a red pulse and a jolt.
+  - A watcher catching a hold mid-act triggers a named line, a cue and a flash.
+- HUD: the countdown sits under the objective panel and no longer overlaps a two-line objective.
+- Evidence:
+  - `docs/qa/sprint-before/*.png` (Phoenix) vs `docs/qa/sprint-after/*.jpg`.
+  - Contact sheet: `docs/qa/sprint-compare.jpg`.
+  - Regenerate with `node tools/capture.mjs <url> <dir> [filter]`.
+- Tests: unit 23/23, input 13/13, simulation, regression, day2, cinematics, phoenix and campaign:all, with all three endings, PASS (simulation; not a device).

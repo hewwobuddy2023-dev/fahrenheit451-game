@@ -135,9 +135,10 @@ export class Hud {
   /** Countdown or meter readout under the objective panel (text, so never colour-only). */
   setTimer(s: string | null) {
     if (s === null) { this.timer?.setVisible(false); return; }
-    this.timer ??= text(this.scene, 34, 82, '', { fontFamily: FONT.display, fontSize: '18px', color: C.amber })
+    this.timer ??= text(this.scene, 18, 82, '', { fontFamily: FONT.display, fontSize: '18px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.78)', padding: { x: 16, y: 6 } })
       .setLetterSpacing(3).setScrollFactor(0).setDepth(1001);
-    this.timer.setVisible(true).setText(s);
+    // sit just under the objective panel, whose height grows when the objective wraps
+    this.timer.setVisible(true).setText(s).setY(14 + Math.max(56, this.objective.height + 40) + 8);
   }
 
   note(s: string) {
