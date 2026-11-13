@@ -210,7 +210,7 @@ export const ROOMS2: Record<string, RoomDef> = {
     objective: (f) => {
       if (!f['c05.done']) return '';
       if (!f['c06.chair']) return 'Bring the parlor chair to the hall ventilator';
-      if (!f['c06.vent']) return 'Hold E at the ventilator grill';
+      if (!f['c06.vent']) return 'Hold [E] at the ventilator grill';
       return '';
     },
     enter: [{ key: 'e.home2', steps: [

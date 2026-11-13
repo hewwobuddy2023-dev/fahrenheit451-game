@@ -4,6 +4,7 @@ export const settings = {
   volume: 0.75,
   assistedHose: false,
   analog: true,
+  inputMode: 'auto' as 'auto' | 'keyboard' | 'touch',
   reducedMotion: typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches,
 };
 try {
@@ -11,6 +12,7 @@ try {
   if (typeof saved?.volume === 'number' && Number.isFinite(saved.volume)) settings.volume = Math.max(0, Math.min(1, saved.volume));
   for (const key of ['assistedHose', 'analog'] as const) if (typeof saved?.[key] === 'boolean') settings[key] = saved[key];
   if (typeof saved?.muted === 'boolean') settings.muted = saved.muted;
+  if (['auto', 'keyboard', 'touch'].includes(saved?.inputMode)) settings.inputMode = saved.inputMode;
   if (typeof saved?.reducedMotion === 'boolean') settings.reducedMotion = saved.reducedMotion;
 } catch { /* managed browsers may disable storage */ }
 

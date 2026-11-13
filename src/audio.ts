@@ -1,6 +1,6 @@
 import { settings, setSetting } from './settings.ts';
 
-type Cue = 'ui' | 'page' | 'step' | 'interact' | 'complete' | 'hound' | 'caught' | 'ignite' | 'ending';
+type Cue = 'ui' | 'page' | 'step' | 'interact' | 'complete' | 'hound' | 'caught' | 'ignite' | 'ending' | 'wrong' | 'engine' | 'alarm';
 interface Profile { noise: number; cutoff: number; hum: number; tone: number }
 const PROFILES: Record<string, Profile> = {
   menu: { noise: 0.07, cutoff: 240, hum: 55, tone: 0.045 },
@@ -18,6 +18,7 @@ const CUES: Record<Cue, [number, number, number, number]> = {
   ui: [440, 330, 0.045, 85], page: [650, 420, 0.035, 140], step: [90, 45, 0.07, 280],
   interact: [280, 420, 0.08, 200], complete: [330, 660, 0.35, 900],
   hound: [125, 48, 0.65, 1000], caught: [150, 70, 0.3, 900], ignite: [80, 160, 0.5, 1500], ending: [196, 294, 1.2, 2000],
+  wrong: [233, 117, 0.28, 250], engine: [55, 140, 1.1, 1400], alarm: [880, 660, 0.5, 900],
 };
 
 /** Original Web Audio synthesis: one reusable noise buffer, two ambient sources, <=8 cue voices.

@@ -132,7 +132,7 @@ export const ROOMS1: Record<string, RoomDef> = {
     ],
     objective: (f) => {
       const n = ['c01.p1', 'c01.p2', 'c01.p3'].filter((k) => f[k]).length;
-      return n === 0 ? 'Move right to the books. Hold E to build pressure (0/3)' : n < 3 ? `Pulse E: hold in FLOW, release before HIGH (${n}/3)` : f['c01.lit'] ? '' : 'Take the igniter from Captain Beatty';
+      return n === 0 ? 'Move right to the books. Hold [E] to spray kerosene (0/3)' : n < 3 ? `Hold [E] to spray; ease off when the needle hits HIGH (${n}/3)` : f['c01.lit'] ? '' : 'Take the igniter from Captain Beatty';
     },
     enter: [{ key: 'e.burn', steps: [{ title: 'PART ONE', sub: 'The Hearth and the Salamander' }, { say: 'b_open' }] }],
     hotspots: [

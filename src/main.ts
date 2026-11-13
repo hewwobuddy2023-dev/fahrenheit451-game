@@ -16,8 +16,10 @@ import { C, H, K, W, params, installQualityGovernor } from './view.ts';
 import { diagnostics } from './diagnostics.ts';
 import { guardFocus } from './focus.ts';
 import { installAudio, sound } from './audio.ts';
+import { installInputMode } from './input.ts';
 
 const diagnostic = diagnostics(params.has('diagnostics'));
+installInputMode();
 
 class BootScene extends Phaser.Scene {
   constructor() { super('boot'); }

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { controls } from '../input.ts';
 import { sound } from '../audio.ts';
 import { RULES } from '../content.ts';
 import { completedIds, type Session } from '../state.ts';
@@ -27,7 +28,7 @@ export class EndScene extends Phaser.Scene {
     const done = completedIds(RULES, this.session.flags).length;
     const foot = text(this, W / 2, H - 120, `JOURNAL ${done}/15${this.session.demo ? '  ·  PRESENTATION MODE' : ''}`, { fontFamily: FONT.display, fontSize: '13px', color: C.amber })
       .setOrigin(0.5).setLetterSpacing(4).setAlpha(0);
-    const back = text(this, W / 2, H - 84, 'PRESS E OR TAP TO RETURN TO THE TITLE', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
+    const back = text(this, W / 2, H - 84, controls('PRESS [E] TO RETURN TO THE TITLE'), { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
       .setOrigin(0.5).setLetterSpacing(3).setAlpha(0);
     this.tweens.add({ targets: [t, n], alpha: 1, duration: 1400 });
     this.tweens.add({ targets: [foot, back], alpha: 1, duration: 800, delay: 1800 });
