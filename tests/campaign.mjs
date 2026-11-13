@@ -28,7 +28,8 @@ try{
   for(const id of ['door','beds','w1','w2','w3'])await d.visit(id);
   await d.visit('out',{missHound:true});await d.visit('books');await d.visit('run');
   // Force one capture, then cross the actual lanes with touch movement and safe-gap waits.
-  const bv=s.scene();s.w.__qa.go(650);await s.until(()=>bv.caughtAt>0,'boulevard capture');assert.equal(Math.round(bv.player.x),540);
+  const bv=s.scene();s.w.__qa.go(650);await s.until(()=>bv.caughtAt>0,'boulevard capture');await s.until(()=>!bv.caughtScene&&bv.mode==='play','capture cinematic ends');
+  assert.equal(Math.round(bv.player.x),620-48,'caught in lane 1 returns to the island just before it');
   await d.walkTo(1700);await d.settle();assert.ok(bv.session.flags['c11.crossed']);
   await d.visit('black');await d.visit('on');await d.visit('faber');await d.visit('back');
   const run=s.scene();await s.advance(34500);assert.ok(run.caughtAt>0,'count-of-ten reset');
@@ -50,7 +51,7 @@ try{
       const r=t.scene();t.w.__qa.go(1000);await t.advance(50);await t.tap(888,474);
       for(let n=0;n<100 && !r.dialogue.options.some(x=>x.startsWith('Stay.'));n++){if(r.dialogue.open)await t.tap(480,450);else await t.advance(100);} assert.ok(r.dialogue.options.some(x=>x.startsWith('Stay.')),'final choice');
       await t.render();const i=r.dialogue.choices.findIndex(c=>c.set?.['c15.ending']===ending);const bg=r.dialogue.choiceRows[i].list[0];
-      assert.ok(i>=0);await t.tap(bg.x+240,bg.y);await e.settle();
+      assert.ok(i>=0);await t.advance(450);await t.tap(bg.x+240,bg.y);await e.settle(); // choices are armed after 400 ms, hence the wait
       assert.equal(t.scene().sys.settings.key,'end');assert.equal(t.scene().session.flags['c15.ending'],ending);
       assert.equal(t.scene().session.flags['c15.seen'],true);console.log(`PASS independent ending ${ending}`);
     }finally{t.close();}

@@ -1,0 +1,24 @@
+# Issue inventory — final sprint (`work/final-sprint`, base Phoenix `3985e53`)
+
+Status key: **FIXED** (code + test), **OPEN**, **SUSPECTED** (not reproduced), **DEFERRED** (with reason).
+Tests named below are in `tests/`. "Sim" = real bundled Phaser under deterministic time (Canvas renderer), not a physical device.
+
+| ID | Sev | Area | Repro | Expected | Observed (before) | Root cause | Fix | Test | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| IN-01 | P0 | Ch1 hose | Hold E at a book pile for 3+ s, as the prompt says | Holding sprays and finishes | Pressure maxed at 2 s; progress froze at 1040/1500 for as long as E was held | Overheat stopped all progress while held; prompt still said HOLD | Holding always progresses: full flow in the FLOW band, 40% sputter outside it. Big state label (FULL FLOW / TOO HIGH: RELEASE E), thinner spray when sputtering | `pressure.test.ts` (never stalls; pulsing is faster), `input.mjs` desktop hold | FIXED |
+| IN-02 | P0 | HUD | Open the game on a touch-capable Windows PC with keyboard and mouse | No on-screen arrows/ACT | Arrows and ACT shown | Touch mode decided once from `device.input.touch` (capability), not actual input | `src/input.ts`: mode from real input (touch vs key/mouse), media-query guess, Auto/Keyboard/Touch setting; HUD shows touch UI only in touch mode, live | `input.mjs` desktop, hybrid, manual setting | FIXED |
+| IN-03 | P0 | Prompts | Same as IN-02 | Press E / Hold E | ACT and "E / ACT" | Same flag plus hand-written labels in 7 files | All labels resolved by `controls()` from `[E]`/`[DOWN]` tokens | `input.mjs` checks prompt, hint, objective | FIXED |
+| IN-04 | P0 | Dialogue choices | Pick a wrong puzzle answer, keep pressing E | Wrong stays wrong; you choose again deliberately | Cursor reset to option 1 and the same E press confirmed it; option 1 was right in 4 of 6 retry puzzles | Confirm key shared with advance; cursor reset; no arming | 400 ms arming after choices appear; cursor stays on the wrong pick; distinct wrong cue + flash | `input.mjs` mashing never completes the pillow puzzle; early press ignored | FIXED |
+| HZ-01 | P1 | Ch4 boulevard | Cross the lanes | Readable, fair | 700 ms warning < 940 ms crossing; lanes drifted (different periods); any catch = back to kerb | Timing/design | One shared 3.6 s rhythm, forward wave; 1.2 s warning glare + engine cue; lane strips show clear/coming/lit; marked islands; caught = island before that lane | `lanes.test.ts` (warn > crossing, dark window fits, islands safe, resets), campaign | FIXED |
+| HZ-02 | P1 | Ch4 count of ten | Doors/searchlights | Same fairness | Same flaws; reset to start | Same | Same rhythm/islands/resets | `lanes.test.ts`, campaign | FIXED |
+| HZ-03 | P1 | Ch4 boulevard | Joyriders cutscene | Resume safely | Trigger at x 1050 was inside lane 3: after the scene you could be hit with no reaction time | Content placement | Moved to the island (x 965) | campaign | FIXED |
+| ST-01 | P1 | Hazards | Get caught | Visible threat response | Text only ("THE LIGHT FINDS YOU") | — | Capture cinematic: light snaps to Montag, glare, alarm, brief push-in, fade, island checkpoint; input released on every path; reduced motion skips the push | campaign capture assertion | FIXED (pursuit); OPEN for Hound sniff and attic watcher |
+| TST-01 | P1 | Tests | — | Desktop paths tested | Harness always reported 5 touch points | — | `simulate({touchDevice:false})`, mouse `click`, more key codes | `input.mjs` | FIXED |
+| TST-02 | P2 | Tests | — | Driver uses game timing | Driver re-implemented lane timing with `%` (breaks on negative phase) | Duplicate logic | Driver imports `laneState` | campaign | FIXED |
+| FG-01 | P2 | Focus guard | Click the address bar | Light pause | Full-screen freeze panel on every blur | Design | — | — | OPEN |
+| CH-01 | P1 | Choices | Beatty pillow, Faber masking | Puzzles with feedback, moral choices with consequences | Retry-until-correct lists | Design | Arming + feedback done; consequences pending (M4) | — | PARTIAL |
+| NAR-01 | P2 | Narrative | — | "X will remember" backed by later effects | None | — | M4 | — | OPEN |
+| MV-01 | P2 | Movement | — | Shift sprint, Space vault | None; Space = interact | — | M4 | — | OPEN |
+| AU-01 | P1 | Audio | Play with sound on | Clear, layered SFX | Single sine sweeps at low gain; one noise bed | Thin synthesis | M3 | — | OPEN |
+| CI-01 | P2 | Native CI | — | All native tests pass | 2 WebKit image-stall failures at `98e5aa2` (inherited) | Unknown | — | — | OPEN |
+| SUS-01 | — | Audio | Owner device | Audible | Unknown | — | — | — | SUSPECTED |

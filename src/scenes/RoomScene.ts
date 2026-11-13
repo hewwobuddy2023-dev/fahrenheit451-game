@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
 import { phoenixSet } from '../art/phoenix.ts';
 import { diveStep, type Breath } from '../gameplay/breath.ts';
-import { hoseStep, type HoseState } from '../gameplay/pressure.ts';
+import { BAND, hoseStep, inBand, type HoseState } from '../gameplay/pressure.ts';
+import { crossMs, inLane, laneState, WARN_MS } from '../gameplay/lanes.ts';
+import { controls, isTouch, onInputMode } from '../input.ts';
 import { sound } from '../audio.ts';
 import { settings, setSetting } from '../settings.ts';
 import { freeTextures } from '../art/core.ts';
@@ -58,13 +60,16 @@ export class RoomScene extends Phaser.Scene {
   private breath: Breath = { air: 1, exhausted: false };
   private breathText!: Phaser.GameObjects.Text;
   private holdMs = 0;
+  private sputter = false;
   private hose: HoseState = { pressure: 0, progress: 0, overheated: false };
   private hazardReadout!: Phaser.GameObjects.Text;
+  private laneStrips = new Map<string, Phaser.GameObjects.Rectangle>();
+  private caughtScene = false;
   private pressureLabel!: Phaser.GameObjects.Text;
   private controlHint!: Phaser.GameObjects.Text;
   private camTarget: number | null = null;
   private done = new Set<number>();
-  private touch = false;
+  private get touch() { return isTouch(); }
   private overlay?: { destroy: () => void; list?: MenuList };
   private caughtAt = 0;
   private timerStart = 0;
@@ -85,7 +90,7 @@ export class RoomScene extends Phaser.Scene {
     this.vx = 0; this.facing = 1; this.near = undefined; this.holdMs = 0;
     this.camTarget = null; this.overlay = undefined; this.caughtAt = 0;
     this.activeTime = 0;
-    this.npcs = []; this.glows = new Map(); this.beams = new Map(); this.eyes = new Map();
+    this.npcs = []; this.glows = new Map(); this.laneStrips = new Map(); this.caughtScene = false; this.beams = new Map(); this.eyes = new Map();
     // Scene restarts destroy its objects, but retain class fields. Never reuse a
     // destroyed emitter when a later chapter starts its next hold interaction.
     this.spray = undefined;
@@ -101,7 +106,6 @@ export class RoomScene extends Phaser.Scene {
     const family = this.room.kit.split(':')[0];
     for (const other of ['station', 'home', 'attic', 'faber', 'subway', 'street', 'forest']) if (other !== family) freeTextures(this, `k:${other}:`);
     resetKitOnce();
-    this.touch = this.sys.game.device.input.touch;
     this.kit = KITS[this.room.kit](this, this.room);
     this.set = phoenixSet(this, this.room);
     this.floor = buildFloor(this, this.kit.floor);
@@ -143,6 +147,10 @@ export class RoomScene extends Phaser.Scene {
       if (hz.pulse) {
         const marks = this.add.graphics().setDepth(4.15).lineStyle(1, 0x78968c, 0.45);
         marks.strokeRect(hz.from - 14, WALK_Y + 7, hz.to - hz.from + 28, 20);
+        // live danger strip under the lane: dim = clear, amber = coming, white-hot = lit
+        this.laneStrips.set(hz.id, this.add.rectangle(hz.from - 14, WALK_Y + 7, hz.to - hz.from + 28, 20, 0xffffff, 0).setOrigin(0).setDepth(4.16).setBlendMode(Phaser.BlendModes.ADD));
+        // the safe island just before the lane
+        this.add.rectangle(hz.reset - 22, WALK_Y + 9, 44, 16, 0x78a68b, 0.18).setOrigin(0).setDepth(4.14);
         for (let x = hz.from - 8; x < hz.to + 12; x += 16) marks.lineBetween(x, WALK_Y + 8, x + 10, WALK_Y + 26);
       }
       this.beams.set(hz.id, img.setBlendMode(Phaser.BlendModes.ADD).setDepth(5.5));
@@ -160,17 +168,18 @@ export class RoomScene extends Phaser.Scene {
     this.hazardReadout = text(this, W / 2, 126, '', { fontFamily: FONT.display, fontSize: '17px', color: C.cream, backgroundColor: '#101819', padding: { x: 12, y: 7 } }).setOrigin(0.5).setScrollFactor(0).setDepth(1003);
     this.pressureLabel = text(this, 0, 0, 'LOW     FLOW     HIGH', { fontFamily: FONT.display, fontSize: '11px', color: C.cream }).setDepth(8).setVisible(false);
 
-    this.dialogue = new Dialogue(this, this.touch);
+    this.dialogue = new Dialogue(this);
     this.dialogue.onPause = () => this.onAction('pause');
     this.dialogue.onSpeaker = (who) => this.frameSpeaker(who);
     this.hud = new Hud(this, `CHAPTER ${this.room.chapter}  ·  ${CHAPTERS[this.room.chapter - 1].toUpperCase()}`, {
-      touch: this.touch, demo: this.session.demo,
+      demo: this.session.demo,
       onJournal: () => this.onAction('journal'), onPause: () => this.onAction('pause'), onAct: () => this.onAction('act'),
     });
     this.controlHint = text(this, W / 2, 104, '', { fontFamily: FONT.display, fontSize: '15px', color: C.cream, backgroundColor: '#111315', padding: { x: 12, y: 8 }, wordWrap: { width: 620 } }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(1003);
     text(this, W - 50, 176, '?', { fontFamily: FONT.display, fontSize: '22px', backgroundColor: '#111315', padding: { x: 18, y: 10 } }).setOrigin(0.5).setScrollFactor(0).setDepth(1001).setInteractive({ useHandCursor: true }).on('pointerdown', () => { if (this.mode === 'play') this.flashNote(this.hint()); });
     addAtmosphere(this, this.room.chapter >= 5 ? 0.45 : 1);
     onActions(this, (a) => this.onAction(a));
+    this.events.once('shutdown', onInputMode(() => { this.near = undefined; })); // rebuild the prompt label
 
     this.done = new Set(completedIds(RULES, this.session.flags));
     this.refresh(false);
@@ -190,7 +199,10 @@ export class RoomScene extends Phaser.Scene {
     this.controlHint.setVisible(this.mode === 'play');
     if (this.mode === 'play') {
       const h = this.near;
-      this.controlHint.setText(this.room.id === 'burn' ? h?.hold?.pressure ? (this.hose.overheated ? 'PRESSURE HIGH — release E / ACT to vent. Progress is kept.' : 'HOLD E / ACT: build pressure. FLOW band fills the lower meter. Release before HIGH.') : 'A / D or arrows: move  ·  E / ACT: interact  ·  J: journal  ·  Esc: pause  ·  H: hint' : h?.watcher ? 'Watch his turn. Hold E / ACT only while he looks away. Being watched resets this attempt.' : '');
+      const moveHelp = this.touch ? 'Arrows: move  ·  ACT: interact' : 'A / D or arrows: move  ·  E: interact  ·  J: journal  ·  Esc: pause  ·  H: hint';
+      this.controlHint.setText(controls(this.room.id === 'burn' ? h?.hold?.pressure
+        ? (this.hose.overheated || this.hose.pressure > BAND[1] ? 'PRESSURE HIGH. The hose sputters. Release [E] for a moment, then hold again.' : 'Hold [E] to spray. Keep the needle in FLOW for full pressure.')
+        : moveHelp : h?.watcher ? 'Watch his turn. Hold [E] only while he looks away. If he turns, the attempt resets.' : ''));
     }
     this.activeTime += dtMs;
     const time = this.activeTime;
@@ -299,7 +311,7 @@ export class RoomScene extends Phaser.Scene {
     this.holdMs = 0;
     this.hose = { pressure: 0, progress: 0, overheated: false };
     if (!best) return void this.prompt.setVisible(false);
-    const key = this.touch ? 'ACT' : 'E';
+    const key = controls('[E]');
     const holdable = best.hold && !this.locked(best);
     this.promptText.setText((holdable ? 'HOLD  ' : '') + best.label.toUpperCase());
     const kw = key.length * 9 + 14, w = this.promptText.width + kw + 26;
@@ -335,13 +347,15 @@ export class RoomScene extends Phaser.Scene {
     if (h.hold.pressure) {
       this.hose = hoseStep(this.hose, held, dtMs / 1000, h.hold.ms, settings.assistedHose);
       this.holdMs = this.hose.progress;
-      flowing = held && (settings.assistedHose || (!this.hose.overheated && this.hose.pressure >= 0.32 && this.hose.pressure <= 0.82));
+      flowing = held; // always sprays; outside the band it sputters (see pressure.ts)
+      this.sputter = held && !settings.assistedHose && !inBand(this.hose);
     } else if (held) this.holdMs += dtMs;
     const k = Math.min(1, this.holdMs / h.hold.ms);
     const bx = h.x - 50, by = (h.py ?? 300) + (h.hold.pressure ? 60 : 24);
     this.meter.fillStyle(C.panel, 0.85).fillRect(bx - 2, by - 2, 104, 12).fillStyle(C.amberN, 1).fillRect(bx, by, 100 * k, 8);
     if (h.hold.pressure) {
-      this.pressureLabel.setText('LOW     FLOW     HIGH').setPosition(bx - 6, by - 48).setVisible(true);
+      const state = !held ? 'HOLD [E] TO SPRAY' : this.sputter ? (this.hose.pressure < BAND[0] ? 'BUILDING PRESSURE…' : 'TOO HIGH: RELEASE [E]') : 'FULL FLOW';
+      this.pressureLabel.setText(controls(state)).setColor(this.sputter && this.hose.pressure >= BAND[0] ? C.ember : C.cream).setPosition(bx - 6, by - 50).setVisible(true);
       this.meter.fillStyle(C.panel, 0.95).fillRect(bx - 4, by - 31, 108, 22).fillStyle(0x78a68b, 0.65).fillRect(bx + 32, by - 28, 50, 15)
         .lineStyle(2, C.creamN).lineBetween(bx + this.hose.pressure * 100, by - 30, bx + this.hose.pressure * 100, by - 10);
     }
@@ -354,6 +368,7 @@ export class RoomScene extends Phaser.Scene {
       const tx = (h.hold.target ?? h.x) - this.player.x;
       this.spray.speedX = { min: tx * 1.5, max: tx * 1.9 } as never;
       this.spray.speedY = { min: -160, max: -110 } as never;
+      this.spray.frequency = this.sputter ? 90 : 18; // thin, broken spray outside the band
       if (h.hold.fx !== 'pull') this.spray.start();
     } else this.spray?.stop();
     if (k >= 1) {
@@ -399,22 +414,26 @@ export class RoomScene extends Phaser.Scene {
       const t = ((time / hz.period) + (hz.phase ?? 0)) % 1;
       let hit = false;
       if (hz.pulse) {
-        const k = t * hz.period;
-        const lit = k < hz.pulse;
+        const st = laneState(hz, time);
         const distance = hz.from - this.player.x;
-        if (this.mode === 'play' && distance > -100 && distance < 360 && Math.abs(distance) < nearest) { nearest = Math.abs(distance); const crossing = Math.max(0, hz.to + 14 - this.player.x) / (SPEED * (this.room.limp ? 0.72 : 1)) * 1000 + 150; label = lit ? 'WAIT — LANE EXPOSED' : hz.period - k < crossing ? 'WAIT — LIGHT APPROACHING' : 'CLEAR GAP — CROSS TO THE NEXT REFUGE'; }
-        const warn = !lit && k > hz.period - 700; // brief glow before the lane lights up
-        img.setVisible(lit || warn).setAlpha(lit ? 0.8 : 0.25);
-        img.setX(hz.from + (hz.to - hz.from) * (lit ? k / hz.pulse : 0.5));
-        hit = lit && this.player.x > hz.from - 14 && this.player.x < hz.to + 14;
+        if (this.mode === 'play' && distance > -100 && distance < 360 && Math.abs(distance) < nearest) {
+          nearest = Math.abs(distance);
+          label = st.lit ? 'WAIT ON THE ISLAND: LANE LIT' : st.untilLit < crossMs(hz, SPEED * (this.room.limp ? 0.72 : 1)) + 150 ? 'WAIT: LIGHT COMING' : 'GO NOW: CROSS TO THE NEXT ISLAND';
+        }
+        // the glare grows through the warning, then sweeps across the lane while lit
+        const glow = st.lit ? 0.85 : st.warn ? 0.12 + 0.5 * (1 - st.untilLit / WARN_MS) : 0;
+        img.setVisible(glow > 0).setAlpha(glow).setX(st.lit ? hz.from + (hz.to - hz.from) * st.progress : hz.to + 40);
+        this.laneStrips.get(hz.id)?.setFillStyle(st.lit ? 0xfff2d0 : 0xffa040, st.lit ? 0.32 : st.warn ? 0.1 + 0.18 * (1 - st.untilLit / WARN_MS) : 0);
+        if (st.warn && st.untilLit < 400 && Math.abs(distance) < 500) sound.cue(hz.look === 'headlights' ? 'engine' : 'alarm');
+        hit = st.lit && inLane(hz, this.player.x);
       } else {
         img.setVisible(true);
         const bx = hz.from + (hz.to - hz.from) * (t < 0.5 ? t * 2 : 2 - t * 2);
         img.setX(bx);
         hit = Math.abs(this.player.x - bx) < hz.width / 2;
       }
-      if (hit && this.mode === 'play' && time - this.caughtAt > 1200 && !(hz.dive && diving)) {
-        this.caught(hz.reset, hz.look === 'headlights' ? 'THE HEADLIGHTS FIND YOU.' : hz.look === 'doorlight' ? 'SOMEONE AT A DOOR SEES YOU.' : 'THE LIGHT FINDS YOU.');
+      if (hit && this.mode === 'play' && !this.caughtScene && time - this.caughtAt > 1200 && !(hz.dive && diving)) {
+        void this.caughtCinematic(hz.reset, hz.look === 'headlights' ? 'CAUGHT IN THE HEADLIGHTS' : hz.look === 'doorlight' ? 'A NEIGHBOUR SEES YOU' : 'THE SEARCHLIGHT FINDS YOU', img);
       }
     }
     this.hazardReadout.setText(label).setVisible(!!label && this.mode === 'play');
@@ -430,7 +449,7 @@ export class RoomScene extends Phaser.Scene {
     const el = time - this.timerStart;
     const n = Math.min(10, 1 + Math.floor((el / tm.ms) * 10));
     this.hud.setTimer(`${tm.label}  ${n} / 10`);
-    if (el >= tm.ms) this.caught(tm.reset, 'THE DOORS OPEN. THEY SEE YOU.');
+    if (el >= tm.ms && !this.caughtScene) void this.caughtCinematic(tm.reset, 'TEN. EVERY DOOR OPENS', undefined);
   }
 
   private caught(x: number, msg: string) {
@@ -441,14 +460,44 @@ export class RoomScene extends Phaser.Scene {
     this.player.x = x;
     this.breath = { air: 1, exhausted: false };
     this.vx = 0;
-    this.flashNote(msg + '  TRY AGAIN.');
+    if (msg) this.flashNote(msg + '  TRY AGAIN.');
+    else this.hud.note('BACK TO THE LAST SAFE SPOT');
+  }
+
+  /**
+   * Short, readable failure: the light snaps onto Montag, glare and alarm, a brief push-in,
+   * a quick fade, then the checkpoint. Input is released on every path; reduced motion skips the push.
+   */
+  private async caughtCinematic(x: number, msg: string, light?: Phaser.GameObjects.Image) {
+    this.caughtScene = true;
+    this.caughtAt = this.activeTime;
+    this.mode = 'cutscene'; this.vx = 0;
+    this.input.keyboard?.resetKeys(); this.hud.showTouch(false); this.spray?.stop();
+    const cam = this.cameras.main;
+    try {
+      sound.cue('caught'); sound.cue('alarm');
+      light?.setVisible(true).setAlpha(1).setX(this.player.x);
+      this.player.setTint(0xffffff);
+      if (!settings.reducedMotion) { cam.flash(220, 255, 250, 235); this.camTarget = this.player.x; }
+      this.flashNote(msg);
+      await sleep(this, 650);
+      cam.fadeOut(220, 0, 0, 0);
+      await sleep(this, 240);
+      this.caught(x, '');
+      this.camTarget = null;
+      cam.scrollX = Phaser.Math.Clamp(x - W / 2, 0, this.room.width - W);
+      cam.fadeIn(260, 0, 0, 0);
+    } finally {
+      this.caughtScene = false;
+      if (!this.isExit()) { this.mode = 'play'; this.hud.showTouch(true); }
+    }
   }
 
   private hintLevel = 0;
   private hint() {
     const h = this.room.hotspots.find(h => this.active(h) && !this.locked(h) && h.required && !(h.doneFlag && this.session.flags[h.doneFlag]) && !(h.hold && this.session.flags[h.hold.flag]));
     const level = this.hintLevel++ % 3;
-    return level === 0 ? 'Look for the warm marker. Read the objective above.' : level === 1 ? (h ? 'Try: ' + h.label + '. Release a held control to stop.' : this.room.objective(this.session.flags)) : h ? (h.x > this.player.x ? 'Move right. ' : 'Move left. ') + h.label + (h.hold?.pressure ? ' — hold in FLOW; release before HIGH.' : h.hold ? ' — hold E / ACT.' : ' — press E / ACT.') : 'Journal J lists every required challenge.';
+    return level === 0 ? 'Look for the warm marker. Read the objective above.' : level === 1 ? (h ? 'Try: ' + h.label + '. Release a held control to stop.' : this.room.objective(this.session.flags)) : h ? (h.x > this.player.x ? 'Move right. ' : 'Move left. ') + h.label + controls(h.hold?.pressure ? ' — hold [E]; release briefly when the needle hits HIGH.' : h.hold ? ' — hold [E].' : ' — press [E].') : 'Journal J lists every required challenge.';
   }
 
   private flashNote(s: string) {
@@ -629,7 +678,7 @@ export class RoomScene extends Phaser.Scene {
     }
     if ('prompt' in s) {
       for (;;) {
-        const t = text(this, W / 2, 210, this.touch ? s.prompt.replace('PRESS E', 'TAP ACT') : s.prompt, { fontFamily: FONT.display, fontSize: '30px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 18, y: 10 } })
+        const t = text(this, W / 2, 210, controls(s.prompt), { fontFamily: FONT.display, fontSize: '30px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 18, y: 10 } })
           .setOrigin(0.5).setLetterSpacing(6).setScrollFactor(0).setDepth(1150);
         sound.cue('hound');
         this.hud.showTouch(true);
@@ -754,7 +803,7 @@ export class RoomScene extends Phaser.Scene {
       .lineStyle(1, C.emberN, 0.5).strokeRect(W / 2 - 219.5, 110.5, 439, 419);
     const block = this.add.zone(0, 0, W, H).setOrigin(0).setScrollFactor(0).setInteractive();
     const title = text(this, W / 2, 150, 'PAUSED', { fontFamily: FONT.display, fontSize: '30px', fontStyle: '600' }).setOrigin(0.5).setLetterSpacing(8);
-    const help = text(this, W / 2, 192, this.touch ? 'TAP A ROW TO CHOOSE' : 'MOVE A / D · INTERACT E (HOLD WHERE ASKED) · JOURNAL J · PAUSE ESC', {
+    const help = text(this, W / 2, 192, this.touch ? 'TAP A ROW TO CHOOSE' : 'ARROWS / W S TO CHOOSE · ENTER OR E TO CONFIRM', {
       fontFamily: FONT.display, fontSize: '11px', color: C.creamDim,
     }).setOrigin(0.5).setLetterSpacing(1);
     const root = this.add.container(0, 0, [g, block, title, help]).setScrollFactor(0, 0, true).setDepth(1290);

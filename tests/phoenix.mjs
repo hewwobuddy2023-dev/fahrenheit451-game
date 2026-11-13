@@ -28,12 +28,12 @@ for(const [room,id,flag] of [['subway','read','c08.verse'],['camp','granger','c1
  const s=await simulate({save:{v:1,room:'burn',x:1060,flags:{'e.burn':true}},lowres:true});
  try{
   await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','hose Continue');await campaign(s).settle();
-  const r=s.scene();await s.touch('touchstart',888,474);await s.advance(5000);await s.touch('touchend',888,474);assert.ok(!r.session.flags['c01.p2']);assert.ok(r.hose.overheated);
+  const r=s.scene();await s.touch('touchstart',888,474);await s.advance(2000);assert.ok(r.sputter,'above the band the hose sputters');assert.ok(r.hose.progress>1000,'but a held hose keeps making progress');await s.touch('touchend',888,474);assert.ok(!r.session.flags['c01.p2']);
   await s.screenshot('docs/qa/phoenix-mechanics/hose-overpressure.webp');
   const before=r.hose.progress;await s.tap(914,112);await s.advance(5000);assert.equal(r.hose.progress,before);await s.tap(500,234);
   await s.advance(1800);assert.equal(r.hose.overheated,false);await campaign(s).visit('pile2');assert.equal(r.session.flags['c01.p2'],true);
   assert.equal(s.game.textures.exists('phoenix:city'),true);
-  console.log('PASS hold cannot bypass hose pressure, release/retry retains progress, pause freezes, city texture loaded');
+  console.log('PASS held hose sputters above the band but never stalls; release keeps progress, pause freezes, city texture loaded');
  }finally{s.close();}
 }
 {

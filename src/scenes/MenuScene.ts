@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { BUILD } from '../build.ts';
 import { sound } from '../audio.ts';
 import { settings, setSetting } from '../settings.ts';
+import { isTouch, setInputPreference } from '../input.ts';
 import { CHAPTERS, CHAPTER_STARTS } from '../content.ts';
 import { loadSave, Session } from '../state.ts';
 import { restoreCheckpoint } from '../checkpoints.ts';
@@ -50,7 +51,7 @@ export class MenuScene extends Phaser.Scene {
     text(this, 82, H - 34, "An interactive adaptation of Ray Bradbury's novel  ·  Student project", {
       fontSize: '12px', color: C.muted,
     }).setOrigin(0, 0.5);
-    text(this, W - 28, H - 34, this.game.device.input.touch ? 'TAP A ROW  ·  LANDSCAPE RECOMMENDED' : 'ARROWS / W S  ·  ENTER', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
+    text(this, W - 28, H - 34, isTouch() ? 'TAP A ROW  ·  LANDSCAPE RECOMMENDED' : 'ARROWS / W S  ·  ENTER', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
       .setOrigin(1, 0.5).setLetterSpacing(2);
     text(this, W - 24, H - 12, `PHOENIX CANDIDATE · ${BUILD.sha.slice(0, 7)}`, { fontSize: '10px', color: C.creamDim }).setOrigin(1);
     addAtmosphere(this);
@@ -131,6 +132,7 @@ export class MenuScene extends Phaser.Scene {
     this.show([
       { label: `Sound: ${settings.muted ? 'OFF' : 'ON'} [M]`, action: () => { sound.toggleMute(); this.settings(0); } },
       { label: `Reduced motion: ${settings.reducedMotion ? 'ON' : 'OFF'}`, action: () => { setSetting('reducedMotion', !settings.reducedMotion); this.settings(1); } },
+      { label: `Controls: ${({ auto: 'AUTO', keyboard: 'KEYBOARD', touch: 'TOUCH' })[settings.inputMode]}`, action: () => { setInputPreference(settings.inputMode === 'auto' ? 'keyboard' : settings.inputMode === 'keyboard' ? 'touch' : 'auto'); this.settings(2); } },
       { label: 'Audio & accessibility', action: () => this.audioOptions() },
       { label: 'Back', action: () => this.main() },
     ]);

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { laneState } from '../../src/gameplay/lanes.ts';
 
 /** Teleports only between static hotspots. Events, holds, choices, retries and chases use real game logic/input. */
 export function campaign(s, { ending = 'preservation' } = {}) {
@@ -78,7 +79,7 @@ export function campaign(s, { ending = 'preservation' } = {}) {
         if(r.player.x<edge && edge-r.player.x<30){
           const speed=175*(r.room.limp?0.72:1);
           const duration=(h.to+28-r.player.x)/speed*1000+150;
-          for(let t=0;t<duration;t+=50){if(((r.activeTime+t)/h.period+(h.phase??0))%1*h.period<h.pulse){safe=false;break;}}
+          for(let t=0;t<duration;t+=50){if(laneState(h,r.activeTime+t).lit){safe=false;break;}} // the game's own timing
         }
       }
       if(!safe){await release();await s.advance(100);continue;}

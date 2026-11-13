@@ -235,3 +235,9 @@ Local execution became unavailable after the provisional 31.8 MB ZIP passed inte
 ### Final native result and complete recovery archive
 
 98e5aa2 native run 42875205788: 29 passes, 2 WebKit stalled-image texture-presence assertion failures, 1 skipped and an outside-test error. The title was reached; forced fallback timing remains unproven. c98d127 remains 32/32 and is supplied prebuilt separately for review. First recovered artifact excluded hidden tracked files due to upload defaults; the follow-up includes them and preserves the full manifest/source/workflow set. All source changes remain isolated and no deployment occurred.
+
+## Final sprint (`work/final-sprint`, from Phoenix `3985e53`) — 2026-11-12
+
+Baseline at `3985e53` (re-run locally): 14 unit tests, typecheck, simulation, regression, day2, cinematics, phoenix and all three campaigns PASS. Reproduced: holding E at the hose froze progress at 1040/1500 (pressure 1.0, overheated) for as long as E was held.
+
+M1 + start of M2 checkpoint: input mode from real input (`src/input.ts`), token-based labels, desktop hides touch UI, hose never stalls while held, dialogue choice arming, lane-hazard redesign with island checkpoints, capture cinematic. Tests: 23 unit PASS, typecheck PASS, `tests/input.mjs` 13/13 PASS, simulation/regression/day2/cinematics/phoenix PASS, campaign:all (3 endings) PASS. All in the deterministic simulation (Canvas renderer); not a physical device. See `docs/ISSUES.md`.

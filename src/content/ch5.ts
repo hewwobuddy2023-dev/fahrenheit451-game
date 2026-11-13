@@ -9,7 +9,7 @@ const looked = (f: Flags) => ['c02.n1', 'c02.n2', 'c02.n3'].filter((k) => f[k] =
 export const SCRIPTS5: Record<string, Script> = {
   rv_open: { lines: [
     { who: N, text: 'The current takes you. Behind you, helicopters sweep the water with white light.' },
-    { who: N, text: 'Hold DOWN as a light reaches you. Release in the dark to breathe. You cannot stay under forever.' },
+    { who: N, text: 'Hold [DOWN] as a light reaches you. Release in the dark to breathe. You cannot stay under forever.' },
   ] },
   rv_shore: { set: { 'c13.shore': true }, lines: [
     { who: N, text: 'Your heel touches stones. The river has carried you to the bank, far out of the city.' },

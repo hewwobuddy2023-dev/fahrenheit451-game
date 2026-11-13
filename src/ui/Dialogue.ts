@@ -1,12 +1,14 @@
 import Phaser from 'phaser';
 import { SequencePuzzle } from './SequencePuzzle.ts';
 import { sound } from '../audio.ts';
+import { controls, isTouch, onInputMode } from '../input.ts';
 import { C, FONT, W, text } from '../view.ts';
 import type { Choice, Line, Script } from '../content/types.ts';
 import type { Flags } from '../state.ts';
 
 const BOX = { x: 80, y: 384, w: W - 160, h: 140 };
 const STEP = 3;   // characters revealed per tick
+const ARM_MS = 400; // choices ignore confirm presses this long after appearing
 const TICK = 55;  // ms per tick (~55 chars/s, ~18 text redraws/s)
 
 /**
@@ -21,7 +23,7 @@ export class Dialogue {
   onPause?: () => void;
   onSpeaker?: (who: string) => void;
   private scene: Phaser.Scene;
-  private touch: boolean;
+  private armedAt = 0;
   private panel: Phaser.GameObjects.Graphics;
   private root: Phaser.GameObjects.Container;
   private name: Phaser.GameObjects.Text;
@@ -36,15 +38,15 @@ export class Dialogue {
   private script?: Script;
   private choices?: Choice[];
   private retry?: Choice[];
+  private retrySel = 0;
   private sel = 0;
   private acc: Flags = {};
   private flags: Flags = {};
   private lookup: (k: string) => Script = () => ({ lines: [] });
   private done?: (acc: Flags) => void;
 
-  constructor(scene: Phaser.Scene, touch: boolean) {
+  constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.touch = touch;
     const g = this.panel = scene.add.graphics();
     this.paintPanel(BOX.y);
     const hit = scene.add.zone(BOX.x, BOX.y, BOX.w, BOX.h).setOrigin(0).setScrollFactor(0).setInteractive();
@@ -55,8 +57,11 @@ export class Dialogue {
     this.body = text(scene, BOX.x + 28, BOX.y + 20, '', { fontSize: '19px', lineSpacing: 7, wordWrap: { width: BOX.w - 70 } });
     this.more = scene.add.triangle(BOX.x + BOX.w - 26, BOX.y + BOX.h - 20, 0, 0, 12, 0, 6, 8, C.amberN);
     scene.tweens.add({ targets: this.more, y: '+=4', yoyo: true, repeat: -1, duration: 500 });
-    const hint = text(scene, BOX.x + BOX.w - 44, BOX.y + BOX.h - 21, touch ? 'TAP' : 'E / ENTER', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
+    const hint = text(scene, BOX.x + BOX.w - 44, BOX.y + BOX.h - 21, '', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
       .setOrigin(1, 0.5).setLetterSpacing(2);
+    const label = () => hint.setText(isTouch() ? 'TAP' : 'E / ENTER');
+    label();
+    scene.events.once('shutdown', onInputMode(label));
     this.root = scene.add.container(0, 0, [g, hit, this.nameBg, this.name, this.body, this.more, hint])
       .setScrollFactor(0, 0, true).setDepth(1200).setVisible(false);
   }
@@ -91,6 +96,7 @@ export class Dialogue {
   choose(i: number) {
     if (!this.choices) return false;
     this.sel = Math.min(i, this.choices.length - 1);
+    this.armedAt = 0; // QA hook: an explicit, deliberate pick
     this.pick();
     return true;
   }
@@ -118,7 +124,7 @@ export class Dialogue {
       this.scene.events.once('shutdown', () => { this.puzzle?.destroy(); this.puzzle = undefined; });
       return;
     }
-    if (this.retry) return this.showChoices(this.retry);
+    if (this.retry) return this.showChoices(this.retry, this.retrySel);
     if (this.script?.choices) {
       const list = this.script.choices.filter((c) => !c.when || c.when({ ...this.flags, ...this.acc }));
       this.script = { ...this.script, choices: undefined };
@@ -136,7 +142,7 @@ export class Dialogue {
     this.name.setText(line.who);
     this.nameBg.setVisible(!narr).setSize(this.name.width + 32, 26);
     this.body.setColor(narr ? C.creamDim : C.cream).setFontStyle(narr ? 'italic' : 'normal');
-    this.full = this.touch ? line.text.replace('Hold DOWN', 'Hold DIVE') : line.text;
+    this.full = controls(line.text);
     this.shown = 0;
     this.body.setText('');
     this.more.setVisible(false);
@@ -159,9 +165,12 @@ export class Dialogue {
     this.more.setVisible(true);
   }
 
-  private showChoices(choices: Choice[]) {
+  /** `keep` is the row to keep highlighted after a wrong answer; the cursor never jumps to another option. */
+  private showChoices(choices: Choice[], keep = 0) {
     this.choices = choices;
-    this.sel = 0;
+    this.sel = keep;
+    // A key press that dismissed the previous line must not also confirm a choice.
+    this.armedAt = this.scene.time.now + ARM_MS;
     this.full = '';
     this.body.setText('');
     this.name.setText('YOUR RESPONSE');
@@ -202,14 +211,19 @@ export class Dialogue {
   }
 
   private pick() {
-    sound.cue('ui');
+    if (this.scene.time.now < this.armedAt) return;
     const list = this.choices!;
     const c = list[this.sel];
+    sound.cue(c.again ? 'wrong' : 'ui');
     this.choices = undefined;
     this.choiceRows.forEach((r) => r.destroy());
     this.choiceRows = [];
     this.queue = [...(c.reply ?? [])];
-    if (c.again) { this.retry = list; return this.next(); }
+    if (c.again) {
+      this.retry = list; this.retrySel = list.indexOf(c);
+      this.scene.cameras.main.flash(160, 120, 30, 20);
+      return this.next();
+    }
     if (c.set) Object.assign(this.acc, c.set);
     this.retry = undefined;
     if (c.next) {

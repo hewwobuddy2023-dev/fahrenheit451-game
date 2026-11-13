@@ -153,7 +153,7 @@ export const ROOMS4: Record<string, RoomDef> = {
     enter: [{ key: 'e.lawn2', steps: [
       { say: 'lw_arrest' }, { wait: 300 },
       { flash: 0xffffff, ms: 900 }, { fade: 'out', ms: 250 }, { npc: 'beatty', show: false }, { wait: 1100 }, { fade: 'in', ms: 900 },
-      { say: 'lw_after' }, { say: 'lw_hound' }, { prompt: 'PRESS E  ·  FIRE', ms: 1800, miss: 'lw_miss' }, { flash: 0xff8040, ms: 400 },
+      { say: 'lw_after' }, { say: 'lw_hound' }, { prompt: 'PRESS [E]  ·  FIRE', ms: 1800, miss: 'lw_miss' }, { flash: 0xff8040, ms: 400 },
       { say: 'lw_hound2' },
     ] }],
     hotspots: [
@@ -164,14 +164,16 @@ export const ROOMS4: Record<string, RoomDef> = {
 
   boulevard: {
     id: 'boulevard', chapter: 4, label: '', width: 2200, spawnX: 150, kit: 'street:boulevard', limp: true,
+    // One shared rhythm: each lane lights 0.6 s after the one before it, a wave moving the way you walk.
+    // Caught = back to the island just before that lane, not the kerb.
     hazards: [620, 820, 1020, 1220, 1420].map((x, i) => ({
-      id: 'lane' + i, from: x, to: x + 90, width: 110, period: 3400 - i * 200, pulse: 1100, phase: i * 0.37,
-      look: 'headlights' as const, reset: 540, when: (f: Record<string, boolean | string>) => !f['c11.crossed'],
+      id: 'lane' + i, from: x, to: x + 90, width: 110, period: 3600, pulse: 1000, phase: -i * 0.165,
+      look: 'headlights' as const, reset: x - 48, when: (f: Record<string, boolean | string>) => !f['c11.crossed'],
     })),
     objective: (f) => !f['c11.crossed'] ? 'Cross the boulevard. Wait in the gaps between the passing cars' : !f['c11.choice'] ? "Fireman Black's house" : 'Keep going to Faber',
     enter: [{ key: 'e.boulevard', steps: [{ say: 'bv_open' }] }],
     hotspots: [
-      { id: 'kids', x: 1050, label: '', auto: true, when: (f) => !f['c11.kids'], steps: [{ flash: 0xfff0d0, ms: 300 }, { fx: 'fall' }, { say: 'bv_kids' }] },
+      { id: 'kids', x: 965, label: '', auto: true, when: (f) => !f['c11.kids'], steps: [{ flash: 0xfff0d0, ms: 300 }, { fx: 'fall' }, { say: 'bv_kids' }] },
       { id: 'curb', x: 1640, label: '', auto: true, when: (f) => !f['c11.crossed'], script: 'bv_cross' },
       { id: 'black', x: 1900, label: "Black's house", required: true, when: (f) => !f['c11.choice'], requires: ['c11.crossed'], lockedScript: 'bv_locked', script: 'bv_black' },
       { id: 'on', x: 2140, label: "On to Faber's", required: true, requires: ['c11.choice'], lockedScript: 'bv_locked', exit: { room: 'faber2', x: 220 } },
@@ -193,13 +195,14 @@ export const ROOMS4: Record<string, RoomDef> = {
     id: 'run', chapter: 4, label: '', width: 2600, spawnX: 150, kit: 'street:alley', limp: true,
     timer: { ms: 34000, reset: 150, label: 'THE COUNT', when: (f) => !!f['e.run'] && !f['c12.river'] },
     hazards: [
+      // Doors open and searchlights pass on one readable beat; caught = back to the last safe gap.
       ...[520, 900, 1280, 1660, 2040].map((x, i) => ({
-        id: 'door' + i, from: x, to: x + 70, width: 90, period: 3000 + i * 300, pulse: 1000, phase: i * 0.41,
-        look: 'doorlight' as const, reset: 150, when: (f: Record<string, boolean | string>) => !f['c12.river'],
+        id: 'door' + i, from: x, to: x + 70, width: 90, period: 3400, pulse: 1000, phase: -i * 0.2,
+        look: 'doorlight' as const, reset: x - 48, when: (f: Record<string, boolean | string>) => !f['c12.river'],
       })),
-      ...[720, 1470, 2240].map((x, i) => ({
-        id: 'heli' + i, from: x, to: x + 110, width: 140, period: 4200 + i * 400, pulse: 1300, phase: 0.2 + i * 0.3,
-        look: 'searchlight' as const, reset: 150, when: (f: Record<string, boolean | string>) => !f['c12.river'],
+      ...[700, 1450, 2200].map((x, i) => ({
+        id: 'heli' + i, from: x, to: x + 100, width: 130, period: 4000, pulse: 1200, phase: -0.1 - i * 0.3,
+        look: 'searchlight' as const, reset: x - 48, when: (f: Record<string, boolean | string>) => !f['c12.river'],
       })),
     ],
     objective: (f) => !f['c12.river'] ? 'Reach the river before the count reaches ten. Avoid the lit doorways and searchlights' : '',
