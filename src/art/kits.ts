@@ -7,6 +7,7 @@ import type { Flags } from '../state.ts';
 import { C, FLOOR_TOP, H, W } from '../view.ts';
 import { hgrad, paint, poly, radial, rng, speckle, vgrad, type Ctx } from './core.ts';
 import { fireAt } from './fx.ts';
+import { pine } from './cinema.ts';
 
 export interface FloorStyle { key: string; top: string; bottom: string; line: string; spacing: number; kind: 'tile' | 'boards' | 'asphalt' | 'earth' | 'water' | 'metal' }
 export interface KitParts {
@@ -376,6 +377,11 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
       fx.ignite = () => first('ignite', () => {
         piles.forEach((p) => fireAt(s, p.x, 472, 2));
         [960, 1100, 1240].forEach((x, i) => s.time.delayedCall(500 + i * 300, () => fireAt(s, x, F - 120, 3, false, 2.5)));
+        // upper storey catches, smoke columns climb, and the whole street takes the fire's colour
+        [1000, 1180, 1340].forEach((x, i) => s.time.delayedCall(1400 + i * 350, () => fireAt(s, x, F - 220, 2, false, 2.4)));
+        s.time.delayedCall(900, () => s.add.particles(0, 0, 'smoke', { x: { min: 900, max: 1420 }, y: F - 260, speedY: { min: -60, max: -25 }, speedX: { min: -8, max: 18 }, lifespan: 7000, frequency: 110, scale: { start: 0.8, end: 3.2 }, alpha: { start: 0.42, end: 0 }, tint: 0x2a2220 }).setDepth(2.2));
+        const wash = s.add.image(1150, F - 160, 'glow').setScale(12, 6).setTint(0xff6a2a).setAlpha(0).setBlendMode(ADD).setDepth(2.6);
+        s.tweens.add({ targets: wash, alpha: 0.32, duration: 1600, onComplete: () => { if (!settings.reducedMotion) s.tweens.add({ targets: wash, alpha: 0.22, yoyo: true, repeat: -1, duration: 160 }); } });
         if (!settings.reducedMotion) s.cameras.main.flash(300, 255, 140, 60);
       });
     }
@@ -425,9 +431,11 @@ const home: Kit = (s, room) => {
     speckle(c, RW, F, 12000, 31, 0.02);
   });
   addLayer(s, 'k:home:wall', 1, 1);
-  const tvs = PARLOR.map((x, i) => s.add.tileSprite(x - 144, 66, 288, 238, 'tv').setOrigin(0).setDepth(1.5)
-    .setTint([0xffd0a0, 0xa0d8ff, 0xffa0d0][i]));
-  const tvGlow = PARLOR.map((x) => s.add.image(x, 220, 'glow').setScale(4, 3).setTint(0x80c0ff).setAlpha(0.22).setBlendMode(ADD).setDepth(2));
+  // Three walls, three broadcasts: the family shouting, the audience laughing, the family turning to smile at you.
+  const shows = ['tv:argue', 'tv:laugh', 'tv:family'];
+  const tvs = PARLOR.map((x, i) => s.add.sprite(x - 144, 66, shows[i]).setOrigin(0).setDepth(1.5).play(shows[i]));
+  const tvGlow = PARLOR.map((x, i) => s.add.image(x, 220, 'glow').setScale(4.4, 3.2).setTint([0xff7aa0, 0x80c0ff, 0xffc080][i]).setAlpha(0.26).setBlendMode(ADD).setDepth(2));
+  if (!settings.reducedMotion) tvGlow.forEach((g, i) => s.tweens.add({ targets: g, alpha: 0.16, yoyo: true, repeat: -1, duration: 140 + i * 60 }));
   paint(s, 'k:bed', 200, 70, (c) => { c.fillStyle = '#2a2830'; c.fillRect(0, 20, 200, 40); c.fillStyle = '#c8c6cc'; c.fillRect(6, 14, 188, 14); c.fillStyle = '#e0dde4'; c.fillRect(8, 6, 50, 14); c.fillStyle = '#121216'; c.fillRect(6, 60, 8, 10); c.fillRect(186, 60, 8, 10); });
   s.add.image(740, 452, 'k:bed').setOrigin(0.5, 1).setDepth(4.6);
   s.add.image(1060, 452, 'k:bed').setOrigin(0.5, 1).setDepth(4.6);
@@ -443,9 +451,8 @@ const home: Kit = (s, room) => {
     floor: { key: 'hometile', top: '#2e2d33', bottom: '#0a0a0c', line: 'rgba(255,255,255,0.05)', spacing: 90, kind: 'tile' },
     lights: [{ x: 300, y: 200, color: 0xd8d0c0, r: 300 }, { x: 900, y: 200, color: 0x9ab0c8, r: 260 }, ...PARLOR.map((x) => ({ x, y: 220, color: 0x9ad0ff, r: 300 }))],
     fx: { tvOff: () => tvs.forEach((t) => t.setVisible(false)), tvOn: () => tvs.forEach((t) => t.setVisible(true)) },
-    tick: (dt) => tvs.forEach((t, i) => { if (t.visible) t.tilePositionX += dt * (0.02 + i * 0.012); }),
     update: (f) => {
-      const off = (!!f['c09.off'] && room.id !== 'home3') || room.id === 'home5' || room.id === 'home3';
+      const off = (!!f['c09.off'] && room.id !== 'home3') || room.id === 'home5' || room.id === 'home3' || (room.id === 'home1' && !f['h1.day']);
       tvs.forEach((t) => t.setVisible(!off)); tvGlow.forEach((g) => g.setVisible(!off));
       vChair.setVisible(!!f['c06.chair'] && room.id === 'home2');
       pile.setVisible(!!f['c06.vent'] && room.id === 'home2');
@@ -556,20 +563,21 @@ const subway: Kit = (s) => {
 function forest(variant: 'river' | 'camp'): Kit {
   return (s, room) => {
     const RW = room.width, F = FLOOR_TOP;
-    nightSky(s, 'k:sky:wild', true, 0.1);
+    nightSky(s, 'k:sky:wild', true, 0.22);
     skyline(s, 'k:city:far', W + 200, 0.08, 330, '#160f10');
     const city = addLayer(s, 'k:city:far', 0.08, 0.3).setTint(0x6a5a5a);
     const distantWidth = Math.ceil(W + (RW - W) * 0.4 + 40);
     paint(s, 'k:forest:distant', distantWidth, F, (c) => {
       const r = rng(451);
-      for (let x = 0; x < distantWidth; x += 55) tree(c, x + r() * 25, F - 16, 180 + r() * 90, '#182024', r);
+      for (let x = 0; x < distantWidth; x += 38) pine(c, x + r() * 25, F - 16, 150 + r() * 110, r() < 0.5 ? '#1f2c2b' : '#263434');
       c.fillStyle = vgrad(c, F - 100, F, [[0, 'rgba(112,131,137,0)'], [1, 'rgba(112,131,137,0.12)']]);
       c.fillRect(0, F - 100, distantWidth, 100);
     });
     addLayer(s, 'k:forest:distant', 0.4, 0.7);
     paint(s, `k:forest:${variant}`, RW, F, (c) => {
       const r = rng(RW + 7);
-      for (let x = -50; x < RW; x += 70) tree(c, x + r() * 40, F, 150 + r() * 170, '#070908', r);
+      for (let x = -50; x < RW; x += 120) pine(c, x + r() * 60, F, 170 + r() * 190, '#101a17');
+      c.fillStyle = vgrad(c, F - 60, F, [[0, 'rgba(120,140,150,0)'], [1, 'rgba(120,140,150,0.1)']]); c.fillRect(0, F - 60, RW, 60); // ground mist
       if (variant === 'river') { c.fillStyle = '#0a0d10'; c.fillRect(0, F - 40, RW * 0.62, 40); }
     });
     addLayer(s, `k:forest:${variant}`, 1, 1);

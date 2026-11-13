@@ -4,7 +4,7 @@
 import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 
-const [base = 'http://127.0.0.1:5181', out = 'docs/qa/sprint-after'] = process.argv.slice(2);
+const [base = 'http://127.0.0.1:5181', out = 'docs/qa/sprint-after', only = ''] = process.argv.slice(2);
 await mkdir(out, { recursive: true });
 
 const ch = (n) => ({ ...Object.fromEntries(Array.from({ length: 50 }, () => []).flat()) , n });
@@ -31,6 +31,7 @@ const cases = [
   ['ch3-faber', 'faber1', 900, { ...done(8), 'e.faber1': true }],
   ['ch4-house', 'home5', 1980, { ...done(10), 'e.home5': true, 'c10.beds': true, 'c10.w1': true, 'c10.w2': true }],
   ['ch4-lawn', 'lawn2', 820, { ...done(10), 'e.lawn2': true, 'c10.beds': true, 'c10.w1': true, 'c10.w2': true, 'c10.w3': true }],
+  ['ch4-hound', 'lawn2', 900, { ...done(10), 'e.lawn2': true, 'c10.beds': true, 'c10.w1': true, 'c10.w2': true, 'c10.w3': true }, 'houndLeap'],
   ['ch4-boulevard', 'boulevard', 900, { ...done(11), 'e.boulevard': true }],
   ['ch4-run', 'run', 1100, { ...done(12), 'e.run': true }],
   ['ch5-river', 'river', 700, { ...done(13), 'e.river': true }],
@@ -41,7 +42,7 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
-for (const [name, room, x, flags, fx] of cases) {
+for (const [name, room, x, flags, fx] of cases.filter(([n]) => n.includes(only))) {
   await page.goto(`${base}/?debug`);
   await page.evaluate(([room, x, flags]) => {
     localStorage.setItem('f451.save', JSON.stringify({ v: 1, room, x, flags }));
@@ -60,7 +61,7 @@ for (const [name, room, x, flags, fx] of cases) {
   }
   if (fx) await page.evaluate((fx) => window.__qa.scene.kit.fx[fx]?.(), fx);
   await page.waitForTimeout(1600);
-  await page.screenshot({ path: `${out}/${name}.png` });
+  await page.screenshot({ path: `${out}/${name}.jpg`, quality: 85 });
   console.log('captured', name);
 }
 console.log(errors.length ? `PAGE ERRORS:\n${errors.join('\n')}` : 'no page errors');

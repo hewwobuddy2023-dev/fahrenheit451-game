@@ -153,7 +153,7 @@ export const ROOMS4: Record<string, RoomDef> = {
     enter: [{ key: 'e.lawn2', steps: [
       { say: 'lw_arrest' }, { wait: 300 },
       { flash: 0xffffff, ms: 900 }, { fade: 'out', ms: 250 }, { npc: 'beatty', show: false }, { wait: 1100 }, { fade: 'in', ms: 900 },
-      { say: 'lw_after' }, { say: 'lw_hound' }, { prompt: 'PRESS [E]  ·  FIRE', ms: 1800, miss: 'lw_miss' }, { flash: 0xff8040, ms: 400 },
+      { say: 'lw_after' }, { say: 'lw_hound' }, { fx: 'houndLeap' }, { prompt: 'PRESS [E]  ·  FIRE', ms: 1800, miss: 'lw_miss' }, { fx: 'houndBurn' }, { flash: 0xff8040, ms: 400 },
       { say: 'lw_hound2' },
     ] }],
     hotspots: [

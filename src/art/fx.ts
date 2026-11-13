@@ -31,7 +31,7 @@ export function paintFx(scene: Phaser.Scene) {
   // vignette and scanlines in one texture: one full-screen pass instead of two
   paint(scene, 'overlay', W, H, (c) => {
     const g = c.createRadialGradient(W / 2, H * 0.48, H * 0.32, W / 2, H / 2, W * 0.62);
-    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.62)');
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.5)');
     c.fillStyle = g; c.fillRect(0, 0, W, H);
     c.fillStyle = 'rgba(0,0,0,0.07)';
     for (let y = 2; y < H; y += 3) c.fillRect(0, y, W, 1);
