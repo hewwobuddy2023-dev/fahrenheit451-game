@@ -29,7 +29,7 @@ export const SCRIPTS2: Record<string, Script> = {
     { who: 'BEATTY', text: 'The asylum. A man who thinks he can hide from us is not thinking straight.' },
     { who: 'MONTAG', text: 'Was it always like this? I mean, way back. Did firemen ever put fires out?' },
     { who: 'STONEMAN', text: "Now that's rich." },
-    { who: N, text: "Stoneman and Black slide their rule books across the table. The rule book's own history: firemen founded in 1790 to burn English-influenced books, Benjamin Franklin the first. Nobody checks it. Nobody can." },
+    { who: N, text: "They slide their rule books across. The rule book's history: firemen founded in 1790, Benjamin Franklin the first. Nobody can check it." },
     { who: 'BEATTY', text: 'Your play, Montag.' },
   ] },
   s2_cards_done: { lines: [{ who: 'BLACK', text: 'Your deal.' }] },
