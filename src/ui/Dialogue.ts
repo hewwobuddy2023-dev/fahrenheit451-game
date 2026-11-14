@@ -39,6 +39,10 @@ export class Dialogue {
   private choices?: Choice[];
   private retry?: Choice[];
   private retrySel = 0;
+  private watch?: Script['suspicion'];
+  private suspicion = 0;
+  private firstChoices?: Choice[];
+  private meter?: Phaser.GameObjects.Text;
   private sel = 0;
   private acc: Flags = {};
   private flags: Flags = {};
@@ -110,6 +114,7 @@ export class Dialogue {
     if (script.set) Object.assign(this.acc, script.set);
     this.queue = [...script.lines];
     this.retry = undefined;
+    this.watch = script.suspicion; this.suspicion = 0; this.firstChoices = undefined; this.meter?.setVisible(false);
     this.next();
   }
 
@@ -167,6 +172,8 @@ export class Dialogue {
 
   /** `keep` is the row to keep highlighted after a wrong answer; the cursor never jumps to another option. */
   private showChoices(choices: Choice[], keep = 0) {
+    this.firstChoices ??= choices;
+    this.paintMeter();
     this.choices = choices;
     this.sel = keep;
     // A key press that dismissed the previous line must not also confirm a choice.
@@ -227,6 +234,16 @@ export class Dialogue {
     this.queue = [...(c.reply ?? [])];
     if (c.again) {
       this.retry = list; this.retrySel = list.indexOf(c);
+      if (c.suspicion && this.watch) {
+        this.suspicion += c.suspicion;
+        if (this.suspicion >= 3) {
+          // a real setback: the scene plays its consequence and the conversation goes back to its first decision
+          this.queue.push(...this.watch.caught);
+          this.suspicion = 0; this.retry = this.firstChoices; this.retrySel = 0;
+          sound.cue('caught');
+        }
+        this.paintMeter();
+      }
       this.scene.cameras.main.flash(160, 120, 30, 20);
       return this.next();
     }
@@ -241,7 +258,17 @@ export class Dialogue {
     this.next();
   }
 
+  private paintMeter() {
+    if (!this.watch) return;
+    this.meter ??= text(this.scene, BOX.x + BOX.w, BOX.y - 22, '', { fontFamily: FONT.display, fontSize: '14px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 10, y: 4 } })
+      .setOrigin(1, 0.5).setLetterSpacing(3).setScrollFactor(0).setDepth(1300);
+    // text, not colour alone: readable when muted and for colour-blind players
+    this.meter.setText(`${this.watch.label}  ${'■'.repeat(this.suspicion)}${'□'.repeat(3 - this.suspicion)}  ${this.suspicion}/3`).setVisible(true);
+    this.meter.setColor(this.suspicion >= 2 ? C.ember : C.amber);
+  }
+
   private close() {
+    this.meter?.setVisible(false);
     this.open = false;
     this.typing?.remove();
     this.root.setVisible(false);

@@ -4,7 +4,7 @@ import { cinematicSet, paintCinema } from '../art/cinema.ts';
 import { diveStep, type Breath } from '../gameplay/breath.ts';
 import { BAND, hoseStep, inBand, type HoseState } from '../gameplay/pressure.ts';
 import { crossMs, inLane, laneState, WARN_MS } from '../gameplay/lanes.ts';
-import { controls, isTouch, onInputMode } from '../input.ts';
+import { controls, inputMode, isTouch } from '../input.ts';
 import { sound } from '../audio.ts';
 import { settings, setSetting } from '../settings.ts';
 import { freeTextures } from '../art/core.ts';
@@ -65,6 +65,7 @@ export class RoomScene extends Phaser.Scene {
   private hose: HoseState = { pressure: 0, progress: 0, overheated: false };
   private hazardReadout!: Phaser.GameObjects.Text;
   private laneStrips = new Map<string, Phaser.GameObjects.Rectangle>();
+  private promptMode = inputMode();
   /** The thing behind each hazard's light: an approaching car or a helicopter. */
   private rigs = new Map<string, Phaser.GameObjects.Image>();
   private caughtScene = false;
@@ -189,7 +190,6 @@ export class RoomScene extends Phaser.Scene {
     text(this, W - 50, 176, '?', { fontFamily: FONT.display, fontSize: '22px', backgroundColor: '#111315', padding: { x: 18, y: 10 } }).setOrigin(0.5).setScrollFactor(0).setDepth(1001).setInteractive({ useHandCursor: true }).on('pointerdown', () => { if (this.mode === 'play') this.flashNote(this.hint()); });
     addAtmosphere(this, this.room.chapter >= 5 ? 0.45 : 1);
     onActions(this, (a) => this.onAction(a));
-    this.events.once('shutdown', onInputMode(() => { this.near = undefined; })); // rebuild the prompt label
 
     this.done = new Set(completedIds(RULES, this.session.flags));
     this.refresh(false);
@@ -330,10 +330,11 @@ export class RoomScene extends Phaser.Scene {
       if (h.auto) { if (d < 26 && !this.locked(h)) { this.near = h; this.interact(); return; } continue; }
       if (d < REACH && (!best || d < Math.abs(best.x - this.player.x))) best = h;
     }
-    if (best === this.near) return;
+    // a new input mode only relabels the prompt; it must not drop the hotspot the same key press is about to use
+    if (best === this.near && this.promptMode === inputMode()) return;
+    if (best !== this.near) { this.holdMs = 0; this.hose = { pressure: 0, progress: 0, overheated: false }; }
     this.near = best;
-    this.holdMs = 0;
-    this.hose = { pressure: 0, progress: 0, overheated: false };
+    this.promptMode = inputMode();
     if (!best) return void this.prompt.setVisible(false);
     const key = controls(best.vault ? '[SPACE]' : '[E]');
     const holdable = best.hold && !this.locked(best);

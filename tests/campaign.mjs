@@ -60,4 +60,20 @@ try{
   for(const raw of chapters){const saved=JSON.parse(raw);const t=await simulate({save:saved});try{await t.advance(700);await t.tap(430,282);await t.until(()=>t.scene().sys.settings.key==='room','chapter Continue');assert.equal(t.scene().room.id,saved.room);assert.deepEqual({...t.scene().session.flags},saved.flags);console.log('PASS Continue',saved.room);}finally{t.close();}}
   const completed=JSON.parse(s.save());assert.ok(completed.flags['c15.seen']);
   const t=await simulate({save:completed});try{await t.advance(700);await t.tap(430,282);await t.until(()=>t.scene().sys.settings.key==='end','completed ending Continue');await t.advance(3000);await t.tap(480,450);await t.until(()=>t.scene().sys.settings.key==='menu','ending title');console.log('PASS completed ending Continue and return to title');}finally{t.close();}
+  // Explore other outcomes: R returns to Granger's question as Presentation Mode; a different ending never touches the save.
+  {const t=await simulate({save:completed});const e=campaign(t);try{
+    await t.advance(700);await t.tap(430,282);await t.until(()=>t.scene().sys.settings.key==='end','end card');await t.advance(3000);
+    const saved=t.w.localStorage.getItem('f451.save');
+    t.w.dispatchEvent(new t.w.KeyboardEvent('keydown',{code:'KeyR',key:'r',keyCode:82,which:82,bubbles:true}));
+    await t.until(()=>t.scene().sys.settings.key==='room','replay room');const r=t.scene();
+    assert.equal(r.room.id,'camp');assert.equal(r.session.demo,true);assert.equal(r.session.flags['c15.ending'],undefined);
+    await e.settle();t.w.__qa.go(1000);await t.advance(50);await t.tap(888,474);
+    for(let n=0;n<100 && !r.dialogue.options.some(x=>x.startsWith('Stay.'));n++){if(r.dialogue.open)await t.tap(480,450);else await t.advance(100);}
+    const other=completed.flags['c15.ending']==='submission'?'preservation':'submission';
+    await t.render();const i=r.dialogue.choices.findIndex(c=>c.set?.['c15.ending']===other);const bg=r.dialogue.choiceRows[i].list[0];
+    await t.advance(450);await t.tap(bg.x+240,bg.y);await e.settle();
+    assert.equal(t.scene().sys.settings.key,'end');assert.equal(t.scene().session.flags['c15.ending'],other);
+    assert.equal(t.w.localStorage.getItem('f451.save'),saved,'replay never writes the normal save');
+    console.log('PASS ending replay explores',other,'without touching the save');
+  }finally{t.close();}}
 }finally{s.close();}

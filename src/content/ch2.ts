@@ -29,7 +29,7 @@ export const SCRIPTS2: Record<string, Script> = {
     { who: 'BEATTY', text: 'The asylum. A man who thinks he can hide from us is not thinking straight.' },
     { who: 'MONTAG', text: 'Was it always like this? I mean, way back. Did firemen ever put fires out?' },
     { who: 'STONEMAN', text: "Now that's rich." },
-    { who: N, text: 'Stoneman and Black slide their rule books across the table: the firemen founded in 1790, Benjamin Franklin the first. Answer quickly. Burn everything. Report back.' },
+    { who: N, text: "Stoneman and Black slide their rule books across the table. The rule book's own history: firemen founded in 1790 to burn English-influenced books, Benjamin Franklin the first. Nobody checks it. Nobody can." },
     { who: 'BEATTY', text: 'Your play, Montag.' },
   ] },
   s2_cards_done: { lines: [{ who: 'BLACK', text: 'Your deal.' }] },
@@ -76,6 +76,9 @@ export const SCRIPTS2: Record<string, Script> = {
   a_match: { lines: [
     { who: N, text: 'Outside, you turn back. She is standing on the porch, perfectly still.' },
     { who: N, text: 'She strikes the match herself.' },
+    { who: N, text: 'In the truck, nobody speaks. Then Beatty does, without looking up.' },
+    { who: 'BEATTY', text: 'Hugh Latimer. To Nicholas Ridley, at the stake in Oxford. Burned for heresy, fifteen fifty-five.' },
+    { who: N, text: 'He knows. He has read it. He burned her anyway.' },
   ] },
 
   // ---- that night, and the next day ----
@@ -95,16 +98,20 @@ export const SCRIPTS2: Record<string, Script> = {
   ] },
 
   // ---- 05 Beatty's Argument: keep the pillow book hidden ----
-  p_1: { lines: [
+  p_1: { suspicion: { label: "BEATTY'S SUSPICION", caught: [
+    { who: 'BEATTY', text: 'You know, Montag, I think I will have a look at that pillow.' },
+    { who: N, text: 'You laugh, too loudly, and roll onto it. He watches you for a long moment, then waves his pipe. Not today.' },
+    { who: N, text: 'He settles back and starts again from the beginning, slower. He is watching now.' },
+  ] }, lines: [
     { who: 'BEATTY', text: 'Thought I would see how the sick man is. You were going to call in, weren\'t you?' },
     { who: N, text: 'He takes the best chair, lights his pipe, and takes his time.' },
     { who: 'BEATTY', text: 'Every fireman hits this sooner or later. He needs to know how the wheels turn. So listen.' },
     { who: 'BEATTY', text: 'It started with pictures. Film, radio, television. Things got big, so they got simple. Books got shorter. A classic, boiled down to a paragraph.' },
     { who: 'MILDRED', text: 'Let me fix your pillow, Guy.' },
   ], choices: [
-    { text: 'Let her.', again: true, reply: [{ who: N, text: "Her hand slides toward the book. Beatty's eyes follow her hand." }, { who: N, text: 'Not like that. Try again.' }] },
+    { text: 'Let her.', again: true, suspicion: 1, reply: [{ who: N, text: "Her hand slides toward the book. Beatty's eyes follow her hand." }] },
     { text: '"Not now, Millie. I\'m comfortable."', next: 'p_2' },
-    { text: 'Push her hand away.', again: true, reply: [{ who: 'BEATTY', text: 'Jumpy today, Montag?' }, { who: N, text: 'Too sharp. Try again.' }] },
+    { text: 'Push her hand away.', again: true, suspicion: 1, reply: [{ who: 'BEATTY', text: 'Jumpy today, Montag?' }] },
   ] },
   p_2: { lines: [
     { who: 'BEATTY', text: 'Speed it all up. Click, flash, done. School gets shorter, the hard subjects drop away. Nobody ordered that, Montag. People wanted it.' },
@@ -113,18 +120,19 @@ export const SCRIPTS2: Record<string, Script> = {
     { who: 'BEATTY', text: "You like baseball, don't you?" },
   ], choices: [
     { text: 'Pin the pillow with your elbow. "Fine game."', next: 'p_3' },
-    { text: '"Millie, stop it!"', again: true, reply: [{ who: 'BEATTY', text: 'Something under there bothering you?' }, { who: N, text: 'Keep him talking. Try again.' }] },
-    { text: 'Say nothing.', again: true, reply: [{ who: 'BEATTY', text: 'Montag? Baseball?' }, { who: N, text: 'Answer him. Try again.' }] },
+    { text: '"Millie, stop it!"', again: true, suspicion: 1, reply: [{ who: 'BEATTY', text: 'Something under there bothering you?' }] },
+    { text: 'Say nothing.', again: true, suspicion: 1, reply: [{ who: 'BEATTY', text: 'Montag? Baseball?' }] },
   ] },
   p_3: { lines: [
     { who: 'BEATTY', text: 'So the houses were fireproofed and the firemen got a new job. Keeping the peace. Taking away the thing that makes people feel small.' },
-    { who: 'BEATTY', text: 'A book in the house next door is a loaded gun. Who knows who it is aimed at?' },
+    { who: 'BEATTY', text: 'A book is a loaded gun in the house next door.' },
+    { who: 'BEATTY', text: 'Unload it, and nobody in that house ever has to feel stupid again. That is a kindness, Montag.' },
     { who: N, text: "Mildred's fingers have found the shape under the pillow. Her eyes go wide." },
     { who: 'MILDRED', text: "What's this?" },
   ], choices: [
     { text: '"Sit down, Millie. We\'re talking."', next: 'p_4' },
-    { text: '"It\'s nothing. Just a book."', again: true, reply: [{ who: N, text: "Too loud. Beatty's head turns." }, { who: N, text: 'Not like that. Try again.' }] },
-    { text: 'Grab it and hide it.', again: true, reply: [{ who: N, text: 'Beatty would see. Keep your hands still. Try again.' }] },
+    { text: '"It\'s nothing. Just a book."', again: true, suspicion: 1, reply: [{ who: N, text: "Too loud. Beatty's head turns." }] },
+    { text: 'Grab it and hide it.', again: true, suspicion: 1, reply: [{ who: N, text: "Your hand moves. Beatty's eyes move with it." }] },
   ] },
   p_4: { set: { 'c05.done': true }, lines: [
     { who: N, text: 'She sits, empty-handed. Beatty goes on as if nothing happened.' },

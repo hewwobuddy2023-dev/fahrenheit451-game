@@ -121,12 +121,12 @@ test('audio unlock/mute, local offline play and browser frame sample', async ({ 
   await page.goto('/?debug&lowres'); await scene(page, 'menu');
   expect(await page.evaluate(() => (window as any).__audio.status.state)).toBe('locked');
   expect(await page.evaluate(() => !!(window as any).__game.sound.context)).toBe(false); // unused Phaser backend stays off
-  await tap(page,430,474,info);await tap(page,430,410,info);
+  await tap(page,430,474,info);await tap(page,430,430,info); // Settings > Audio & accessibility
   await page.keyboard.press('KeyM');
   await tap(page,430,162,info); // visible sound check explicitly unmutes
   await expect.poll(()=>page.evaluate(()=>(window as any).__audio.status.state)).toBe('running');
   expect(await page.evaluate(()=>(window as any).__audio.status.muted)).toBe(false);
-  await tap(page,430,462,info);await tap(page,430,474,info);
+  await tap(page,430,462,info);await tap(page,430,486,info); // Audio Back > Settings Back
   await tap(page, 430, 282, info); await scene(page, 'room'); await settle(page, info);
   await expect.poll(() => page.evaluate(() => (window as any).__audio.status.state)).toBe('running');
   await expect.poll(()=>page.evaluate(()=>(window as any).__audio.sampleOutput().rms),{timeout:10000}).toBeGreaterThan(.0001);
