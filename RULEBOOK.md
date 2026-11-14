@@ -18,6 +18,13 @@ Open the GitHub Pages game in Chrome or Safari. Choose **New Game** to begin. If
 | Finish a line / advance dialogue | Press interaction key again | Tap the dialogue box |
 | Select a response | Up/down, then interaction key | Tap its full row |
 | Dive in the river | Hold Down or S | Hold DIVE; move with a second finger |
+| Run | Hold Shift while moving (slower after the Hound injures Montag's leg) | Hold RUN while moving |
+| Vault a low fence | Space (or E) at the fence prompt | VAULT / ACT at the fence |
+| Controls shown | Settings → Controls: Auto / Keyboard / Touch | Same |
+
+**Beatty's suspicion (pillow scene):** wrong answers fill a meter shown on screen as text (`BEATTY'S SUSPICION ■■□ 2/3`). At 3/3, Beatty nearly checks the pillow and the conversation restarts at its first decision.
+
+**After an ending:** press R, or tap the amber line, to go back to Granger's question and explore the other endings. This replay runs in Presentation Mode and never changes your saved game. The **Preservation** ending is the one closest to the novel; Defiance and Submission are invented "what if" outcomes.
 | Journal | J | JOURNAL |
 | Pause | Esc or P | II |
 | Resume | Esc or choose Resume | Tap Resume |

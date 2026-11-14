@@ -64,6 +64,8 @@ export class Soundscape {
   private scene = 'menu';
   private quiet = false;
   private spray = 0;
+  private muffled = false;
+  private muffle?: BiquadFilterNode;
   private failed = false;
   private pending?: Promise<boolean>;
   private makeContext: () => AudioContext;
@@ -98,9 +100,12 @@ export class Soundscape {
     const c = this.context = this.makeContext();
     this.master = c.createGain(); this.master.gain.value = 0;
     // The compressor keeps stacked cues from clipping and lifts quiet ambience on small speakers.
+    // underwater: the whole mix goes through one low-pass that only closes while Montag is diving
+    this.muffle = c.createBiquadFilter(); this.muffle.type = 'lowpass'; this.muffle.frequency.value = 20000;
+    this.master.connect(this.muffle);
     const comp = c.createDynamicsCompressor?.();
-    if (comp) { comp.threshold.value = -20; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = 0.004; comp.release.value = 0.2; this.master.connect(comp); comp.connect(c.destination); this.out = comp; }
-    else { this.master.connect(c.destination); this.out = this.master; }
+    if (comp) { comp.threshold.value = -20; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = 0.004; comp.release.value = 0.2; this.muffle.connect(comp); comp.connect(c.destination); this.out = comp; }
+    else { this.muffle.connect(c.destination); this.out = this.muffle; }
     if (c.createAnalyser) { this.analyser = c.createAnalyser(); this.analyser.fftSize = 2048; this.out.connect(this.analyser); }
     this.amb = c.createGain(); this.amb.gain.value = 0.45; this.amb.connect(this.master);
     this.sfx = c.createGain(); this.sfx.gain.value = 1; this.sfx.connect(this.master);
@@ -156,6 +161,7 @@ export class Soundscape {
       : ['home1', 'home4'].includes(scene) ? 'television' : ['burn', 'attic', 'home5'].includes(scene) ? 'fire' : 'industrial';
     for (const voice of this.voices) { try { voice.stop(); } catch { /* already ended */ } }
     this.spray = 0;
+    this.setMuffle(false);
     this.apply();
   }
 
@@ -163,6 +169,13 @@ export class Soundscape {
     if (!['home1', 'home4'].includes(this.scene)) return;
     const profile = on ? 'television' : 'industrial';
     if (this.profile !== profile) { this.profile = profile; this.apply(); }
+  }
+
+  /** Underwater muffling while diving; cheap to call every frame. */
+  setMuffle(on: boolean) {
+    if (on === this.muffled) return;
+    this.muffled = on;
+    if (this.context && this.muffle) this.muffle.frequency.setTargetAtTime(on ? 450 : 20000, this.context.currentTime, 0.08);
   }
 
   /** Hose loop: 0 = off, ~0.4 = sputtering, 1 = full flow. Cheap to call every frame. */

@@ -140,7 +140,7 @@ export class RoomScene extends Phaser.Scene {
       left: [kb.addKey('LEFT'), kb.addKey('A')], right: [kb.addKey('RIGHT'), kb.addKey('D')],
       act: [kb.addKey('E'), kb.addKey('ENTER'), kb.addKey('SPACE')], down: [kb.addKey('DOWN'), kb.addKey('S')], run: [kb.addKey('SHIFT')],
     };
-    const release = () => { kb.resetKeys(); this.hud?.resetTouch(); this.vx = 0; sound.setSpray(0); };
+    const release = () => { kb.resetKeys(); this.hud?.resetTouch(); this.vx = 0; sound.setSpray(0); sound.setMuffle(false); };
     this.game.events.on('blur', release);
     // the hose loop is driven from update(); silence it whenever update stops running
     this.events.on('pause', release);
@@ -259,7 +259,7 @@ export class RoomScene extends Phaser.Scene {
     if (!this.scriptedWalk) this.animate(p, this.vx, this.facing, swimming ? 'fig:montagFloat' : this.near?.hold && (this.keys.act.some(k => k.isDown) || this.hud.touchAct) ? 'fig:montagWork' : this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag');
     const diveHeld = playing && (this.keys.down.some((k) => k.isDown) || this.hud.touchDown) && (this.room.hazards ?? []).some((h) => h.dive);
     const dive = swimming && playing ? diveStep(this.breath, diveHeld, dt) : { ...this.breath, diving: false };
-    this.breath = dive; const diving = dive.diving;
+    this.breath = dive; const diving = dive.diving; sound.setMuffle(diving);
     this.breathText.setVisible(swimming && playing).setText(this.breath.exhausted ? controls('OUT OF BREATH: release [DOWN] to recover') : `BREATH ${Math.round(this.breath.air * 100)}% · dive only as the light reaches you`);
 
     this.hud.showDive(this.room.id === 'river' && !f['c13.shore']);
