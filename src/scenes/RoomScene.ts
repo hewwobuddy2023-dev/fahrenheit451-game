@@ -39,7 +39,7 @@ export class RoomScene extends Phaser.Scene {
   private shadow!: Phaser.GameObjects.Image;
   private wake?: Phaser.GameObjects.Image;
   private npcs: NpcView[] = [];
-  private keys!: { left: Phaser.Input.Keyboard.Key[]; right: Phaser.Input.Keyboard.Key[]; act: Phaser.Input.Keyboard.Key[]; down: Phaser.Input.Keyboard.Key[] };
+  private keys!: { left: Phaser.Input.Keyboard.Key[]; right: Phaser.Input.Keyboard.Key[]; act: Phaser.Input.Keyboard.Key[]; down: Phaser.Input.Keyboard.Key[]; run: Phaser.Input.Keyboard.Key[] };
   private dialogue!: Dialogue;
   private hud!: Hud;
   private prompt!: Phaser.GameObjects.Container;
@@ -137,11 +137,13 @@ export class RoomScene extends Phaser.Scene {
     const kb = this.input.keyboard!;
     this.keys = {
       left: [kb.addKey('LEFT'), kb.addKey('A')], right: [kb.addKey('RIGHT'), kb.addKey('D')],
-      act: [kb.addKey('E'), kb.addKey('ENTER'), kb.addKey('SPACE')], down: [kb.addKey('DOWN'), kb.addKey('S')],
+      act: [kb.addKey('E'), kb.addKey('ENTER'), kb.addKey('SPACE')], down: [kb.addKey('DOWN'), kb.addKey('S')], run: [kb.addKey('SHIFT')],
     };
-    const release = () => { kb.resetKeys(); this.hud?.resetTouch(); this.vx = 0; };
+    const release = () => { kb.resetKeys(); this.hud?.resetTouch(); this.vx = 0; sound.setSpray(0); };
     this.game.events.on('blur', release);
-    this.events.once('shutdown', () => this.game.events.off('blur', release));
+    // the hose loop is driven from update(); silence it whenever update stops running
+    this.events.on('pause', release);
+    this.events.once('shutdown', () => { this.game.events.off('blur', release); sound.setSpray(0); });
 
     for (const h of this.room.hotspots) {
       if (h.required) this.glows.set(h.id, this.add.image(h.x, WALK_Y - 4, 'glow').setScale(1.4, 0.28).setTint(C.amberN).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD).setDepth(4.1));
@@ -206,7 +208,7 @@ export class RoomScene extends Phaser.Scene {
     if (this.mode === 'pause' || this.mode === 'journal') return;
     if (this.mode === 'play') {
       const h = this.near;
-      const moveHelp = this.touch ? 'Arrows: move  ·  ACT: interact' : 'A / D or arrows: move  ·  E: interact  ·  J: journal  ·  Esc: pause  ·  H: hint';
+      const moveHelp = this.touch ? 'Arrows: move  ·  RUN: hold to run  ·  ACT: interact' : 'A / D or arrows: move  ·  Shift: run  ·  E: interact  ·  J: journal  ·  Esc: pause  ·  H: hint';
       this.controlHint.setText(controls(this.room.id === 'burn' ? h?.hold?.pressure
         ? (this.hose.overheated || this.hose.pressure > BAND[1] ? 'PRESSURE HIGH. The hose sputters. Release [E] for a moment, then hold again.' : 'Hold [E] to spray. Keep the needle in FLOW for full pressure.')
         : moveHelp : h?.watcher ? 'Watch his turn. Hold [E] only while he looks away. If he turns, the attempt resets.' : ''));
@@ -238,10 +240,19 @@ export class RoomScene extends Phaser.Scene {
       this.stillWatch.moving = !!dir;
       dir = 0;
     }
-    const speed = SPEED * (this.room.limp ? 0.72 : 1);
+    // Shift / RUN sprints on land; the numbed leg after the lawn only manages a hobbling run
+    const sprint = playing && !this.stillWatch && !(this.room.id === 'river' && !f['c13.shore']) && (this.keys.run.some((k) => k.isDown) || this.hud.touchRun);
+    const speed = SPEED * (this.room.limp ? 0.72 : 1) * (sprint ? (this.room.limp ? 1.25 : 1.6) : 1);
     this.vx += (dir * speed - this.vx) * (1 - Math.exp(-dt * (dir ? 9 : 12)));
     if (Math.abs(this.vx) < 3) this.vx = 0;
-    p.x = Phaser.Math.Clamp(p.x + this.vx * dt, 40, this.room.width - 40);
+    let nx = p.x + this.vx * dt;
+    for (const v of this.room.hotspots) {
+      // low fences stop walking (never teleports or scripted moves); vault() carries Montag over
+      if (!v.vault || !this.active(v)) continue;
+      if (p.x <= v.x - 18 && nx > v.x - 18) { nx = v.x - 18; this.vx = 0; }
+      if (p.x >= v.x + 18 && nx < v.x + 18) { nx = v.x + 18; this.vx = 0; }
+    }
+    p.x = Phaser.Math.Clamp(nx, 40, this.room.width - 40);
     if (dir) this.facing = dir;
     if (playing && Math.abs(this.vx) > 35 && this.room.id !== 'river') sound.cue('step');
     const swimming = this.room.id === 'river' && !f['c13.shore'];
@@ -324,7 +335,7 @@ export class RoomScene extends Phaser.Scene {
     this.holdMs = 0;
     this.hose = { pressure: 0, progress: 0, overheated: false };
     if (!best) return void this.prompt.setVisible(false);
-    const key = controls('[E]');
+    const key = controls(best.vault ? '[SPACE]' : '[E]');
     const holdable = best.hold && !this.locked(best);
     this.promptText.setText((holdable ? 'HOLD  ' : '') + best.label.toUpperCase());
     const kw = key.length * 9 + 14, w = this.promptText.width + kw + 26;
@@ -582,6 +593,7 @@ export class RoomScene extends Phaser.Scene {
     this.near = undefined;
     const blocked = key !== h.script && key !== h.doneScript;
     const firstTime = !(h.doneFlag && f[h.doneFlag]);
+    if (h.vault && !locked) return this.vault(h);
     sound.cue(h.id === 'hound' ? 'hound' : 'interact');
     this.mode = 'cutscene';
     this.vx = 0;
@@ -590,6 +602,19 @@ export class RoomScene extends Phaser.Scene {
     if (!locked && !blocked && firstTime && h.steps) await this.runSteps(h.steps);
     if (this.isExit()) return;
     if (!locked && !blocked && h.exit) return this.transition(h.exit.room, h.exit.x);
+    this.endCutscene();
+  }
+
+  /** Contextual vault: a short arc over a low obstacle, input-locked for under half a second. */
+  private async vault(h: Hotspot) {
+    this.mode = 'cutscene'; this.vx = 0; this.hud.showTouch(false);
+    const p = this.player, to = p.x < h.x ? h.x + 46 : h.x - 46, y0 = WALK_Y + 6;
+    this.facing = to > p.x ? 1 : -1;
+    this.scriptedPose = true; sound.cue('step');
+    this.tweens.add({ targets: p, y: y0 - (settings.reducedMotion ? 20 : 44), duration: 200, yoyo: true, ease: 'Quad.easeOut' });
+    await this.tween({ targets: p, x: to, duration: 400 });
+    p.setY(y0); this.scriptedPose = false; sound.cue('step');
+    if (this.isExit()) return;
     this.endCutscene();
   }
 
@@ -778,8 +803,22 @@ export class RoomScene extends Phaser.Scene {
     this.mode = 'exit';
     this.hud.showTouch(false);
     this.session.checkpoint(room, x ?? ROOMS[room].spawnX);
-    this.cameras.main.fadeOut(700, 0, 0, 0);
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.restart({ session: this.session }));
+    const go = () => {
+      this.cameras.main.fadeOut(700, 0, 0, 0);
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.restart({ session: this.session }));
+    };
+    const n = this.room.chapter;
+    if (ROOMS[room].chapter <= n) return go();
+    // chapter completion card: what was finished, then the fade
+    sound.cue('complete');
+    const card = this.add.container(0, 0, [
+      this.add.rectangle(0, 170, W, 150, 0x0d0a09, 0.86).setOrigin(0),
+      text(this, W / 2, 204, `CHAPTER ${n} COMPLETE`, { fontFamily: FONT.display, fontSize: '16px', color: C.amber }).setOrigin(0.5).setLetterSpacing(8),
+      text(this, W / 2, 242, CHAPTERS[n - 1], { fontFamily: FONT.type, fontSize: '30px', color: C.cream }).setOrigin(0.5),
+      text(this, W / 2, 284, `JOURNAL ${this.done.size}/15  ·  PROGRESS SAVED`, { fontFamily: FONT.display, fontSize: '13px', color: C.creamDim }).setOrigin(0.5).setLetterSpacing(4),
+    ]).setScrollFactor(0, 0, true).setDepth(1100).setAlpha(0);
+    this.tweens.add({ targets: card, alpha: 1, duration: 400 });
+    this.time.delayedCall(1900, go);
   }
 
   private checkpoint() {

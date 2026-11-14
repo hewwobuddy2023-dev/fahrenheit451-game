@@ -157,6 +157,12 @@ export function cinematicSet(s: Phaser.Scene, room: RoomDef): CinemaParts {
     }
   }
   if (room.id === 'lawn2') {
+    // the low garden fence Montag vaults to reach the books (hotspot 'fence' at x 1190)
+    paint(s, 'k:street:fence', 120, 70, (c) => {
+      c.fillStyle = '#2a211b'; c.fillRect(0, 30, 120, 6); c.fillRect(0, 52, 120, 6);
+      for (let x = 4; x < 120; x += 14) { c.fillStyle = '#3a2e25'; poly(c, [x, 70, x, 14, x + 5, 6, x + 10, 14, x + 10, 70]); c.fillStyle = 'rgba(255,190,120,0.18)'; c.fillRect(x + 1, 14, 2, 56); }
+    });
+    s.add.image(1190, 476, 'k:street:fence').setOrigin(0.5, 1).setDepth(5.15);
     // The Hound comes across the lawn, veers off, comes again, until Montag fires.
     const hound = s.add.sprite(1720, 470, 'hound:run').setOrigin(0.5, 1).setDepth(5.2).setVisible(false);
     let run: Phaser.Tweens.Tween | undefined;

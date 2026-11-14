@@ -43,6 +43,40 @@ await check('desktop: no touch arrows/ACT button; prompt, hint and objective say
   } finally { s.close(); }
 });
 
+await check('desktop: Shift sprints on land and stops sprinting when released', async () => {
+  const s = await desktop({ v: 1, room: 'burn', x: 200, flags: { 'e.burn': true } });
+  try {
+    const r = s.scene(); await settleKeys(s);
+    const walk = async (shift) => {
+      r.player.x = 200; r.vx = 0;
+      if (shift) await s.key('ShiftLeft');
+      await s.key('ArrowRight'); await s.advance(800); await s.key('ArrowRight', false);
+      if (shift) await s.key('ShiftLeft', false);
+      const dx = r.player.x - 200; await s.advance(400); return dx;
+    };
+    const plain = await walk(false), fast = await walk(true), after = await walk(false);
+    assert.ok(fast > plain * 1.35, `sprint ${fast.toFixed(0)} vs walk ${plain.toFixed(0)}`);
+    assert.ok(Math.abs(after - plain) < 8, `released Shift returns to walking (${after.toFixed(0)} vs ${plain.toFixed(0)})`);
+  } finally { s.close(); }
+});
+
+await check('desktop: the garden fence blocks walking; Space vaults it both ways and play resumes', async () => {
+  const flags = { 'e.lawn2': true, 'c10.beds': true, 'c10.w1': true, 'c10.w2': true, 'c10.w3': true, 'c10.beatty': true, 'c10.hound': true };
+  const s = await desktop({ v: 1, room: 'lawn2', x: 1080, flags });
+  try {
+    const r = s.scene(); await settleKeys(s);
+    await s.key('ArrowRight'); await s.advance(1500); await s.key('ArrowRight', false); await s.advance(200);
+    assert.ok(r.player.x <= 1173, `fence blocks walking (x ${r.player.x.toFixed(0)})`);
+    assert.equal(r.near?.id, 'fence'); assert.equal(promptKey(r), 'SPACE');
+    await s.key('Space'); await s.key('Space', false); await s.advance(700);
+    assert.ok(r.player.x > 1200, `vaulted over (x ${r.player.x.toFixed(0)})`); assert.equal(r.mode, 'play');
+    await s.key('ArrowLeft'); await s.advance(400); await s.key('ArrowLeft', false); await s.advance(200);
+    assert.ok(r.player.x >= 1207, 'blocked from the far side too');
+    await s.key('Space'); await s.key('Space', false); await s.advance(700);
+    assert.ok(r.player.x < 1180, 'vaulted back'); assert.equal(r.mode, 'play');
+  } finally { s.close(); }
+});
+
 await check('desktop: holding E continuously at the hose always finishes (no dead end)', async () => {
   const s = await desktop({ v: 1, room: 'burn', x: 900, flags: { 'e.burn': true } });
   try {
