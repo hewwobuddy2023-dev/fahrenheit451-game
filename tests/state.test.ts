@@ -68,7 +68,7 @@ function settableFlags() {
     s.choices?.forEach((c) => Object.keys(c.set ?? {}).forEach((k) => out.add(k)));
   }
   for (const r of Object.values(ROOMS)) {
-    for (const h of r.hotspots) { if (h.hold) out.add(h.hold.flag); walkSteps(h.steps, (s) => { if ('set' in s) Object.keys(s.set).forEach((k) => out.add(k)); }); }
+    for (const h of r.hotspots) { if (h.hold) { out.add(h.hold.flag); Object.keys(h.hold.also ?? {}).forEach((k) => out.add(k)); } walkSteps(h.steps, (s) => { if ('set' in s) Object.keys(s.set).forEach((k) => out.add(k)); }); }
     for (const e of r.enter ?? []) { out.add(e.key); walkSteps(e.steps, (s) => { if ('set' in s) Object.keys(s.set).forEach((k) => out.add(k)); }); }
   }
   return out;

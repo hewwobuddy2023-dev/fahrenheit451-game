@@ -32,14 +32,16 @@ const noAct = (str) => !/\bACT\b|\bTAP\b/.test(str ?? '');
 
 // ---------- desktop: controls, labels, holds ----------
 await check('desktop: no touch arrows/ACT button; prompt, hint and objective say E, never ACT', async () => {
-  const s = await desktop({ v: 1, room: 'burn', x: 900, flags: { 'e.burn': true } });
+  const s = await desktop({ v: 1, room: 'burn', x: 1060, flags: { 'e.burn': true } });
   try {
     const r = s.scene(); await settleKeys(s); await s.advance(300);
     assert.equal(visibleTouchUi(r), false, 'touch controls hidden on desktop');
     assert.equal(promptKey(r), 'E');
     assert.ok(noAct(r.controlHint.text), r.controlHint.text);
     assert.ok(noAct(r.hud.objective.text), r.hud.objective.text);
-    assert.ok(/Hold E/.test(r.hud.objective.text), r.hud.objective.text);
+    // Chapter 1 redesign: the objective states the intention, never a counter; the prompt carries the control
+    assert.ok(/kerosene/i.test(r.hud.objective.text) && !/\d\s*\/\s*\d/.test(r.hud.objective.text), r.hud.objective.text);
+    assert.equal(r.near?.id, 'douse'); assert.ok(/^HOLD\s+SOAK THE BOOKS$/.test(r.promptText.text), r.promptText.text);
   } finally { s.close(); }
 });
 
@@ -78,37 +80,39 @@ await check('desktop: the garden fence blocks walking; Space vaults it both ways
 });
 
 await check('desktop: holding E continuously at the hose always finishes (no dead end)', async () => {
-  const s = await desktop({ v: 1, room: 'burn', x: 900, flags: { 'e.burn': true } });
+  const s = await desktop({ v: 1, room: 'burn', x: 1060, flags: { 'e.burn': true } });
   try {
     const r = s.scene(); await settleKeys(s);
     await s.key('KeyE');
     let last = -1;
-    for (let i = 0; i < 12 && !r.session.flags['c01.p1']; i++) {
-      await s.advance(500);
-      const p = r.session.flags['c01.p1'] ? Infinity : r.hose.progress;
-      assert.ok(p > last, `progress stalled at ${r.hose.progress} (pressure ${r.hose.pressure.toFixed(2)})`);
+    for (let i = 0; i < 12 && !r.session.flags['c01.p3']; i++) {
+      await s.advance(400);
+      const p = r.session.flags['c01.p3'] ? Infinity : r.holdMs;
+      assert.ok(p > last, `progress stalled at ${r.holdMs}`);
+      assert.equal(r.pressureLabel.visible, false, 'no pressure gauge in the redesigned burn');
       last = p;
     }
     await s.key('KeyE', false);
-    assert.equal(r.session.flags['c01.p1'], true);
+    // one pour soaks all three piles (the old three separate pressure holds are gone)
+    assert.deepEqual(['c01.p1', 'c01.p2', 'c01.p3'].map((k) => r.session.flags[k]), [true, true, true]);
     assert.equal(r.mode, 'play');
   } finally { s.close(); }
 });
 
 await check('desktop: releasing E early keeps partial progress and does not complete', async () => {
-  const s = await desktop({ v: 1, room: 'burn', x: 900, flags: { 'e.burn': true } });
+  const s = await desktop({ v: 1, room: 'burn', x: 1060, flags: { 'e.burn': true } });
   try {
     const r = s.scene(); await settleKeys(s);
     await s.key('KeyE'); await s.advance(900); await s.key('KeyE', false);
-    const kept = r.hose.progress; await s.advance(1500);
-    assert.ok(kept > 0 && !r.session.flags['c01.p1']);
-    assert.equal(r.hose.progress, kept, 'progress kept after release');
+    const kept = r.holdMs; await s.advance(1500);
+    assert.ok(kept > 0 && !r.session.flags['c01.p3']);
+    assert.equal(r.holdMs, kept, 'progress kept after release');
     assert.equal(r.keys.act[0].isDown, false);
   } finally { s.close(); }
 });
 
 await check('desktop: another key during a hold, then release: no stuck input', async () => {
-  const s = await desktop({ v: 1, room: 'burn', x: 900, flags: { 'e.burn': true } });
+  const s = await desktop({ v: 1, room: 'burn', x: 1060, flags: { 'e.burn': true } });
   try {
     const r = s.scene(); await settleKeys(s);
     await s.key('KeyE'); await s.advance(300); await s.key('KeyD'); await s.advance(400); await s.key('KeyD', false); await s.key('KeyE', false);
@@ -118,7 +122,7 @@ await check('desktop: another key during a hold, then release: no stuck input', 
 });
 
 await check('desktop: losing focus while holding E freezes, releases the key, and resumes cleanly', async () => {
-  const s = await desktop({ v: 1, room: 'burn', x: 900, flags: { 'e.burn': true } });
+  const s = await desktop({ v: 1, room: 'burn', x: 1060, flags: { 'e.burn': true } });
   try {
     const r = s.scene(); await settleKeys(s);
     await s.key('KeyE'); await s.advance(400);
@@ -132,7 +136,7 @@ await check('desktop: losing focus while holding E freezes, releases the key, an
 });
 
 await check('desktop: pausing while holding E stops the hold; resume needs a fresh press', async () => {
-  const s = await desktop({ v: 1, room: 'burn', x: 900, flags: { 'e.burn': true } });
+  const s = await desktop({ v: 1, room: 'burn', x: 1060, flags: { 'e.burn': true } });
   try {
     const r = s.scene(); await settleKeys(s);
     await s.key('KeyE'); await s.advance(400);

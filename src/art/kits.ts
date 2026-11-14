@@ -212,6 +212,13 @@ const station: Kit = (s, room) => {
         s.tweens.add({ targets: eye, scale: 0.24, yoyo: true, duration: 400, onComplete: () => eye.setTint(C.coldN) });
       },
       houndGone: () => { hound.setVisible(false); eye.setVisible(false); },
+      // the Hound wakes as someone passes: rises on its legs, eye goes from cold to red, settles back
+      houndStir: () => {
+        if (!hound.visible) return;
+        eye.setTint(C.redN);
+        s.tweens.add({ targets: [hound, eye], y: '-=7', duration: 380, yoyo: true, hold: 900, ease: 'Sine.easeInOut', onComplete: () => eye.setTint(C.coldN) });
+        s.tweens.add({ targets: eye, scale: 0.26, duration: 380, yoyo: true, hold: 900 });
+      },
       alarm: () => { s.tweens.add({ targets: bulb, alpha: 0.9, yoyo: true, repeat: 7, duration: 150 }); if (!settings.reducedMotion) s.cameras.main.flash(250, 120, 20, 10); },
     },
     update: (f) => {
@@ -454,6 +461,11 @@ const home: Kit = (s, room) => {
     update: (f) => {
       const off = (!!f['c09.off'] && room.id !== 'home3') || room.id === 'home5' || room.id === 'home3' || (room.id === 'home1' && !f['h1.day']);
       tvs.forEach((t) => t.setVisible(!off)); tvGlow.forEach((g) => g.setVisible(!off));
+      if (room.id === 'home1') PARLOR.forEach((_, i) => {
+        const quiet = !!f[`c03.w${i + 1}`];
+        tvs[i].setAlpha(quiet ? 0.28 : 1).setTint(quiet ? 0x8a9094 : 0xffffff);
+        tvGlow[i].setVisible(!off && !quiet);
+      });
       vChair.setVisible(!!f['c06.chair'] && room.id === 'home2');
       pile.setVisible(!!f['c06.vent'] && room.id === 'home2');
       if (room.id === 'home5') {

@@ -1,6 +1,6 @@
 import { settings, setSetting } from './settings.ts';
 
-type Cue = 'ui' | 'page' | 'step' | 'interact' | 'complete' | 'hound' | 'caught' | 'ignite' | 'ending' | 'wrong' | 'engine' | 'alarm';
+type Cue = 'ui' | 'page' | 'step' | 'interact' | 'complete' | 'hound' | 'caught' | 'ignite' | 'ending' | 'wrong' | 'engine' | 'alarm' | 'click' | 'rush' | 'servo' | 'knob';
 /** noise bed level/cutoff, drone Hz/level, fire crackle, tension pad, slow filter swell (water, wind). */
 interface Profile { noise: number; cutoff: number; hum: number; tone: number; crackle: number; pad: number; swell: number }
 const PROFILES: Record<string, Profile> = {
@@ -33,6 +33,14 @@ const CUES: Record<Cue, { gap: number; parts: Part[] }> = {
   wrong: { gap: 250, parts: [{ tone: 'square', f: [233, 220], lp: 1100, len: 0.26, vol: 0.1 }, { tone: 'square', f: [247, 233], lp: 1100, len: 0.26, vol: 0.1 }] },
   // a beetle car coming fast: rising engine saw plus tyre roar
   engine: { gap: 1400, parts: [{ tone: 'sawtooth', f: [42, 120], lp: 520, len: 1.2, vol: 0.3 }, { burst: 'lowpass', f: [220, 1200], len: 1.2, vol: 0.5 }] },
+  // igniter: a dry flint click with a tiny ring
+  click: { gap: 300, parts: [{ burst: 'highpass', f: [5000, 3000], q: 1.2, len: 0.035, vol: 0.55 }, { tone: 'triangle', f: [2400, 1800], len: 0.08, vol: 0.06 }] },
+  // the fire catching: a deep inhale of air, then the roar opening up
+  rush: { gap: 2000, parts: [{ burst: 'lowpass', f: [160, 2400], len: 1.6, vol: 0.85 }, { tone: 'sine', f: [48, 30], len: 1.4, vol: 0.5 }, { burst: 'bandpass', f: [900, 3200], q: 0.5, at: 0.35, len: 1.2, vol: 0.4 }] },
+  // the Hound stirring: servo whine rising, a needle tick
+  servo: { gap: 1500, parts: [{ tone: 'sawtooth', f: [180, 420], lp: 900, len: 0.7, vol: 0.12 }, { burst: 'bandpass', f: [4800, 5200], q: 6, at: 0.62, len: 0.03, vol: 0.35 }] },
+  // a parlor wall knob turned down
+  knob: { gap: 250, parts: [{ burst: 'bandpass', f: [1400, 900], q: 2, len: 0.06, vol: 0.4 }, { tone: 'sine', f: [300, 180], len: 0.12, vol: 0.12 }] },
   alarm: { gap: 900, parts: [{ tone: 'square', f: [880, 880], lp: 2200, len: 0.22, vol: 0.08 }, { tone: 'square', f: [660, 660], lp: 2200, at: 0.25, len: 0.22, vol: 0.08 }] },
 };
 
@@ -63,6 +71,7 @@ export class Soundscape {
   private profile = 'menu';
   private scene = 'menu';
   private quiet = false;
+  private ducked = false;
   private spray = 0;
   private muffled = false;
   private muffle?: BiquadFilterNode;
@@ -160,7 +169,7 @@ export class Soundscape {
       : scene === 'camp' ? 'camp' : scene === 'subway' ? 'subway' : ['lawn2', 'boulevard', 'run'].includes(scene) ? 'pursuit'
       : ['home1', 'home4'].includes(scene) ? 'television' : ['burn', 'attic', 'home5'].includes(scene) ? 'fire' : 'industrial';
     for (const voice of this.voices) { try { voice.stop(); } catch { /* already ended */ } }
-    this.spray = 0;
+    this.spray = 0; this.ducked = false;
     this.setMuffle(false);
     this.apply();
   }
@@ -205,11 +214,13 @@ export class Soundscape {
 
   toggleMute() { setSetting('muted', !settings.muted); this.apply(); }
   setQuiet(quiet: boolean) { if (quiet !== this.quiet) { this.quiet = quiet; this.apply(); } }
+  /** Pull the whole mix down for a held story moment (cues still play, quietly); restored on scene change. */
+  setDuck(on: boolean) { if (on !== this.ducked) { this.ducked = on; this.apply(); } }
 
   private apply() {
     if (!this.context || !this.master) return;
     const now = this.context.currentTime, p = PROFILES[this.profile];
-    this.master.gain.setTargetAtTime(settings.muted || this.quiet ? 0 : 0.8 * settings.volume, now, 0.06);
+    this.master.gain.setTargetAtTime(settings.muted || this.quiet ? 0 : 0.8 * settings.volume * (this.ducked ? 0.22 : 1), now, this.ducked ? 0.5 : 0.06);
     this.filter!.frequency.setTargetAtTime(p.cutoff, now, 0.3);
     this.swellDepth!.gain.setTargetAtTime(p.cutoff * p.swell, now, 0.5);
     this.noiseGain!.gain.setTargetAtTime(p.noise * 3, now, 0.3);

@@ -38,8 +38,12 @@ for(let i=0;i<5;i++){
   const r=s.scene();await s.advance(50);await s.tap(888,474);const line=r.dialogue.current;
   for(let i=0;i<5;i++)await s.key('Enter',true,true);assert.equal(r.dialogue.current,line);await s.key('Enter',false);
   for(let i=0;i<20&&!r.dialogue.choosing;i++)await s.tap(480,450);
-  const before=s.save();assert.ok(r.dialogue.choosing);await s.render();await s.tap(400,r.dialogue.choiceRows[0].list[0].y);
-  for(let i=0;i<20&&!r.session.flags['c01.lit'];i++)await s.tap(480,450);
+  assert.ok(r.dialogue.choosing);await s.render();await s.advance(450);await s.tap(400,r.dialogue.choiceRows[0].list[0].y);
+  for(let i=0;i<20&&r.mode!=='play';i++)await s.tap(480,450);
+  assert.ok(r.session.flags['c01.igniter'],'took the igniter');
+  // Chapter 1 redesign: lighting is its own deliberate action; mid-event state must not be checkpointed
+  r.player.x=980;await s.advance(120);const before=s.save();await s.tap(888,474);
+  for(let i=0;i<60&&!r.session.flags['c01.lit'];i++)await s.advance(100);
   assert.ok(r.session.flags['c01.lit']);assert.equal(s.save(),before,'no partial completed flag checkpoint');
   const reload=await simulate({save:JSON.parse(before)});try{await reload.advance(700);await reload.tap(430,282);await reload.until(()=>reload.scene().sys.settings.key==='room','mid-event reload');assert.ok(!reload.scene().session.flags['c01.lit']);}finally{reload.close();}
   await campaign(s).settle();assert.equal(JSON.parse(s.save()).room,'station1');

@@ -147,6 +147,7 @@ export class Dialogue {
     this.name.setText(line.who);
     this.nameBg.setVisible(!narr).setSize(this.name.width + 32, 26);
     this.body.setColor(narr ? C.creamDim : C.cream).setFontStyle(narr ? 'italic' : 'normal');
+    if (!narr) this.scene.events.emit('speaker', line.who);
     this.full = controls(line.text);
     this.shown = 0;
     this.body.setText('');

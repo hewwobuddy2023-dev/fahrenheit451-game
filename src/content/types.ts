@@ -57,7 +57,10 @@ export interface Hotspot {
   requires?: string[];
   lockedScript?: string;
   required?: boolean;        // glows on the floor while it is part of the objective
-  hold?: { flag: string; ms: number; fx?: 'hose' | 'flame' | 'pull'; target?: number; pressure?: boolean };
+  hold?: { flag: string; ms: number; fx?: 'hose' | 'flame' | 'pull'; target?: number; pressure?: boolean;
+    sweep?: [number, number]; // the spray travels from one x to the other as the hold fills
+    also?: Flags;            // extra flags set when the hold completes
+  };
   watcher?: string;          // T2: blocked while this npc is watching
   watchedScript?: string;
   auto?: boolean;            // triggers on arrival, no key press
@@ -109,4 +112,14 @@ export interface RoomDef {
   objective: (f: Flags) => string;
   hotspots: Hotspot[];
   enter?: { key: string; steps: Step[]; when?: Cond }[]; // each runs once (flag `key`)
+  /** Redesigned rooms (Chapter 1 slice): no permanent control ribbon, quiet progress notes, a small hint pill. */
+  quietUi?: boolean;
+  /** Escalating hints for the current state: a nudge, then the precise target, then direct guidance. */
+  hints?: (f: Flags) => [string, string, string];
+  /** Short in-world lines spoken as the player passes; they never stop movement. */
+  barks?: Bark[];
+  /** Line shown on the chapter card when this room ends a chapter (instead of the journal count). */
+  coda?: string;
 }
+
+export interface Bark { x: number; who: string; text: string; when?: Cond; cue?: string; fx?: string; range?: number }

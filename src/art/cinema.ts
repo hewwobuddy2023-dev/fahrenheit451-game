@@ -156,6 +156,22 @@ export function cinematicSet(s: Phaser.Scene, room: RoomDef): CinemaParts {
       if (!settings.reducedMotion) s.tweens.add({ targets: eye, alpha: 0.15, yoyo: true, repeat: -1, duration: 700 });
     }
   }
+  if (room.id === 'corner') {
+    // Clarisse's walk: what she points out answers when Montag actually looks
+    const moon = s.add.image(360, 100, 'glow').setScale(2.2).setTint(0xf0e6cc).setAlpha(0).setBlendMode(ADD).setDepth(0.07).setScrollFactor(0.12);
+    parts.fx.moonUp = () => s.tweens.add({ targets: moon, alpha: 0.55, duration: 1400, ease: 'Sine.easeOut' });
+    parts.fx.dew = () => {
+      const p = s.add.particles(0, 0, 'dot', { x: { min: 1300, max: 1700 }, y: { min: F + 4, max: F + 40 }, lifespan: 1600, frequency: 40, quantity: 2, scale: { start: 0.5, end: 0 }, alpha: { start: 0.9, end: 0 }, tint: 0xcfe6f2, blendMode: ADD, duration: 2600 }).setDepth(4.3);
+      s.time.delayedCall(4500, () => p.destroy());
+    };
+    paint(s, 'k:street:farboard', 520, 40, (c) => {
+      c.fillStyle = '#0c0b0d'; c.fillRect(0, 0, 520, 40);
+      c.fillStyle = '#e8b064'; for (let x = 8; x < 512; x += 10) c.fillRect(x, 10, 6, 18); // a strip of lit lettering, too far to read
+      c.fillStyle = '#0c0b0d'; for (let x = 40; x < 520; x += 70) c.fillRect(x, 0, 8, 40);
+    });
+    const board = s.add.image(1500, F - 230, 'k:street:farboard').setOrigin(0.5, 1).setScale(0.6, 0.6).setAlpha(0).setDepth(0.6).setScrollFactor(0.45);
+    parts.fx.billboard = () => s.tweens.add({ targets: board, alpha: 0.85, duration: 1600 });
+  }
   if (room.id === 'lawn2') {
     // the low garden fence Montag vaults to reach the books (hotspot 'fence' at x 1190)
     paint(s, 'k:street:fence', 120, 70, (c) => {

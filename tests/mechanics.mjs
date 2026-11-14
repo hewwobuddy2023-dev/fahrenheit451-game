@@ -28,12 +28,13 @@ for(const [room,id,flag] of [['subway','read','c08.verse'],['camp','granger','c1
  const s=await simulate({save:{v:1,room:'burn',x:1060,flags:{'e.burn':true}},lowres:true});
  try{
   await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','hose Continue');await campaign(s).settle();
-  const r=s.scene();await s.touch('touchstart',888,474);await s.advance(2000);assert.ok(r.sputter,'above the band the hose sputters');assert.ok(r.hose.progress>1000,'but a held hose keeps making progress');await s.touch('touchend',888,474);assert.ok(!r.session.flags['c01.p2']);
-  await s.screenshot('docs/qa/mechanics/hose-overpressure.webp');
-  const before=r.hose.progress;await s.tap(914,112);await s.advance(5000);assert.equal(r.hose.progress,before);await s.tap(500,234);
-  await s.advance(1800);assert.equal(r.hose.overheated,false);await campaign(s).visit('pile2');assert.equal(r.session.flags['c01.p2'],true);
+  // Chapter 1 redesign: one kerosene pour with no pressure gauge; holding always progresses
+  const r=s.scene();await s.touch('touchstart',888,474);await s.advance(1000);assert.ok(r.holdMs>800,'a held pour makes steady progress');assert.equal(r.pressureLabel.visible,false,'no pressure gauge');await s.touch('touchend',888,474);assert.ok(!r.session.flags['c01.p3']);
+  await s.screenshot('docs/qa/mechanics/pour-partial.webp');
+  const before=r.holdMs;await s.tap(914,112);await s.advance(5000);assert.equal(r.holdMs,before,'pause freezes the pour');await s.tap(500,234);
+  await s.advance(400);await campaign(s).visit('douse');assert.deepEqual(['c01.p1','c01.p2','c01.p3'].map(k=>r.session.flags[k]),[true,true,true]);
   assert.equal(s.game.textures.exists('city:backdrop'),true);
-  console.log('PASS held hose sputters above the band but never stalls; release keeps progress, pause freezes, city texture loaded');
+  console.log('PASS one kerosene pour, no pressure gauge, never stalls; release keeps progress, pause freezes, city texture loaded');
  }finally{s.close();}
 }
 {
