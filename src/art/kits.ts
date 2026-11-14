@@ -596,7 +596,7 @@ function forest(variant: 'river' | 'camp'): Kit {
       const r = rng(RW + 7);
       for (let x = -50; x < RW; x += 120) pine(c, x + r() * 60, F, 170 + r() * 190, '#101a17');
       c.fillStyle = vgrad(c, F - 60, F, [[0, 'rgba(120,140,150,0)'], [1, 'rgba(120,140,150,0.1)']]); c.fillRect(0, F - 60, RW, 60); // ground mist
-      if (variant === 'river') { c.fillStyle = '#0a0d10'; c.fillRect(0, F - 40, RW * 0.62, 40); }
+      if (variant === 'river') { c.fillStyle = vgrad(c, F - 40, F, [[0, '#1a2228'], [1, '#26323a']]); c.fillRect(0, F - 40, RW * 0.62, 40); } // muddy bank, lit by the moon
     });
     addLayer(s, `k:forest:${variant}`, 1, 1);
     paint(s, 'k:reeds', 120, 160, (c) => { c.strokeStyle = '#050605'; c.lineWidth = 3; const r = rng(3); for (let i = 0; i < 18; i++) { c.beginPath(); c.moveTo(10 + r() * 100, 160); c.quadraticCurveTo(10 + r() * 100, 80, 10 + r() * 110, 10 + r() * 40); c.stroke(); } });
@@ -630,7 +630,7 @@ function forest(variant: 'river' | 'camp'): Kit {
     };
     return {
       floor: variant === 'river'
-        ? { key: 'water', top: '#0e1620', bottom: '#020406', line: 'rgba(160,190,210,0.12)', spacing: 70, kind: 'water' }
+        ? { key: 'water', top: '#1d3142', bottom: '#060b10', line: 'rgba(190,215,230,0.22)', spacing: 70, kind: 'water' }
         : { key: 'earth', top: '#1c1712', bottom: '#050403', line: 'rgba(0,0,0,0.35)', spacing: 110, kind: 'earth' },
       lights, fx,
     };

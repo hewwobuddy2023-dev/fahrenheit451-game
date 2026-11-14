@@ -266,3 +266,29 @@ M1 + start of M2 checkpoint: input mode from real input (`src/input.ts`), token-
   - Contact sheet: `docs/qa/sprint-compare.jpg`.
   - Regenerate with `node tools/capture.mjs <url> <dir> [filter]`.
 - Tests: unit 23/23, input 13/13, simulation, regression, day2, cinematics, phoenix and campaign:all, with all three endings, PASS (simulation; not a device).
+
+### Final sprint M4 + source audit (2026-11-13)
+- Preserved the uncommitted M4 work first as `a3442a5` (sprint, RUN, vault, callbacks, chapter card).
+- M4:
+  - Shift / RUN sprint (reduced while limping, off while swimming or still).
+  - Lawn garden fence: blocks walking; Space / E / VAULT hops over it.
+  - Two "will remember that" choices, each backed by a later Beatty line (enforced by `tests/callbacks.test.ts`).
+  - A chapter-complete card at chapter boundaries.
+  - Ending replay: R or a tap on the end card returns to Granger's question in Presentation Mode. A test proves the save is untouched.
+- Source audit against the user's ebook (searched by event; the book is not in the repo): `docs/LITERARY_FIDELITY.md`.
+  - Fixed: exact "loaded gun" line; Franklin framed as rule-book propaganda; Beatty recognises Latimer.
+  - Fixed: Faber's three necessities as an inference; the mirror factory; the final line.
+  - Short verified phrases only.
+- Pillow scene: a BEATTY'S SUSPICION n/3 meter replaces "try again". At 3, Beatty's consequence plays and the scene restarts at its first decision.
+- Fixes:
+  - On touch, the first E press was swallowed by the mode switch (IN-05).
+  - The Settings Back row was off the frame edge (UI-01).
+  - The river dive muffles the whole mix.
+- Docs:
+  - `docs/TEACHER_GUIDE.md`.
+  - RULEBOOK controls.
+  - Connection statement filled with 3 quotes verified in the ebook; print page numbers are still blank.
+- Still open, owner-only:
+  - The two human playtests and measured play length (PT-01).
+  - Approval to publish the final build to Pages, plus a Chromebook check behind the school filter (DEP-01).
+  - Print-edition page numbers for the three quotes.
