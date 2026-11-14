@@ -31,7 +31,7 @@ export function campaign(s, { ending = 'preservation' } = {}) {
           await s.render();
           const bg = r.dialogue.choiceRows[index].list[0];
           await s.tap(bg.x + 240, bg.y);
-        } else await s.tap(480,450);
+        } else await s.tap(480,450+(r.dialogue.root?.y??0)); // follow the panel: cinematic lines frame it at the top
       } else if (r.promptWait) {
         if (missHound && !missedHound) { await s.advance(2000); missedHound++; }
         else { await s.tap(888,474); assert.ok(!r.promptWait || r.promptWait.hit, 'quick tap latched'); }
