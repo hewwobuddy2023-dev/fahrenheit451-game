@@ -292,3 +292,15 @@ M1 + start of M2 checkpoint: input mode from real input (`src/input.ts`), token-
   - The two human playtests and measured play length (PT-01).
   - Approval to publish the final build to Pages, plus a Chromebook check behind the school filter (DEP-01).
   - Print-edition page numbers for the three quotes.
+
+### Handoff — Nov 13, 19:35 (HEAD `02848d2`, pushed to draft PR #4)
+- Verified on this exact code: `npm run verify -- --browser` passed every step.
+  - 24 unit tests.
+  - input 17/17; simulation, regression, day2, cinematics, phoenix.
+  - campaign:all with all 3 endings and the replay.
+  - Build, and 32/32 Chromium + WebKit browser tests.
+- Also run: `tools/audio-gameplay.mjs` 8/8.
+- Review build (local, not published): `review-build/f451-review-02848d2.zip` (relative paths; serve from any static server).
+- Evidence: `docs/EVIDENCE_REPORT_NOV13.md`; book audit: `docs/LITERARY_FIDELITY.md`; teacher guide: `docs/TEACHER_GUIDE.md`.
+- Owner-only: two human playtests with timings; print page numbers; approval to publish to Pages; a school Chromebook check; a headphone listen.
+- Next command for a resumed session: `npm run verify -- --browser`, then continue from the "Still open" table in the evidence report.
