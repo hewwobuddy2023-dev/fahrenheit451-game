@@ -181,7 +181,10 @@ export function cinematicSet(s: Phaser.Scene, room: RoomDef): CinemaParts {
   }
   if (room.id === 'river') {
     // Moon on the water and the helicopters quartering the far bank.
-    const moon = s.add.image(560, F + 40, 'glow').setScale(6, 0.4).setTint(0xcfd8e6).setAlpha(0.3).setBlendMode(ADD).setDepth(1.15).setScrollFactor(0.2);
+    // the moon itself, above the treeline, and its path across the water
+    s.add.image(820, 110, 'glow').setScale(1.4).setTint(0xdfe6f0).setAlpha(0.35).setBlendMode(ADD).setDepth(0.05).setScrollFactor(0.05);
+    s.add.circle(820, 110, 18, 0xe8ecf2, 1).setDepth(0.06).setScrollFactor(0.05);
+    const moon = s.add.image(560, F + 40, 'glow').setScale(6, 0.45).setTint(0xcfd8e6).setAlpha(0.5).setBlendMode(ADD).setDepth(1.15).setScrollFactor(0.2);
     if (!settings.reducedMotion) s.tweens.add({ targets: moon, scaleX: 4.2, alpha: 0.14, yoyo: true, repeat: -1, duration: 1900, ease: 'Sine.easeInOut' });
     for (const [i, x] of [300, 900].entries()) {
       const h = s.add.image(x, 70 + i * 30, 'heli').setScale(0.8 - i * 0.15).setDepth(0.8).setScrollFactor(0.25);
