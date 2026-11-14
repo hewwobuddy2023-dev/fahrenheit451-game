@@ -36,15 +36,16 @@ export function openJournal(scene: Phaser.Scene, flags: Flags, onClose: () => vo
   });
   parts.push(text(scene, W / 2, H - 50, 'J / ESC / TAP TO CLOSE', { fontFamily: FONT.display, fontSize: '12px', color: C.muted })
     .setOrigin(0.5).setLetterSpacing(3));
-  const hit = scene.add.zone(0, 0, W, H).setOrigin(0).setScrollFactor(0).setInteractive();
-  parts.splice(1, 0, hit);
+  // The close zone lives outside the fading container: Phaser skips hit tests on objects that do not
+  // render yet, so a quick tap during the 150 ms fade-in (long on slow devices) was silently lost.
+  const hit = scene.add.zone(0, 0, W, H).setOrigin(0).setScrollFactor(0).setDepth(1301).setInteractive();
   const root = scene.add.container(0, 0, parts).setScrollFactor(0, 0, true).setDepth(1300).setAlpha(0);
   scene.tweens.add({ targets: root, alpha: 1, duration: 150 });
   let closed = false;
   const close = () => {
     if (closed) return;
     closed = true;
-    root.destroy();
+    root.destroy(); hit.destroy();
     onClose();
   };
   hit.on('pointerdown', close);
