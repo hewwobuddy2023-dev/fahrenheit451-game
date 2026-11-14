@@ -23,7 +23,10 @@ void ch;
 
 const cases = [
   ['ch1-burn', 'burn', 1060, { 'e.burn': true }, 'ignite'],
+  ['ch1-station', 'station1', 900, { ...done(1), 'e.station1': true }],
   ['ch1-clarisse', 'corner', 1000, { ...done(2), 'c02.meet': true }],
+  ['ch3-ladies', 'home4', 2000, { ...done(9), 'e.home4': true }],
+  ['ch4-station', 'station3', 900, { ...done(10), 'e.station3': true }],
   ['ch1-parlor', 'home1', 1980, { ...done(3), 'e.home1': true, 'h1.day': true }],
   ['ch2-firehouse', 'station2', 1500, { ...done(4), 'e.station2': true }],
   ['ch2-attic', 'attic', 1200, { ...done(4), 'e.attic': true }],

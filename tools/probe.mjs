@@ -16,6 +16,6 @@ await page.waitForFunction(() => window.__game.scene.isActive('room'));
 await page.waitForTimeout(2500);
 console.log(JSON.stringify(await page.evaluate(() => {
   const s = window.__game.scene.getScene('room');
-  return s.children.list.filter((o) => o.visible && o.displayWidth >= 700 && o.displayHeight >= 300).map((o) => ({ t: o.type, d: o.depth, a: +o.alpha.toFixed(2), w: Math.round(o.displayWidth), h: Math.round(o.displayHeight), tex: o.texture?.key, fill: o.fillColor?.toString(16), fa: o.fillAlpha, blend: o.blendMode, tint: o.tintTopLeft?.toString(16), sf: o.scrollFactorX }));
+  return s.children.list.filter((o) => o.visible && o.depth >= 4.5 && o.displayWidth >= 300).map((o) => ({ t: o.type, d: o.depth, a: +o.alpha.toFixed(2), w: Math.round(o.displayWidth), h: Math.round(o.displayHeight), tex: o.texture?.key, fill: o.fillColor?.toString(16), fa: o.fillAlpha, blend: o.blendMode, tint: o.tintTopLeft?.toString(16), sf: o.scrollFactorX }));
 }), null, 0));
 await browser.close();

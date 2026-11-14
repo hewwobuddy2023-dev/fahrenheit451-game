@@ -46,7 +46,7 @@ export function scrollFloor(bands: ReturnType<typeof buildFloor>, camX: number, 
 }
 
 /** Tint a character from the room's lights: warm under lamps, cold near TV walls, dim in between. */
-export function lightTint(x: number, lights: Light[], ambient = 0xb0a69c) {
+export function lightTint(x: number, lights: Light[], ambient = 0xe2d9ce) {
   let r = (ambient >> 16) & 255, g = (ambient >> 8) & 255, b = ambient & 255;
   for (const l of lights) {
     const k = Math.max(0, 1 - Math.abs(x - l.x) / l.r);

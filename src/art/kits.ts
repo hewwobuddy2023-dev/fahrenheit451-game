@@ -471,14 +471,31 @@ const attic: Kit = (s) => {
     c.fillStyle = 'rgba(0,0,0,0.3)'; for (let x = 0; x < RW; x += 26) c.fillRect(x, 0, 2, F); // old boards
     c.fillStyle = '#0d0907'; c.fillRect(60, 140, 110, F - 140); // front door
     // stairwell climbing to the attic, drawn in perspective
-    for (let i = 0; i < 10; i++) { c.fillStyle = i % 2 ? '#3a281a' : '#2e2014'; poly(c, [700 + i * 30, F - i * 22, 760 + i * 30, F - i * 22, 760 + i * 30, F - i * 22 - 22, 700 + i * 30, F - i * 22 - 22]); }
+    poly(c, [690, F, 712, F, 1012, F - 230, 990, F - 230]); // stringer under the treads
+    for (let i = 0; i < 10; i++) {
+      const x = 700 + i * 30, y = F - i * 22;
+      c.fillStyle = '#2e2014'; c.fillRect(x, y - 22, 60, 22);             // riser
+      c.fillStyle = '#5a4028'; c.fillRect(x, y - 24, 62, 4);              // worn tread edge catches the light
+    }
+    c.strokeStyle = '#4a3420'; c.lineWidth = 4; c.beginPath(); c.moveTo(706, F - 70); c.lineTo(1006, F - 290); c.stroke(); // handrail
+    for (let i = 0; i < 10; i += 2) c.fillRect(706 + i * 30, F - 70 - i * 22, 3, 60);  // balusters
     // attic roof beams and heaps of books
     c.fillStyle = '#120c08';
     for (let x = 1000; x < RW; x += 140) poly(c, [x, 0, x + 20, 0, x + 120, F - 160, x + 100, F - 160]);
+    // a small attic window and the dusty shaft of light it throws across the heaps
+    c.fillStyle = '#3a2c20'; c.fillRect(1356, 30, 88, 64); c.fillStyle = '#c9b48a'; c.fillRect(1362, 36, 76, 52); c.fillStyle = '#3a2c20'; c.fillRect(1398, 36, 4, 52); c.fillRect(1362, 60, 76, 3);
+    c.fillStyle = 'rgba(242,205,150,0.09)'; poly(c, [1362, 90, 1438, 90, 1560, F - 40, 1260, F - 40]);
+    // books heaped in mounds: stacked spines with cream page edges, tallest in the middle of each heap
     const r = rng(8);
-    for (let i = 0; i < 400; i++) {
-      const x = 1000 + r() * 780, y = F - r() * 150;
-      c.fillStyle = ['#d9cba8', '#6b2a1a', '#2a3a5a', '#7a6a3a', '#3a2a1a'][i % 5]; c.fillRect(x, y, 22 + r() * 8, 5 + r() * 3);
+    for (const [cx, w, h] of [[1150, 170, 120], [1420, 230, 160], [1680, 160, 110]] as const) {
+      for (let row = 0; row < h / 8; row++) {
+        const y = F - 6 - row * 8, half = w * Math.sqrt(1 - (row * 8) / h);
+        for (let x = cx - half; x < cx + half; x += 24 + r() * 10) {
+          const bw = 18 + r() * 12;
+          c.fillStyle = ['#6b2a1a', '#2a3a5a', '#7a6a3a', '#4a5a3a', '#5a2a3a'][Math.floor(r() * 5)]; c.fillRect(x, y - 7, bw, 7);
+          c.fillStyle = 'rgba(222,206,170,0.75)'; c.fillRect(x + 2, y - 5, bw - 4, 1);   // page edges
+        }
+      }
     }
     for (let x = 200; x < 640; x += 110) { c.fillStyle = '#2a1c12'; c.fillRect(x, 120, 90, 200); c.fillStyle = '#4a3220'; for (let y = 130; y < 310; y += 30) c.fillRect(x + 4, y, 82, 4); for (let y = 134; y < 310; y += 30) for (let b = x + 6; b < x + 84; b += 7) { c.fillStyle = ['#6b2a1a', '#2a3a5a', '#7a6a3a'][(b + y) % 3]; c.fillRect(b, y - 18, 6, 18); } }
     radial(c, 1400, 60, 200, 'rgba(242,165,74,A)', 0.2);
@@ -509,7 +526,8 @@ const faber: Kit = (s) => {
     const r = rng(2); for (let i = 0; i < 60; i++) { c.fillStyle = r() > 0.5 ? '#9a8a5a' : '#5a7a7a'; c.fillRect(890 + r() * 240, 248 + r() * 10, 2 + r() * 4, 2 + r() * 4); }
     radial(c, 1010, 230, 120, 'rgba(242,190,110,A)', 0.35);
     // small picture-frame television
-    c.fillStyle = '#3a2a1e'; c.fillRect(1260, 140, 110, 84); c.fillStyle = '#0a0c10'; c.fillRect(1270, 150, 90, 64);
+    c.fillStyle = '#3a2a1e'; c.fillRect(1260, 140, 110, 84); c.fillStyle = '#2a2c2e'; c.beginPath(); c.roundRect(1270, 150, 72, 64, 10); c.fill(); c.fillStyle = 'rgba(190,210,220,0.18)'; c.beginPath(); c.ellipse(1292, 166, 14, 6, -0.4, 0, Math.PI * 2); c.fill(); // switched-off screen with glass glint
+    c.fillStyle = '#8a7a5a'; c.beginPath(); c.arc(1352, 166, 4, 0, Math.PI * 2); c.arc(1352, 186, 4, 0, Math.PI * 2); c.fill(); c.fillStyle = '#5a4a36'; for (let y = 196; y < 212; y += 4) c.fillRect(1346, y, 12, 2); // knobs and speaker grille
     interiorTrim(c, RW, F);
     speckle(c, RW, F, 9000, 51, 0.02);
   });
