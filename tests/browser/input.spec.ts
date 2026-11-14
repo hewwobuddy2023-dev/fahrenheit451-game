@@ -71,10 +71,12 @@ test('fresh visitor: early repeated native taps, dialogue, movement, journal and
   await page.keyboard.down('KeyD');
   try { await expect.poll(async () => (await state(page)).x, { timeout: 15000 }).toBeGreaterThan(x + 25); }
   finally { await page.keyboard.up('KeyD'); }
-  await tap(page, 860, 34, info); expect((await state(page)).mode).toBe('journal');
-  await tap(page, 480, 300, info); expect((await state(page)).mode).toBe('play');
-  await page.keyboard.press('Escape'); expect((await state(page)).mode).toBe('pause');
-  await tap(page, 500, 234, info); expect((await state(page)).mode).toBe('play');
+  // Phaser handles native input on its next frame; poll rather than read the mode synchronously (slow WebKit frames raced).
+  const mode = (m: string) => expect.poll(async () => (await state(page)).mode).toBe(m);
+  await tap(page, 860, 34, info); await mode('journal');
+  await tap(page, 480, 300, info); await mode('play');
+  await page.keyboard.press('Escape'); await mode('pause');
+  await tap(page, 500, 234, info); await mode('play');
   await expect(page.locator('#diagnostics')).toContainText('Phaser downs');
   expect(errors).toEqual([]);
   await page.screenshot({ path: info.outputPath('chapter1-native.png') });

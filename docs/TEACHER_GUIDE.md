@@ -24,7 +24,7 @@
 Touch screens show on-screen buttons automatically. Settings → Controls can force Keyboard or Touch.
 
 ## Length and saving
-- **Expected length: not yet measured.** The game is designed for roughly 35–45 minutes for a first-time player, but no student has been timed yet. The student is running two real playtests and will report the actual times.
+- **Expected length: not yet measured.** A content-based estimate is about 38 minutes of active play for a first-time player (reading about 24 of those), plus time for mistakes, the journal and the other endings. No student has been timed yet; the two real playtests will give the actual numbers.
 - Progress saves automatically at each checkpoint on that Chromebook and browser. **Continue** resumes it.
 - Students who finish early can press **R** on the ending card to explore the other two endings. That replay never overwrites their save.
 
