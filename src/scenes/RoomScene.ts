@@ -26,7 +26,7 @@ const SPEED = 175;
 const REACH = 70;
 const sleep = (s: Phaser.Scene, ms: number) => new Promise<void>((r) => s.time.delayedCall(ms, r));
 
-interface NpcView { def: Npc; spr: Phaser.GameObjects.Sprite; sh: Phaser.GameObjects.Image; y: number }
+interface NpcView { def: Npc; spr: Phaser.GameObjects.Sprite; sh: Phaser.GameObjects.Image; rim: Phaser.GameObjects.Image; y: number }
 
 export class RoomScene extends Phaser.Scene {
   private session!: Session;
@@ -66,6 +66,7 @@ export class RoomScene extends Phaser.Scene {
   private hazardReadout!: Phaser.GameObjects.Text;
   private laneStrips = new Map<string, Phaser.GameObjects.Rectangle>();
   private promptMode = inputMode();
+  private rim?: Phaser.GameObjects.Image;
   /** The thing behind each hazard's light: an approaching car or a helicopter. */
   private rigs = new Map<string, Phaser.GameObjects.Image>();
   private caughtScene = false;
@@ -126,13 +127,14 @@ export class RoomScene extends Phaser.Scene {
     this.shadow = shadowFor(this, x, WALK_Y);
     this.player = this.add.sprite(x, WALK_Y + 6, fig, 0).setOrigin(0.5, 1).setDepth(5);
     this.player.play(fig + ':idle');
+    this.rim = this.rimFor(this.player);
     if (this.room.id === 'river') this.wake = this.add.image(x, WALK_Y + 3, 'wake').setDepth(5.1);
     for (const n of this.room.npcs ?? []) {
       const y = n.back ? 452 : WALK_Y;
       const spr = this.add.sprite(n.x, y + 6, 'fig:' + n.fig, 0).setOrigin(0.5, 1).setDepth(n.back ? 4.5 : 5 - 0.01).setFlipX(n.face === -1);
       if (n.back) spr.setScale(0.9);
       spr.play({ key: 'fig:' + n.fig + ':idle', startFrame: Math.floor(Math.random() * 4) });
-      this.npcs.push({ def: n, spr, sh: shadowFor(this, n.x, y, n.back ? 0.9 : 1), y });
+      this.npcs.push({ def: n, spr, sh: shadowFor(this, n.x, y, n.back ? 0.9 : 1), rim: this.rimFor(spr), y });
     }
 
     const kb = this.input.keyboard!;
@@ -265,8 +267,9 @@ export class RoomScene extends Phaser.Scene {
     this.hud.showDive(this.room.id === 'river' && !f['c13.shore']);
     if (!this.scriptedPose) p.setAlpha(diving ? 0.35 : 1).setY(WALK_Y + 6 + (diving ? 14 : swimming ? Math.sin(time * 0.002) * 2 : 0));
     this.shadow.setX(p.x).setVisible(!swimming && !this.scriptedPose);
+    this.rim?.setPosition(p.x, p.y - 78).setVisible(!swimming && p.alpha > 0.5);
     this.wake?.setX(p.x).setVisible(swimming).setAlpha(diving ? 0.18 : 0.6).setScale(1 + Math.sin(time * 0.003) * 0.08, 1);
-    p.setTint(lightTint(p.x, this.roomLights, this.room.chapter >= 5 ? 0xc4d2cc : 0xbcb2a8));
+    p.setTint(lightTint(p.x, this.roomLights, this.room.chapter >= 5 ? 0xdde8e2 : 0xe8ded2));
     this.dark?.follow(p.x - this.cameras.main.scrollX, p.y);
 
     // npcs: follow, face, tint
@@ -278,6 +281,7 @@ export class RoomScene extends Phaser.Scene {
         this.animate(n.spr, nvx, nvx ? Math.sign(nvx) : (p.x > n.spr.x ? 1 : -1), 'fig:' + n.def.fig);
       }
       n.sh.setX(n.spr.x).setVisible(n.spr.visible);
+      n.rim.setPosition(n.spr.x, n.spr.y - 78).setVisible(n.spr.visible && n.spr.alpha > 0.5);
       n.spr.setTint(lightTint(n.spr.x, this.roomLights));
     }
 
@@ -617,6 +621,12 @@ export class RoomScene extends Phaser.Scene {
     p.setY(y0); this.scriptedPose = false; sound.cue('step');
     if (this.isExit()) return;
     this.endCutscene();
+  }
+
+  /** Soft backlight behind a figure so dark coats separate from dark rooms (one additive image, no shader). */
+  private rimFor(spr: Phaser.GameObjects.Sprite) {
+    return this.add.image(spr.x, spr.y - 78, 'glow').setScale(0.95, 1.7).setTint(0xd8c8b0).setAlpha(0.2)
+      .setBlendMode(Phaser.BlendModes.ADD).setDepth(spr.depth - 0.03);
   }
 
   private endCutscene() {
