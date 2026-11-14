@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
-import { controls } from '../input.ts';
+import { controls, isTouch } from '../input.ts';
 import { sound } from '../audio.ts';
 import { RULES } from '../content.ts';
-import { completedIds, type Session } from '../state.ts';
+import { completedIds, Session } from '../state.ts';
 import { addAtmosphere, C, FONT, H, W, onActions, setupCamera, text } from '../view.ts';
 
 const ENDINGS: Record<string, { title: string; note: string }> = {
@@ -31,7 +31,10 @@ export class EndScene extends Phaser.Scene {
     const back = text(this, W / 2, H - 84, controls('PRESS [E] TO RETURN TO THE TITLE'), { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
       .setOrigin(0.5).setLetterSpacing(3).setAlpha(0);
     this.tweens.add({ targets: [t, n], alpha: 1, duration: 1400 });
-    this.tweens.add({ targets: [foot, back], alpha: 1, duration: 800, delay: 1800 });
+    // Explore other outcomes: back to Granger's question in a Presentation Mode session that never writes the save
+    const replay = text(this, W / 2, H - 56, isTouch() ? 'TAP HERE TO EXPLORE THE OTHER ENDINGS (NOT SAVED)' : 'PRESS R TO EXPLORE THE OTHER ENDINGS (NOT SAVED)',
+      { fontFamily: FONT.display, fontSize: '11px', color: C.amber }).setOrigin(0.5).setLetterSpacing(3).setAlpha(0).setInteractive();
+    this.tweens.add({ targets: [foot, back, replay], alpha: 1, duration: 800, delay: 1800 });
     addAtmosphere(this);
     let leaving = false;
     const leave = () => {
@@ -40,8 +43,19 @@ export class EndScene extends Phaser.Scene {
       this.cameras.main.fadeOut(500, 0, 0, 0);
       this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('menu'));
     };
+    const explore = () => {
+      if (leaving || replay.alpha < 1) return;
+      leaving = true;
+      const flags = { ...this.session.flags };
+      delete flags['c15.ending']; delete flags['c15.seen'];
+      const session = new Session({ v: 1, room: 'camp', x: 1000, flags }, true);
+      this.cameras.main.fadeOut(500, 0, 0, 0);
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('room', { session }));
+    };
     onActions(this, (a) => { if (a === 'act') leave(); });
-    this.input.on('pointerdown', leave);
+    this.input.keyboard?.on('keydown-R', explore);
+    replay.on('pointerdown', explore);
+    this.input.on('pointerdown', (_p: Phaser.Input.Pointer, over: Phaser.GameObjects.GameObject[]) => { if (!over.includes(replay)) leave(); });
     this.cameras.main.fadeIn(800, 0, 0, 0);
   }
 }

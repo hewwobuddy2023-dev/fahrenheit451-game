@@ -221,6 +221,36 @@ await check('hybrid: desktop shows touch controls after a real touch and hides t
   } finally { s.close(); }
 });
 
+await check('hybrid: the first E press on a touch device both switches to keyboard and interacts', async () => {
+  const s = await simulate({ save: { v: 1, room: 'subway', x: 620, flags: {} }, lowres: true });
+  try {
+    await s.advance(700); await s.tap(430, 282); await s.until(() => s.scene().sys.settings.key === 'room', 'Continue');
+    const r = s.scene(); await campaign(s).settle(); await s.advance(200);
+    assert.ok(r.near, 'standing at a hotspot'); assert.equal(r.mode, 'play');
+    await s.key('KeyE'); await s.key('KeyE', false); await s.advance(100);
+    assert.notEqual(r.mode, 'play', 'that same E press opened the interaction');
+    assert.equal(visibleTouchUi(r), false);
+  } finally { s.close(); }
+});
+
+await check("pillow: three wrong answers raise Beatty's suspicion to 3/3, play his consequence and restart the first decision", async () => {
+  const s = await desktop({ v: 1, room: 'home2', x: 900, flags: { 'c04.book': true, 'c04.plea': 'plead' } });
+  try {
+    const r = s.scene(), q = s.w.__qa;
+    const to = async (first) => { for (let i = 0; i < 200 && q.options()[0] !== first; i++) { q.adv(); await s.advance(120); } assert.equal(q.options()[0], first); };
+    await to('Let her.'); q.choose(0); await s.advance(100);
+    assert.match(r.dialogue.meter.text, /1\/3/);
+    await to('Let her.'); q.choose(1);
+    await to('Pin the pillow with your elbow. "Fine game."'); q.choose(1); await s.advance(100);
+    assert.match(r.dialogue.meter.text, /2\/3/);
+    await to('Pin the pillow with your elbow. "Fine game."'); q.choose(0);
+    await to(`"Sit down, Millie. We're talking."`); q.choose(1); await s.advance(100);
+    assert.match(r.dialogue.meter.text, /0\/3/, 'meter resets after the consequence');
+    await to('Let her.'); // back to the first decision, not a free retry of the third
+    assert.equal(r.session.flags['c05.done'], undefined);
+  } finally { s.close(); }
+});
+
 await check('manual setting: Controls = KEYBOARD hides touch UI even on a touch device', async () => {
   const s = await simulate({ save: { v: 1, room: 'station1', x: 900, flags: { 'e.station1': true, 'c01.lit': true } }, lowres: true, options: { inputMode: 'keyboard' } });
   try {

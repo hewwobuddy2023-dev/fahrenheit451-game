@@ -135,7 +135,7 @@ export class MenuScene extends Phaser.Scene {
       { label: `Controls: ${({ auto: 'AUTO', keyboard: 'KEYBOARD', touch: 'TOUCH' })[settings.inputMode]}`, action: () => { setInputPreference(settings.inputMode === 'auto' ? 'keyboard' : settings.inputMode === 'keyboard' ? 'touch' : 'auto'); this.settings(2); } },
       { label: 'Audio & accessibility', action: () => this.audioOptions() },
       { label: 'Back', action: () => this.main() },
-    ]);
+    ], 262, 56); // five rows must end well inside the 540 px frame
     this.list?.select(selected);
   }
 
