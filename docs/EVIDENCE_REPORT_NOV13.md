@@ -83,3 +83,20 @@ Limits, stated plainly:
 | Test the published link on a school Chromebook behind the filter | You, on Monday |
 | Listening test on headphones | You |
 | Long-dialogue chapters 2–3 (about 1,100 words each): candidates to trim after the playtests show where players skim | After playtests |
+
+## 7. Live deployment check (Nov 14, 03:09 UTC)
+- **URL:** https://hewwobuddy2023-dev.github.io/fahrenheit451-game/
+- **Published commit:** `af3c901`, on branch `release/classroom-2026-11-17`. That is `a29d599` plus the deploy trigger.
+- **GitHub workflow:** the build job (unit tests, all simulation suites, production build) passed, then the deploy job ran. The workflow does not run the browser suite; it last passed locally at `a29d599`.
+- **Rollback:** tag `pages-rollback-2026-11-13` points at `94c45a3`, the previous live build.
+- **Live check:** `node tools/live-check.mjs <url> af3c901`, run in real Chromium with a fresh profile and a cache-busting URL. **17/17 passed:**
+  - HTTPS 200; title screen in 4.7 s.
+  - The diagnostics overlay reports `BUILD af3c901`, so the site serves the new release, not a cached one.
+  - 10 resources loaded (607 KB transferred): JS, CSS, fonts and the backdrop.
+  - New Game, D to move, hold E to soak the first pile; no touch buttons on desktop.
+  - Continue after a reload restores the checkpoint.
+  - All 5 chapters load.
+  - A real chapter 1 → 2 transition plays the chapter card and reaches the firehouse.
+  - No console errors and no failed requests.
+- Screenshots: `docs/qa/live/`.
+- **Not covered:** school Chromebook behind the school filter, Safari/iPad, real student devices, human playtests.
