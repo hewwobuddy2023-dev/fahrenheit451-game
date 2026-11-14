@@ -372,15 +372,30 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
     if (variant === 'burn') {
       truckTexture(s);
       s.add.image(380, 470, 'k:truck').setOrigin(0.5, 1).setDepth(3);
-      const piles = [900, 1060, 1220].map((x) => s.add.image(x, 472, 'k:pile').setOrigin(0.5, 1).setDepth(4.4));
-      paint(s, 'k:pile', 120, 50, (c) => {
-        const r = rng(12);
-        for (let i = 0; i < 26; i++) { c.save(); c.translate(20 + r() * 80, 44 - r() * 26); c.rotate((r() - 0.5) * 1.2); c.fillStyle = ['#d9cba8', '#6b2a1a', '#2a3a5a', '#7a6a3a'][i % 4]; c.fillRect(-11, -3, 22, 7); c.restore(); }
+      const piles = [900, 1060, 1220].map((x) => s.add.image(x, 474, 'k:pile').setOrigin(0.5, 1).setDepth(4.4));
+      const sheen = [900, 1060, 1220].map((x) => s.add.image(x, 474, 'glow').setScale(1.9, 0.22).setTint(0xd8c890).setAlpha(0).setBlendMode(ADD).setDepth(4.35));
+      // a heap of real-looking books: closed volumes with cream page edges, a few lying open, spines up
+      paint(s, 'k:pile', 190, 84, (c) => {
+        const r = rng(12), cols = ['#7a2c1e', '#2c4060', '#7c6a38', '#3c5a3c', '#5a2e46', '#c9b48a'];
+        for (let i = 0; i < 34; i++) {
+          const x = 24 + r() * 142, y = 80 - Math.pow(r(), 0.7) * 50 * (1 - Math.abs(x - 95) / 110), w = 22 + r() * 12, h = 7 + r() * 4;
+          c.save(); c.translate(x, y); c.rotate((r() - 0.5) * 0.9);
+          c.fillStyle = cols[Math.floor(r() * cols.length)]; c.fillRect(-w / 2, -h / 2, w, h);
+          c.fillStyle = '#ece0c2'; c.fillRect(-w / 2 + 2, -h / 2 + 2, w - 5, h - 4);   // page block
+          c.fillStyle = 'rgba(0,0,0,0.35)'; c.fillRect(-w / 2, h / 2 - 2, w, 2);
+          c.restore();
+        }
+        for (const [x, y] of [[60, 42], [118, 36], [150, 60]]) { // open books, pages fanned
+          c.fillStyle = '#f2e8d0'; poly(c, [x - 16, y, x, y + 4, x + 16, y, x + 14, y - 9, x, y - 5, x - 14, y - 9]);
+          c.strokeStyle = 'rgba(60,50,40,0.5)'; c.lineWidth = 1; for (let k = 1; k < 4; k++) { c.beginPath(); c.moveTo(x - 13, y - 8 + k * 2); c.lineTo(x - 2, y - 4 + k * 2); c.moveTo(x + 2, y - 4 + k * 2); c.lineTo(x + 13, y - 8 + k * 2); c.stroke(); }
+        }
+        for (let i = 0; i < 5; i++) { c.fillStyle = cols[i]; c.fillRect(70 + i * 9, 24 + (i % 2) * 4, 7, 26); c.fillStyle = 'rgba(232,212,160,0.7)'; c.fillRect(71 + i * 9, 30 + (i % 2) * 4, 5, 2); } // a few standing spines
       });
       piles.forEach((p) => p.setTexture('k:pile'));
       // books fall from the upper windows
       s.add.particles(0, 0, 'book', { x: { min: 940, max: 1380 }, y: 150, speedY: { min: 80, max: 140 }, speedX: { min: -30, max: 30 }, rotate: { min: 0, max: 360 }, lifespan: 2200, frequency: 700, gravityY: 120 }).setDepth(3.5);
-      update = (f) => piles.forEach((p, i) => { if (f[`c01.p${i + 1}`]) p.setTint(0x7a6a50); });
+      // soaked: darker, wet-looking books and a fuel sheen spreading on the lawn (before the fire)
+      update = (f) => piles.forEach((p, i) => { if (f[`c01.p${i + 1}`]) { p.setTint(0x9a8460); if (!f['c01.lit'] && sheen[i].alpha === 0) s.tweens.add({ targets: sheen[i], alpha: 0.32, duration: 700 }); } if (f['c01.lit']) sheen[i].setAlpha(0); });
       fx.ignite = () => first('ignite', () => {
         piles.forEach((p) => fireAt(s, p.x, 472, 2));
         [960, 1100, 1240].forEach((x, i) => s.time.delayedCall(500 + i * 300, () => fireAt(s, x, F - 120, 3, false, 2.5)));

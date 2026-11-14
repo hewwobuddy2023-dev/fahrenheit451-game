@@ -64,13 +64,16 @@ export function paintCinema(s: Phaser.Scene) {
   // Wall 2: the studio audience laughing on cue.
   sheet(s, 'tv:laugh', TV_W, TV_H, 3, (c, f) => {
     screen(c, f, '#2c5f8a', '#0c1b2c');
-    for (let row = 0; row < 4; row++) for (let i = 0; i < 9; i++) {
-      const x = 16 + i * 32 + (row % 2) * 16, y = 70 + row * 42 + ((i + f) % 2) * 3;
-      c.fillStyle = row % 2 ? '#c9d6e6' : '#a9bdd4';
-      c.beginPath(); c.ellipse(x, y, 11, 14, 0, 0, Math.PI * 2); c.fill();
-      c.fillStyle = '#0a1420'; c.beginPath(); c.ellipse(x, y + 5, 5, f === 1 ? 2 : 6, 0, 0, Math.PI * 2); c.fill();
+    radial(c, 144, 70, 150, 'rgba(255,236,190,A)', 0.55);           // the stage light everyone is facing
+    c.fillStyle = '#f2e2b8'; c.fillRect(110, 52, 68, 6);                 // the host's lit podium
+    for (let row = 0; row < 4; row++) for (let i = 0; i < 10; i++) {     // rows of heads and shoulders, from behind
+      const x = 8 + i * 30 + (row % 2) * 15, y = 120 + row * 30 + (((i + row + f) % 3) === 0 ? -4 : 0);
+      c.fillStyle = ['#1a2534', '#141d2a', '#0f1620', '#0a0f16'][row];
+      c.beginPath(); c.ellipse(x, y + 18, 15, 10, 0, Math.PI, 0); c.fill(); c.fillRect(x - 15, y + 18, 30, 12);
+      c.beginPath(); c.ellipse(x, y, 8, 10, 0, 0, Math.PI * 2); c.fill();
+      if (((i + row + f) % 3) === 0) { c.fillRect(x - 13, y - 14, 3, 12); c.fillRect(x + 10, y - 14, 3, 12); } // hands up, clapping
     }
-    c.fillStyle = '#ffe9a6'; c.font = '700 22px Oswald'; c.textAlign = 'center'; c.fillText(f === 1 ? '' : 'LAUGH', 144, 40);
+    c.fillStyle = f === 1 ? '#5a3a20' : '#ffcf6a'; c.font = '700 20px Oswald'; c.textAlign = 'center'; c.fillText('APPLAUSE', 144, 32);
     scanlinesAndCurve(c);
   }, 3);
   // Wall 3: the family at dinner, turning one by one to smile out at the room.

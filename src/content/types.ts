@@ -22,6 +22,8 @@ export interface Script {
   lines: Line[];
   choices?: Choice[];
   set?: Flags;
+  /** Cinematic framing: show this script's panel near the top so the speakers below stay in view. */
+  top?: boolean;
   /** A watched conversation: at 3 suspicion the `caught` lines play and the player restarts its first choice. */
   suspicion?: { label: string; caught: Line[] };
 }

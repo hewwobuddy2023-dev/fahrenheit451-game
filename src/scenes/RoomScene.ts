@@ -66,6 +66,7 @@ export class RoomScene extends Phaser.Scene {
   private hazardReadout!: Phaser.GameObjects.Text;
   private laneStrips = new Map<string, Phaser.GameObjects.Rectangle>();
   private promptMode = inputMode();
+  private hintBtn?: Phaser.GameObjects.Text;
   private rim?: Phaser.GameObjects.Image;
   private barked = new Set<Bark>();
   private playMs = 0;
@@ -194,8 +195,8 @@ export class RoomScene extends Phaser.Scene {
       onJournal: () => this.onAction('journal'), onPause: () => this.onAction('pause'), onAct: () => this.onAction('act'),
     });
     this.controlHint = text(this, W / 2, 104, '', { fontFamily: FONT.display, fontSize: '15px', color: C.cream, backgroundColor: '#111315', padding: { x: 12, y: 8 }, wordWrap: { width: 620 } }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(1003);
-    (this.room.quietUi
-      ? text(this, W - 22, 158, controls(this.touch ? 'HINT' : 'H  HINT'), { fontFamily: FONT.display, fontSize: '12px', color: C.creamDim, backgroundColor: 'rgba(13,10,9,0.7)', padding: { x: 10, y: 5 } }).setOrigin(1, 0).setLetterSpacing(2)
+    this.hintBtn = (this.room.quietUi
+      ? text(this, W - 22, this.touch ? 158 : 96, controls(this.touch ? 'HINT' : 'H  HINT'), { fontFamily: FONT.display, fontSize: '12px', color: C.creamDim, backgroundColor: 'rgba(13,10,9,0.7)', padding: { x: 10, y: 5 } }).setOrigin(1, 0).setLetterSpacing(2)
       : text(this, W - 50, 176, '?', { fontFamily: FONT.display, fontSize: '22px', backgroundColor: '#111315', padding: { x: 18, y: 10 } }).setOrigin(0.5)).setScrollFactor(0).setDepth(1001).setInteractive({ useHandCursor: true }).on('pointerdown', () => { if (this.mode === 'play') this.flashNote(this.hint()); });
     addAtmosphere(this, this.room.chapter >= 5 ? 0.45 : 1);
     onActions(this, (a) => this.onAction(a));
@@ -228,6 +229,7 @@ export class RoomScene extends Phaser.Scene {
     }
     this.controlHint.setVisible(this.mode === 'play' && this.controlHint.text !== ''); // an empty hint would show as a stray box
     if (this.mode === 'play') { this.playMs += dtMs; this.updateBarks(); this.updateIdle(dtMs); }
+    if (this.room.quietUi) this.hintBtn?.setVisible(this.mode === 'play');
     this.activeTime += dtMs;
     const time = this.activeTime;
     // Phaser already supplies a smoothed/capped delta. A second 50 ms cap

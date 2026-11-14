@@ -140,6 +140,7 @@ export class Dialogue {
 
   private show(line: Line) {
     sound.cue('page');
+    this.root.setY(this.script?.top ? 96 - BOX.y : 0);
     this.paintPanel(BOX.y);
     this.name.setY(BOX.y - 13);
     this.nameBg.setY(BOX.y - 26);

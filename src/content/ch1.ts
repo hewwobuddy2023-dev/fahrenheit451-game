@@ -72,7 +72,7 @@ export const SCRIPTS1: Record<string, Script> = {
     { who: 'CLARISSE', text: 'Everything. Good night, Mr. Montag.' },
     { who: N, text: 'She starts up the path. Then she stops, and turns back, as if she has just remembered something.' },
   ] },
-  c_happy: { set: { 'c02.asked': true }, lines: [
+  c_happy: { set: { 'c02.asked': true }, top: true, lines: [
     { who: 'CLARISSE', text: 'Are you happy?' },
     { who: 'MONTAG', text: 'Am I what?' },
   ] },
@@ -239,7 +239,7 @@ export const ROOMS1: Record<string, RoomDef> = {
     id: 'home1', chapter: 1, label: '', width: 2600, spawnX: 200, kit: 'home', quietUi: true,
     coda: 'Happy. The word follows you all the way to the firehouse.',
     dark: (f) => !f['h1.day'],
-    npcs: [{ id: 'mildred', fig: 'mildred', name: 'MILDRED', x: 1830, face: 1, when: (f) => !!f['h1.day'] }],
+    npcs: [{ id: 'mildred', fig: 'mildred', name: 'MILDRED', x: 1890, face: -1, when: (f) => !!f['h1.day'] }],
     objective: (f) => {
       if (!f['h1.day']) return '';
       if (!f['c03.t3']) return down(f) < 3 ? 'Try to reach Mildred through the walls' : 'Talk to Mildred. The room is quiet now.';
@@ -262,13 +262,13 @@ export const ROOMS1: Record<string, RoomDef> = {
       { id: 'w2', x: 2000, label: 'Turn the second wall down', py: 330, when: (f) => !!f['h1.day'] && !f['c03.w2'], script: 'm_w2', steps: [{ fx: 'knob' }] },
       { id: 'w3', x: 2300, label: 'Turn the third wall down', py: 330, when: (f) => !!f['h1.day'] && !f['c03.w3'], script: 'm_w3', steps: [{ fx: 'knob' }] },
       // Mildred only hears as much as the walls allow: each serious subject needs one more wall quiet
-      { id: 't1', x: 1830, label: 'Talk to Mildred', required: true, when: (f) => !!f['h1.day'] && !f['c03.t1'] && down(f) >= 1, script: 'm_t1' },
-      { id: 'x1', x: 1830, label: 'Talk to Mildred', when: (f) => !!f['h1.day'] && !f['c03.t1'] && down(f) < 1, script: 'm_x1' },
-      { id: 't2', x: 1830, label: 'Talk to Mildred', required: true, when: (f) => !!f['c03.t1'] && !f['c03.t2'] && down(f) >= 2, script: 'm_t2' },
-      { id: 'x2', x: 1830, label: 'Talk to Mildred', when: (f) => !!f['c03.t1'] && !f['c03.t2'] && down(f) < 2, script: 'm_x2' },
-      { id: 't3', x: 1830, label: 'Talk to Mildred', required: true, when: (f) => !!f['c03.t2'] && !f['c03.t3'] && down(f) >= 3, script: 'm_t3' },
-      { id: 'x3', x: 1830, label: 'Talk to Mildred', when: (f) => !!f['c03.t2'] && !f['c03.t3'] && down(f) < 3, script: 'm_x3' },
-      { id: 'tdone', x: 1830, label: 'Mildred', when: (f) => !!f['c03.t3'], script: 'm_done' },
+      { id: 't1', x: 1860, label: 'Talk to Mildred', required: true, when: (f) => !!f['h1.day'] && !f['c03.t1'] && down(f) >= 1, script: 'm_t1' },
+      { id: 'x1', x: 1860, label: 'Talk to Mildred', when: (f) => !!f['h1.day'] && !f['c03.t1'] && down(f) < 1, script: 'm_x1' },
+      { id: 't2', x: 1860, label: 'Talk to Mildred', required: true, when: (f) => !!f['c03.t1'] && !f['c03.t2'] && down(f) >= 2, script: 'm_t2' },
+      { id: 'x2', x: 1860, label: 'Talk to Mildred', when: (f) => !!f['c03.t1'] && !f['c03.t2'] && down(f) < 2, script: 'm_x2' },
+      { id: 't3', x: 1860, label: 'Talk to Mildred', required: true, when: (f) => !!f['c03.t2'] && !f['c03.t3'] && down(f) >= 3, script: 'm_t3' },
+      { id: 'x3', x: 1860, label: 'Talk to Mildred', when: (f) => !!f['c03.t2'] && !f['c03.t3'] && down(f) < 3, script: 'm_x3' },
+      { id: 'tdone', x: 1860, label: 'Mildred', when: (f) => !!f['c03.t3'], script: 'm_done' },
       { id: 'script', x: 1740, label: "Read Mildred's script", required: true, when: (f) => !!f['c03.t3'], script: 'm_script', doneFlag: 'c03.script', doneScript: 'm_done' },
       { id: 'door', x: 140, label: 'Leave for work', required: true, when: (f) => !!f['h1.day'],
         requires: ['c03.w1', 'c03.w2', 'c03.w3', 'c03.t3', 'c03.script'], lockedScript: 'm_done', script: 'm_leave', exit: { room: 'station2', x: 2200 } },
