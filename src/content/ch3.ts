@@ -57,22 +57,40 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: 'FABER', text: "May I? ...It's been a long time. Books smell like nutmeg, did you know? Some spice from a country far away." },
     { who: 'FABER', text: 'You are looking at a coward, Mr. Montag. I saw where things were going and said nothing. Why did you come?' },
     { who: 'MONTAG', text: "Nobody listens anymore. I can't talk to the walls, and my wife listens to the walls. I want someone to teach me to understand what I read." },
-    { who: 'FABER', text: "It isn't the books you want. It's what was in them. Detail, life up close with its pores showing. Then time to think it over. Then the freedom to act on it." },
+    { who: 'FABER', text: "It isn't the books you want. It's what was in them." },
     { who: 'MONTAG', text: "Then help me. We could print more. Hide them in firemen's houses and turn in the alarms. Let the firemen burn each other." },
     { who: 'FABER', text: 'Go home, Montag. That kind of talk gets people burned. Good night.' },
   ], choices: [
-    { text: 'Start tearing pages from the Bible.', set: { 'faber.tear': 'tear' }, next: 'fb_ear', reply: [
+    { text: 'Start tearing pages from the Bible.', set: { 'faber.tear': 'tear' }, next: 'fb_three1', reply: [
       { who: N, text: 'Your hands rip out the first page, then the next. Faber cries out as if you had struck him.' },
       { who: 'FABER', text: "Don't! All right. All right. What do you want?" },
       { who: 'MONTAG', text: 'Teach me.' }] },
-    { text: '"Please. There is no one else."', set: { 'faber.tear': 'plead' }, next: 'fb_ear', reply: [
+    { text: '"Please. There is no one else."', set: { 'faber.tear': 'plead' }, next: 'fb_three1', reply: [
       { who: N, text: 'He looks at you a long time.' },
       { who: 'FABER', text: "...I almost let you walk out. I'm that afraid. Come here." }] },
+  ] },
+  fb_three1: { lines: [
+    { who: 'FABER', text: 'Then listen. Three things are missing from this world. Think before you answer. What is the first?' },
+  ], choices: [
+    { text: '"More books. Millions of them."', again: true, reply: [{ who: 'FABER', text: 'Numbers. The walls give us more every hour, and every hour is the same nothing. Think about what is IN a book.' }] },
+    { text: '"Detail. Things written so you can see the pores in them."', next: 'fb_three2', reply: [{ who: 'FABER', text: 'Yes. Quality of information. Texture. Life you can actually see.' }] },
+    { text: '"Faster reading. Summaries."', again: true, reply: [{ who: 'FABER', text: 'Speed is how they emptied us. Slower. What is in a good book that the walls leave out?' }] },
+  ] },
+  fb_three2: { lines: [{ who: 'FABER', text: 'And the second? Detail is useless if...' }], choices: [
+    { text: '"...if the walls are louder than the book. Quieter walls."', again: true, reply: [{ who: 'FABER', text: 'A quiet wall is still a wall. It still will not let you argue back. What do you need, yourself?' }] },
+    { text: '"...if someone just tells me what it means."', again: true, reply: [{ who: 'FABER', text: "Then you'd be borrowing my thinking, and I am a coward. No." }] },
+    { text: '"...if you never get time to think it over."', next: 'fb_three3', reply: [{ who: 'FABER', text: 'Leisure to digest it. Time. Not the time they give us at a hundred miles an hour.' }] },
+  ] },
+  fb_three3: { lines: [{ who: 'FABER', text: 'And the third. The one I never had.' }], choices: [
+    { text: '"The right to act on what the first two teach us."', set: { 'faber.three': true }, next: 'fb_ear', reply: [{ who: 'FABER', text: 'The right to carry out actions, based on the first two. That is where an old coward stops, Montag. That is where you begin.' }] },
+    { text: '"Permission. From the Captain."', again: true, reply: [{ who: 'FABER', text: 'Beatty grants nothing but matches. Again.' }] },
+    { text: '"Courage."', again: true, reply: [{ who: 'FABER', text: 'Courage comes after. What do you DO with what you have understood?' }] },
   ] },
   fb_ear: { set: { 'faber.ear': true }, lines: [
     { who: 'FABER', text: 'I know a printer who has been out of work for forty years. That much I can do. And this.' },
     { who: N, text: 'In a back room full of coils and crystals, he hands you something green, no bigger than a bullet.' },
     { who: 'FABER', text: 'Put it in your ear. I will hear what you hear, and I will talk to you. Go to the firehouse tonight. We will listen to your Captain together.' },
+    { who: 'FABER', text: 'You held the verse on the train: that was the first. Tonight, with your wife\'s friends, take your time: that is the second. The third will cost you. Choose it carefully.' },
   ] },
 
   // ---- 09 Dover Beach ----
@@ -98,7 +116,7 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: 'MRS. BOWLES', text: 'I voted for the tall one last election. Such a nice-looking man.' },
     { who: 'MRS. PHELPS', text: 'The other one mumbled. And he was short.' },
   ], choices: [
-    { text: 'Go and get a book.', set: { 'c09.book': 'outburst' }, next: 'l_3', reply: [{ who: EAR, text: 'Montag, no! You will ruin everything!' }, { who: 'MILDRED', text: "Guy! ...Ladies, every fireman gets to bring one book home a year, to show how silly the old days were. Isn't that right, dear?" }] },
+    { text: 'Go and get a book.', set: { 'c09.book': 'outburst' }, remember: 'Mildred', next: 'l_3', reply: [{ who: EAR, text: 'Montag, no! You will ruin everything!' }, { who: 'MILDRED', text: "Guy! ...Ladies, every fireman gets to bring one book home a year, to show how silly the old days were. Isn't that right, dear?" }] },
     { text: 'Bite your tongue.', set: { 'c09.book': 'restraint' }, next: 'l_3', reply: [{ who: EAR, text: 'Good.' }, { who: 'MILDRED', text: "Guy has a surprise! Every fireman gets one old book a year, to show how silly it all was. Read us something, dear." }] },
   ] },
   l_3: { set: { 'c09.read': true }, lines: [
@@ -131,7 +149,7 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: EAR, text: "He's muddying the water. Don't let him in." },
   ], choices: [
     { text: 'Keep quiet.', set: { 'st.reply': 'quiet' } },
-    { text: '"Then why did you read them?"', set: { 'st.reply': 'ask' }, reply: [{ who: 'BEATTY', text: "To know what I'm burning. I read enough to be sure." }] },
+    { text: '"Then why did you read them?"', set: { 'st.reply': 'ask' }, remember: 'Beatty', reply: [{ who: 'BEATTY', text: "To know what I'm burning. I read enough to be sure." }] },
   ] },
   st_alarm: { lines: [
     { who: 'BEATTY', text: 'What a pulse! Like the day after a war.' },

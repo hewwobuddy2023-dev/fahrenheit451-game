@@ -9,7 +9,7 @@ const looked = (f: Flags) => ['c02.n1', 'c02.n2', 'c02.n3'].filter((k) => f[k] =
 export const SCRIPTS5: Record<string, Script> = {
   rv_open: { lines: [
     { who: N, text: 'The current takes you. Behind you, helicopters sweep the water with white light.' },
-    { who: N, text: 'Hold DOWN as a light reaches you. Release in the dark to breathe. You cannot stay under forever.' },
+    { who: N, text: 'Hold [DOWN] as a light reaches you. Release in the dark to breathe. You cannot stay under forever.' },
   ] },
   rv_shore: { set: { 'c13.shore': true }, lines: [
     { who: N, text: 'Your heel touches stones. The river has carried you to the bank, far out of the city.' },
@@ -83,7 +83,9 @@ export const SCRIPTS5: Record<string, Script> = {
     { who: N, text: 'At dawn someone lights a small fire and fries a little bacon. Granger looks into the flames.' },
     { who: 'GRANGER', text: "There was an old bird that burned itself up and rose out of the ashes, again and again. We do the same. But we can remember what we did. That's the difference." },
     { who: 'GRANGER', text: "If anyone asks what we're doing, tell them: we're remembering." },
-    { who: N, text: 'They walk upstream toward the city, to help. Granger nods you to the front. The verse waits in you for noon.' },
+    { who: 'GRANGER', text: 'And when we get back, we build a mirror factory first, and take a long look at ourselves.' },
+    { who: N, text: 'They walk upstream toward the city, to help. Granger nods you to the front. Someone asks what you are saving for noon.' },
+    { who: 'MONTAG', text: 'When we reach the city.' },
   ] },
   ep_pres_dew: { lines: [{ who: N, text: 'There is dew on the grass. This time you stop, and look.' }] },
   ep_pres_woman: { lines: [{ who: N, text: "You think of the woman's match, and keep walking." }] },

@@ -8,7 +8,7 @@ import { writeFile } from 'node:fs/promises';
 const bundle = await build({ entryPoints: ['src/main.ts'], bundle: true, write: false,
   format: 'esm', loader: { '.css': 'empty', '.webp': 'dataurl' }, define: { 'process.env.NODE_ENV': '"test"' } });
 
-export async function simulate({ width = 844, height = 390, dpr = 3, lowres = false, save, blocked = false, frameMs = 1000 / 60 } = {}) {
+export async function simulate({ width = 844, height = 390, dpr = 3, lowres = false, save, blocked = false, frameMs = 1000 / 60, touchDevice = true, options } = {}) {
   const dom = new JSDOM('<!doctype html><div id="boot"></div><div id="game"></div>', {
     url: `https://simulation.invalid/?debug${lowres ? '&lowres' : ''}`, pretendToBeVisual: true, runScripts: 'outside-only',
   });
@@ -18,7 +18,8 @@ export async function simulate({ width = 844, height = 390, dpr = 3, lowres = fa
   for (const [k, value] of Object.entries({ innerWidth: width, innerHeight: height, devicePixelRatio: dpr })) {
     Object.defineProperty(w, k, { value, writable: true });
   }
-  Object.defineProperty(w.navigator, 'maxTouchPoints', { value: 5 });
+  // touchDevice:false models a keyboard-and-mouse desktop (no touch points reported).
+  Object.defineProperty(w.navigator, 'maxTouchPoints', { value: touchDevice ? 5 : 0 });
   w.focus = () => {};
   w.document.fonts = { load: async () => [] }; // System fonts; font/Safari loading is outside this simulation.
   w.CanvasRenderingContext2D = canvas.CanvasRenderingContext2D || function () {};
@@ -52,6 +53,7 @@ export async function simulate({ width = 844, height = 390, dpr = 3, lowres = fa
   w.HTMLCanvasElement.prototype.getBoundingClientRect = () => ({ ...rect, left: rect.x, top: rect.y, right: rect.x + rect.width, bottom: rect.y + rect.height });
   w.HTMLElement.prototype.getBoundingClientRect = () => ({ x: 0, y: 0, top: 0, left: 0, right: width, bottom: height, width, height });
   Object.defineProperties(w.HTMLElement.prototype, { clientWidth: { get: () => width }, clientHeight: { get: () => height } });
+  if (options) w.localStorage.setItem('f451.options', JSON.stringify(options));
   if (save !== undefined) w.localStorage.setItem('f451.save', typeof save === 'string' ? save : JSON.stringify(save));
   if (blocked) Object.defineProperty(w, 'localStorage', { get() { throw new w.DOMException('Blocked', 'SecurityError'); } });
   await w.eval(`(async()=>{${bundle.outputFiles[0].text}})()`);
@@ -82,11 +84,21 @@ export async function simulate({ width = 844, height = 390, dpr = 3, lowres = fa
   };
   const tap = async (x, y, id = 1) => { await touch('touchstart', x, y, id); await touch('touchend', x, y, id); await advance(50); };
   const key = async (code, down = true, repeat = false) => {
-    const keyCode = { KeyE: 69, Enter: 13, Space: 32, KeyD: 68, KeyA: 65, ArrowDown: 40, ArrowUp: 38, Escape: 27, KeyJ: 74 }[code];
+    const keyCode = { KeyE: 69, Enter: 13, Space: 32, KeyD: 68, KeyA: 65, KeyS: 83, KeyW: 87, ArrowDown: 40, ArrowUp: 38, ArrowLeft: 37, ArrowRight: 39, Escape: 27, KeyJ: 74, ShiftLeft: 16, KeyM: 77 }[code];
     w.dispatchEvent(new w.KeyboardEvent(down ? 'keydown' : 'keyup', { code, key: code, keyCode, which: keyCode, repeat, bubbles: true }));
     await advance(20);
   };
-  return { w, game, scene, advance, until, touch, tap, key, render,
+  const click = async (x, y) => {
+    await render();
+    for (const type of ['pointerdown', 'mousedown', 'pointerup', 'mouseup']) {
+      const e = new w.MouseEvent(type, { bubbles: true, cancelable: true, clientX: rect.x + x * fit, clientY: rect.y + y * fit, button: 0, buttons: type.endsWith('down') ? 1 : 0 });
+      if (type.startsWith('pointer')) Object.defineProperty(e, 'pointerType', { value: 'mouse' });
+      (type.startsWith('pointer') ? w : game.canvas).dispatchEvent(e);
+      if (type === 'mousedown') await advance(30);
+    }
+    await advance(50);
+  };
+  return { w, game, scene, advance, until, touch, tap, key, click, render,
     save: () => w.localStorage.getItem('f451.save'),
     screenshot: async (path) => { await render(); await writeFile(path, native(game.canvas).toBuffer(path.endsWith('.webp') ? 'image/webp' : 'image/png')); },
     close: () => { game.destroy(true); game.runDestroy(); w.close(); },

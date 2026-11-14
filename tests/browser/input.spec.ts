@@ -71,10 +71,12 @@ test('fresh visitor: early repeated native taps, dialogue, movement, journal and
   await page.keyboard.down('KeyD');
   try { await expect.poll(async () => (await state(page)).x, { timeout: 15000 }).toBeGreaterThan(x + 25); }
   finally { await page.keyboard.up('KeyD'); }
-  await tap(page, 860, 34, info); expect((await state(page)).mode).toBe('journal');
-  await tap(page, 480, 300, info); expect((await state(page)).mode).toBe('play');
-  await page.keyboard.press('Escape'); expect((await state(page)).mode).toBe('pause');
-  await tap(page, 500, 234, info); expect((await state(page)).mode).toBe('play');
+  // Phaser handles native input on its next frame; poll rather than read the mode synchronously (slow WebKit frames raced).
+  const mode = (m: string) => expect.poll(async () => (await state(page)).mode).toBe(m);
+  await tap(page, 860, 34, info); await mode('journal');
+  await tap(page, 480, 300, info); await mode('play');
+  await page.keyboard.press('Escape'); await mode('pause');
+  await tap(page, 500, 234, info); await mode('play');
   await expect(page.locator('#diagnostics')).toContainText('Phaser downs');
   expect(errors).toEqual([]);
   await page.screenshot({ path: info.outputPath('chapter1-native.png') });
@@ -119,17 +121,20 @@ test('audio unlock/mute, local offline play and browser frame sample', async ({ 
   const requests: string[] = [];
   page.on('request', r => requests.push(r.url()));
   await page.goto('/?debug&lowres'); await scene(page, 'menu');
+  // Playwright's Windows WebKit build ships without Web Audio; there the game must degrade quietly, not fail.
+  const webAudio = await page.evaluate(() => !!((window as any).AudioContext || (window as any).webkitAudioContext));
+  if (!webAudio) info.annotations.push({ type: 'limit', description: 'This browser build has no Web Audio; asserted graceful "unavailable" instead of sound' });
   expect(await page.evaluate(() => (window as any).__audio.status.state)).toBe('locked');
   expect(await page.evaluate(() => !!(window as any).__game.sound.context)).toBe(false); // unused Phaser backend stays off
-  await tap(page,430,474,info);await tap(page,430,410,info);
+  await tap(page,430,474,info);await tap(page,430,430,info); // Settings > Audio & accessibility
   await page.keyboard.press('KeyM');
   await tap(page,430,162,info); // visible sound check explicitly unmutes
-  await expect.poll(()=>page.evaluate(()=>(window as any).__audio.status.state)).toBe('running');
+  await expect.poll(()=>page.evaluate(()=>(window as any).__audio.status.state)).toBe(webAudio ? 'running' : 'unavailable');
   expect(await page.evaluate(()=>(window as any).__audio.status.muted)).toBe(false);
-  await tap(page,430,462,info);await tap(page,430,474,info);
+  await tap(page,430,462,info);await tap(page,430,486,info); // Audio Back > Settings Back
   await tap(page, 430, 282, info); await scene(page, 'room'); await settle(page, info);
-  await expect.poll(() => page.evaluate(() => (window as any).__audio.status.state)).toBe('running');
-  await expect.poll(()=>page.evaluate(()=>(window as any).__audio.sampleOutput().rms),{timeout:10000}).toBeGreaterThan(.0001);
+  await expect.poll(() => page.evaluate(() => (window as any).__audio.status.state)).toBe(webAudio ? 'running' : 'unavailable');
+  if (webAudio) await expect.poll(()=>page.evaluate(()=>(window as any).__audio.sampleOutput().rms),{timeout:10000}).toBeGreaterThan(.0001);
   const signal=await page.evaluate(()=>(window as any).__audio.sampleOutput());
   console.log(JSON.stringify({label:'Actual Web Audio analyser signal, not a speaker listening test',signal}));
   expect(signal.peak).toBeLessThan(.95);
@@ -222,12 +227,15 @@ test('subway: source-first reconstruction fails locally, supports rereading and 
 test('missing or stalled decorative backdrop never gates the title indefinitely', async ({page}, info) => {
   await page.addInitScript(()=>localStorage.clear()); // each fault starts as a fresh visitor
   for(const fault of ['abort','stall']) {
-    await page.route('**/phoenix-city-*.webp', async route=>{
+    let hits=0;
+    await page.route('**/phoenix-city-*.webp', async route=>{ hits++;
       if(fault==='abort') await route.abort();
       else {await new Promise(r=>setTimeout(r,6500));await route.continue().catch(()=>{});}
     });
     await page.goto('/?debug&lowres');await scene(page,'menu');
-    expect(await page.evaluate(()=>(window as any).__game.textures.exists('phoenix:city'))).toBe(false);
+    // WebKit may serve the image from its memory cache without consulting the route; then there is no fault to test.
+    if(hits) expect(await page.evaluate(()=>(window as any).__game.textures.exists('phoenix:city')), `${fault}: backdrop must be absent after the fault`).toBe(false);
+    else info.annotations.push({type:'limit',description:`${fault}: browser bypassed the route (cache); title-not-gated still checked`});
     await tap(page,430,346,info);await scene(page,'room');await settle(page,info);
     expect((await state(page)).room).toBe('burn');
     await page.screenshot({path:info.outputPath(`procedural-${fault}-fallback-native.png`)});

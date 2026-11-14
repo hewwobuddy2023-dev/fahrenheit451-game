@@ -61,12 +61,7 @@ export function phoenixSet(s: Phaser.Scene, room: RoomDef) {
   });
   s.add.image(0,0,key).setOrigin(0).setDepth(1.8);
   const faces: Phaser.GameObjects.Container[]=[];
-  if(family==='home') for(const [i,x] of [1660,1980,2300].entries()) {
-    const g=s.add.graphics().fillStyle([0x7c9290,0x798e9b,0x9b8582][i],.75);
-    g.fillEllipse(0,-12,66,88).fillRoundedRect(-54,30,108,74,22).fillStyle(0x17232b,1).fillEllipse(-14,-22,12,5).fillEllipse(14,-22,12,5);
-    g.lineStyle(2,0xd7d8ba,.6).beginPath().arc(0,-10,23,.2,Math.PI-.2).strokePath();
-    const face=s.add.container(x,176,[g]).setDepth(1.65);faces.push(face);
-  }
+  // Parlor walls play painted broadcasts from the home kit (src/art/cinema.ts).
   let elapsed=0;
   return { update(f:Flags){const off=room.id==='home3'||room.id==='home5'||!!f['c09.off']||(room.id==='home1'&&!f['h1.day']);faces.forEach(o=>o.setVisible(!off));},
     tick(dt:number){elapsed+=dt;faces.forEach((o,i)=>o.setScale(1,settings.reducedMotion?1:1+Math.sin(elapsed*.0009+i)*.015));} };

@@ -16,12 +16,13 @@ import { C, H, K, W, params, installQualityGovernor } from './view.ts';
 import { diagnostics } from './diagnostics.ts';
 import { guardFocus } from './focus.ts';
 import { installAudio, sound } from './audio.ts';
+import { installInputMode } from './input.ts';
 
 const diagnostic = diagnostics(params.has('diagnostics'));
+installInputMode();
 
 class BootScene extends Phaser.Scene {
   constructor() { super('boot'); }
-  preload() { this.load.image({ key: 'phoenix:city', url: cityUrl, xhrSettings: { responseType: 'blob', timeout: 4000 } }); }
   create() {
     paintFx(this);
     paintCast(this);
@@ -51,6 +52,14 @@ const game = new Phaser.Game({
   render: { antialias: true, powerPreference: 'low-power' },
   scene: [BootScene, MenuScene, RoomScene, EndScene],
 });
+
+// The city backdrop is decorative: load it outside the boot path so a stalled network can never hold the title.
+// (WebKit ignored the old XHR timeout, so a request that never answers kept the boot screen up indefinitely.)
+{
+  const img = new Image();
+  img.onload = () => { if (!game.textures.exists('phoenix:city')) game.textures.addImage('phoenix:city', img); };
+  img.src = cityUrl;
+}
 diagnostic.attach(game);
 game.events.once('ready', () => {
   guardFocus(game);

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { C, FONT, W, H, text } from '../view.ts';
+import { controls, isTouch, onInputMode } from '../input.ts';
 
 /** Objective panel, journal chip, toasts and (on touch devices) on-screen buttons. */
 export class Hud {
@@ -7,11 +8,14 @@ export class Hud {
   touchRight = false;
   touchAct = false;
   touchDown = false;
-  private held = new Map<number, 'left' | 'right' | 'act' | 'down'>();
+  touchRun = false;
+  private held = new Map<number, 'left' | 'right' | 'act' | 'down' | 'run'>();
   private diveUi?: Phaser.GameObjects.Container;
   private timer?: Phaser.GameObjects.Text;
   private scene: Phaser.Scene;
-  private touch: boolean;
+  private wantTouch = true;
+  private lastObjective = '';
+  private lastDone = 0;
   private panel: Phaser.GameObjects.Graphics;
   private chapter: Phaser.GameObjects.Text;
   private objective: Phaser.GameObjects.Text;
@@ -19,9 +23,8 @@ export class Hud {
   private touchUi?: Phaser.GameObjects.Container;
   private toastRoot?: Phaser.GameObjects.Container;
 
-  constructor(scene: Phaser.Scene, chapter: string, opts: { touch: boolean; demo: boolean; onJournal: () => void; onPause: () => void; onAct: () => void }) {
+  constructor(scene: Phaser.Scene, chapter: string, opts: { demo: boolean; onJournal: () => void; onPause: () => void; onAct: () => void }) {
     this.scene = scene;
-    this.touch = opts.touch;
     this.panel = scene.add.graphics().setScrollFactor(0).setDepth(1000);
     this.chapter = text(scene, 34, 24, chapter, { fontFamily: FONT.display, fontSize: '11px', color: C.creamDim })
       .setLetterSpacing(2).setScrollFactor(0).setDepth(1001);
@@ -37,7 +40,7 @@ export class Hud {
         .setOrigin(1, 0).setLetterSpacing(2).setScrollFactor(0).setDepth(1001);
     }
 
-    if (opts.touch) {
+    {
       const btn = (x: number, y: number, r: number, label: string) => {
         const c = scene.add.circle(x, y, r, 0x0d0a09, 0.55).setStrokeStyle(1.5, C.creamN, 0.45);
         // arrows are drawn shapes: the display font has no arrow glyphs
@@ -55,8 +58,9 @@ export class Hud {
       const [a, at] = btn(W - 72, H - 66, 47, 'ACT');
       const [p, pt] = btn(W - 46, 112, 32, 'II');
       const [d, dt] = btn(W - 184, H - 66, 47, 'DIVE');
+      const [u, ut] = btn(272, H - 62, 38, 'RUN');
       const release = (p: Phaser.Input.Pointer) => { this.held.delete(p.id); this.syncTouch(); };
-      for (const [obj, action] of [[l, 'left'], [r, 'right'], [a, 'act'], [d, 'down']] as const) {
+      for (const [obj, action] of [[l, 'left'], [r, 'right'], [a, 'act'], [d, 'down'], [u, 'run']] as const) {
         obj.on('pointerdown', (p: Phaser.Input.Pointer) => {
           this.held.set(p.id, action); this.syncTouch();
           if (action === 'act') opts.onAct();
@@ -74,12 +78,23 @@ export class Hud {
       });
       p.on('pointerdown', opts.onPause);
       this.diveUi = scene.add.container(0, 0, [d, dt]).setVisible(false);
-      this.touchUi = scene.add.container(0, 0, [l, lt, r, rt, a, at, p, pt, this.diveUi]).setScrollFactor(0, 0, true).setDepth(1001);
+      this.touchUi = scene.add.container(0, 0, [l, lt, r, rt, u, ut, a, at, p, pt, this.diveUi]).setScrollFactor(0, 0, true).setDepth(1001);
     }
+    this.syncVisibility();
+    const off = onInputMode(() => { this.syncVisibility(); this.setObjective(this.lastObjective, this.lastDone); });
+    scene.events.once('shutdown', off);
+  }
+
+  /** Touch buttons show only in touch mode, and never while dialogue or menus own the screen. */
+  private syncVisibility() {
+    const on = this.wantTouch && isTouch();
+    this.touchUi?.setVisible(on);
+    if (!on) this.resetTouch();
   }
 
   setObjective(s: string, done: number) {
-    this.objective.setText(this.touch ? s.replace('Hold DOWN', 'Hold DIVE').replace('Hold E', 'Hold ACT') : s);
+    this.lastObjective = s; this.lastDone = done;
+    this.objective.setText(controls(s));
     this.objective.setWordWrapWidth(W - 340);
     const w = Math.max(this.objective.width, this.chapter.width) + 40;
     this.panel.clear()
@@ -90,8 +105,8 @@ export class Hud {
 
   /** Hide touch buttons while dialogue or menus own the screen, so they never overlap text. */
   showTouch(on: boolean) {
-    this.touchUi?.setVisible(on);
-    if (!on) this.resetTouch();
+    this.wantTouch = on;
+    this.syncVisibility();
   }
 
   showDive(on: boolean) { this.diveUi?.setVisible(on); }
@@ -101,7 +116,7 @@ export class Hud {
   private syncTouch() {
     const actions = new Set(this.held.values());
     this.touchLeft = actions.has('left'); this.touchRight = actions.has('right');
-    this.touchAct = actions.has('act'); this.touchDown = actions.has('down');
+    this.touchAct = actions.has('act'); this.touchDown = actions.has('down'); this.touchRun = actions.has('run');
   }
 
   toast(title: string, sub: string) {
@@ -122,9 +137,10 @@ export class Hud {
   /** Countdown or meter readout under the objective panel (text, so never colour-only). */
   setTimer(s: string | null) {
     if (s === null) { this.timer?.setVisible(false); return; }
-    this.timer ??= text(this.scene, 34, 82, '', { fontFamily: FONT.display, fontSize: '18px', color: C.amber })
+    this.timer ??= text(this.scene, 18, 82, '', { fontFamily: FONT.display, fontSize: '18px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.78)', padding: { x: 16, y: 6 } })
       .setLetterSpacing(3).setScrollFactor(0).setDepth(1001);
-    this.timer.setVisible(true).setText(s);
+    // sit just under the objective panel, whose height grows when the objective wraps
+    this.timer.setVisible(true).setText(s).setY(14 + Math.max(56, this.objective.height + 40) + 8);
   }
 
   note(s: string) {

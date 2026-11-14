@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { controls } from '../input.ts';
 import { sound } from '../audio.ts';
 import { C, FONT, W, H, text } from '../view.ts';
 
@@ -64,7 +65,7 @@ export class SequencePuzzle {
     if (this.phase === 'study') {
       label(65, 145, this.def.fragments.join('\n'), 23);
       label(65, 330, 'Study at your own pace. Then rebuild the order from memory.\nYou can read this again at any time. No timer.', 16, C.creamDim);
-      button(245, 423, 470, 60, 'BEGIN RECALL  ·  E / ENTER / TAP', () => this.action('act'), true);
+      button(245, 423, 470, 60, controls('BEGIN RECALL  ·  PRESS [E]'), () => this.action('act'), true);
     } else {
       label(60, 116, this.selected.length ? this.selected.join(' / ') : 'Place four fragments in the order you studied.', 16);
       this.cards.forEach((word, i) => button(60 + (i % 2) * 425, 201 + Math.floor(i / 2) * 75, 412, 65, `${this.selected.includes(word) ? 'PLACED · ' : ''}${word}`, () => this.pick(i), i === this.index));

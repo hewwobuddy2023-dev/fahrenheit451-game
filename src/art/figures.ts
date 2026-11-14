@@ -161,17 +161,17 @@ const COLD = 'rgba(150,190,205,0.7)';
 
 /** The cast. Distinct silhouettes: helmet brim, captain's cap and pipe, white dress, straw hair, stoop, beard. */
 export const CAST: Record<string, Fig> = {
-  montag: { coat: '#1a1615', rim: WARM, hat: 'helmet', stripe: true, badge: '#c98a3a' },
-  montagWork: { coat: '#262422', rim: WARM, hat: 'helmet', stripe: true, badge: '#c98a3a', work: true },
-  montagCivil: { coat: '#1f1b1a', rim: WARM, hat: 'none', hair: 'short', coatLen: 70 },
-  beatty: { coat: '#141111', rim: 'rgba(232,104,46,0.85)', hat: 'cap', pipe: true, bulk: 1.18, tall: 1.06, stripe: true },
-  fireman: { coat: '#171313', rim: 'rgba(242,165,74,0.55)', hat: 'helmet', stripe: true, bulk: 1.08 },
+  montag: { coat: '#463d35', skin: '#a88a72', rim: WARM, hat: 'helmet', stripe: true, badge: '#c98a3a' },
+  montagWork: { coat: '#4c443c', skin: '#a88a72', rim: WARM, hat: 'helmet', stripe: true, badge: '#c98a3a', work: true },
+  montagCivil: { coat: '#4d4842', skin: '#a88a72', rim: WARM, hat: 'none', hair: 'short', coatLen: 70 },
+  beatty: { coat: '#47302b', skin: '#b08c74', rim: 'rgba(232,104,46,0.85)', hat: 'cap', pipe: true, bulk: 1.18, tall: 1.06, stripe: true },
+  fireman: { coat: '#3c3431', skin: '#8c7464', rim: 'rgba(242,165,74,0.55)', hat: 'helmet', stripe: true, bulk: 1.08 },
   clarisse: { coat: '#cfc6b5', rim: COLD, hair: 'long', hairCol: '#2a2420', dress: '#ddd5c4', tall: 0.92, bulk: 0.82, skin: '#cfc3ad' },
   mildred: { coat: '#4a3c44', rim: 'rgba(160,200,215,0.75)', hair: 'straw', hairCol: '#b59a5a', dress: '#5a4a52', tall: 0.95, bulk: 0.8, shell: true },
-  faber: { coat: '#141313', rim: WARM, hair: 'white', hairCol: '#cfc9bd', stoop: 0.7, tall: 0.93, coatLen: 64 },
+  faber: { coat: '#58524b', skin: '#c2aa94', rim: WARM, hair: 'white', hairCol: '#cfc9bd', stoop: 0.7, tall: 0.93, coatLen: 64 },
   granger: { coat: '#1e2a36', rim: 'rgba(242,165,74,0.9)', hair: 'short', beard: true, coatLen: 78, bulk: 1.05 },
   bookman: { coat: '#1b2530', rim: 'rgba(242,165,74,0.8)', hair: 'white', beard: true, coatLen: 78, stoop: 0.2 },
-  woman: { coat: '#201a19', rim: 'rgba(242,165,74,0.7)', hair: 'white', hairCol: '#bdb6a8', dress: '#3a2e2a', stoop: 0.45, tall: 0.88, bulk: 0.85 },
+  woman: { coat: '#4e423c', skin: '#b8a08c', rim: 'rgba(242,165,74,0.7)', hair: 'white', hairCol: '#bdb6a8', dress: '#3a2e2a', stoop: 0.45, tall: 0.88, bulk: 0.85 },
   lady1: { coat: '#2a2024', rim: 'rgba(160,200,215,0.7)', hair: 'short', dress: '#6b3d4a', tall: 0.93, bulk: 0.85 },
   lady2: { coat: '#262126', rim: 'rgba(160,200,215,0.7)', hair: 'straw', dress: '#3f4f5f', tall: 0.96, bulk: 0.9 },
 };

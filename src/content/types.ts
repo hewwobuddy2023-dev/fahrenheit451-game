@@ -13,6 +13,8 @@ export interface Choice {
   again?: boolean;   // wrong answer: show reply, then offer the same choices again (sets nothing)
   next?: string;     // continue with another script (its lines, choices and set)
   when?: Cond;
+  remember?: string;
+  suspicion?: number; // with Script.suspicion: a wrong answer raises a visible meter instead of a free retry  // who will remember: shown only when a later scene reads this choice's flag (tests/callbacks.test.ts)
 }
 
 export interface Script {
@@ -20,6 +22,8 @@ export interface Script {
   lines: Line[];
   choices?: Choice[];
   set?: Flags;
+  /** A watched conversation: at 3 suspicion the `caught` lines play and the player restarts its first choice. */
+  suspicion?: { label: string; caught: Line[] };
 }
 
 /** Cutscene steps, run in order by the room scene. */
@@ -59,6 +63,7 @@ export interface Hotspot {
   auto?: boolean;            // triggers on arrival, no key press
   steps?: Step[];            // run after the script (or alone)
   exit?: { room: string; x?: number };
+  vault?: boolean;           // a low obstacle: blocks walking; E / Space / VAULT hops over it
 }
 
 export interface Npc {

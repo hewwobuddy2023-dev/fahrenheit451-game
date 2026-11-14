@@ -235,3 +235,72 @@ Local execution became unavailable after the provisional 31.8 MB ZIP passed inte
 ### Final native result and complete recovery archive
 
 98e5aa2 native run 42875205788: 29 passes, 2 WebKit stalled-image texture-presence assertion failures, 1 skipped and an outside-test error. The title was reached; forced fallback timing remains unproven. c98d127 remains 32/32 and is supplied prebuilt separately for review. First recovered artifact excluded hidden tracked files due to upload defaults; the follow-up includes them and preserves the full manifest/source/workflow set. All source changes remain isolated and no deployment occurred.
+
+## Final sprint (`work/final-sprint`, from Phoenix `3985e53`) — 2026-11-12
+
+Baseline at `3985e53` (re-run locally): 14 unit tests, typecheck, simulation, regression, day2, cinematics, phoenix and all three campaigns PASS. Reproduced: holding E at the hose froze progress at 1040/1500 (pressure 1.0, overheated) for as long as E was held.
+
+M1 + start of M2 checkpoint: input mode from real input (`src/input.ts`), token-based labels, desktop hides touch UI, hose never stalls while held, dialogue choice arming, lane-hazard redesign with island checkpoints, capture cinematic. Tests: 23 unit PASS, typecheck PASS, `tests/input.mjs` 13/13 PASS, simulation/regression/day2/cinematics/phoenix PASS, campaign:all (3 endings) PASS. All in the deterministic simulation (Canvas renderer); not a physical device. See `docs/ISSUES.md`.
+
+### Final sprint M3: cinematic and audio production (2026-11-12)
+- Visuals (all original, painted once into textures; animation is sprite frames/tweens, no shaders):
+  - Parlor: three animated wall broadcasts replace the Phoenix smiley ovals.
+  - Boulevard: cars approach in perspective through each lane on the lane timing, plus Denham's billboard and loudspeaker poles.
+  - Run: a helicopter rides each searchlight.
+  - Lawn: the Hound runs across the lawn, veers off on a miss and burns on FIRE.
+  - Burn: the upper storey catches, with smoke columns and an orange wash.
+  - River and camp: layered pines, mist, moon spill and helicopters.
+  - Characters are brighter and the vignette is softer.
+- Audio (`src/audio.ts`):
+  - Compressor on the master; separate ambience and SFX buses.
+  - Fire crackle, tension pad, water/wind swell, and a hose loop tied to the spray.
+  - Multi-part cues for the Hound, car engine, siren, impact, ignite, chime and wrong answer.
+  - Evidence: `tools/audio-capture.mjs` recorded the final mix in Chromium (`docs/qa/audio/final-mix.webm`, levels in `levels.md`). Cue peaks are 0.36–0.55, above ambience at about 0.2–0.3; no clipping; mute measured silent.
+  - Not heard on a physical device.
+- Stealth reactions:
+  - Moving during the Hound's still-watch triggers a growl, a red pulse and a jolt.
+  - A watcher catching a hold mid-act triggers a named line, a cue and a flash.
+- HUD: the countdown sits under the objective panel and no longer overlaps a two-line objective.
+- Evidence:
+  - `docs/qa/sprint-before/*.png` (Phoenix) vs `docs/qa/sprint-after/*.jpg`.
+  - Contact sheet: `docs/qa/sprint-compare.jpg`.
+  - Regenerate with `node tools/capture.mjs <url> <dir> [filter]`.
+- Tests: unit 23/23, input 13/13, simulation, regression, day2, cinematics, phoenix and campaign:all, with all three endings, PASS (simulation; not a device).
+
+### Final sprint M4 + source audit (2026-11-13)
+- Preserved the uncommitted M4 work first as `a3442a5` (sprint, RUN, vault, callbacks, chapter card).
+- M4:
+  - Shift / RUN sprint (reduced while limping, off while swimming or still).
+  - Lawn garden fence: blocks walking; Space / E / VAULT hops over it.
+  - Two "will remember that" choices, each backed by a later Beatty line (enforced by `tests/callbacks.test.ts`).
+  - A chapter-complete card at chapter boundaries.
+  - Ending replay: R or a tap on the end card returns to Granger's question in Presentation Mode. A test proves the save is untouched.
+- Source audit against the user's ebook (searched by event; the book is not in the repo): `docs/LITERARY_FIDELITY.md`.
+  - Fixed: exact "loaded gun" line; Franklin framed as rule-book propaganda; Beatty recognises Latimer.
+  - Fixed: Faber's three necessities as an inference; the mirror factory; the final line.
+  - Short verified phrases only.
+- Pillow scene: a BEATTY'S SUSPICION n/3 meter replaces "try again". At 3, Beatty's consequence plays and the scene restarts at its first decision.
+- Fixes:
+  - On touch, the first E press was swallowed by the mode switch (IN-05).
+  - The Settings Back row was off the frame edge (UI-01).
+  - The river dive muffles the whole mix.
+- Docs:
+  - `docs/TEACHER_GUIDE.md`.
+  - RULEBOOK controls.
+  - Connection statement filled with 3 quotes verified in the ebook; print page numbers are still blank.
+- Still open, owner-only:
+  - The two human playtests and measured play length (PT-01).
+  - Approval to publish the final build to Pages, plus a Chromebook check behind the school filter (DEP-01).
+  - Print-edition page numbers for the three quotes.
+
+### Handoff — Nov 13, 19:35 (HEAD `02848d2`, pushed to draft PR #4)
+- Verified on this exact code: `npm run verify -- --browser` passed every step.
+  - 24 unit tests.
+  - input 17/17; simulation, regression, day2, cinematics, phoenix.
+  - campaign:all with all 3 endings and the replay.
+  - Build, and 32/32 Chromium + WebKit browser tests.
+- Also run: `tools/audio-gameplay.mjs` 8/8.
+- Review build (local, not published): `review-build/f451-review-02848d2.zip` (relative paths; serve from any static server).
+- Evidence: `docs/EVIDENCE_REPORT_NOV13.md`; book audit: `docs/LITERARY_FIDELITY.md`; teacher guide: `docs/TEACHER_GUIDE.md`.
+- Owner-only: two human playtests with timings; print page numbers; approval to publish to Pages; a school Chromebook check; a headphone listen.
+- Next command for a resumed session: `npm run verify -- --browser`, then continue from the "Still open" table in the evidence report.

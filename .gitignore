@@ -39,3 +39,9 @@ docs/qa/day2-after/
 # Reproducible Phoenix capture outputs (distributed with the review package)
 docs/qa/day2-phoenix-*/
 docs/qa/phoenix-mechanics/
+
+# local review build packages (never published from here)
+review-build/
+# extracted private book text
+*SEARCHABLE*.txt
+BOOK_SOURCE/
