@@ -84,7 +84,7 @@ export async function simulate({ width = 844, height = 390, dpr = 3, lowres = fa
   };
   const tap = async (x, y, id = 1) => { await touch('touchstart', x, y, id); await touch('touchend', x, y, id); await advance(50); };
   const key = async (code, down = true, repeat = false) => {
-    const keyCode = { KeyE: 69, Enter: 13, Space: 32, KeyD: 68, KeyA: 65, KeyS: 83, KeyW: 87, ArrowDown: 40, ArrowUp: 38, Escape: 27, KeyJ: 74, ShiftLeft: 16, KeyM: 77 }[code];
+    const keyCode = { KeyE: 69, Enter: 13, Space: 32, KeyD: 68, KeyA: 65, KeyS: 83, KeyW: 87, ArrowDown: 40, ArrowUp: 38, ArrowLeft: 37, ArrowRight: 39, Escape: 27, KeyJ: 74, ShiftLeft: 16, KeyM: 77 }[code];
     w.dispatchEvent(new w.KeyboardEvent(down ? 'keydown' : 'keyup', { code, key: code, keyCode, which: keyCode, repeat, bubbles: true }));
     await advance(20);
   };

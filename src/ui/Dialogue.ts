@@ -215,6 +215,12 @@ export class Dialogue {
     const list = this.choices!;
     const c = list[this.sel];
     sound.cue(c.again ? 'wrong' : 'ui');
+    if (c.remember) {
+      // restrained emphasis: a quiet line above the dialogue box that fades on its own
+      const t = text(this.scene, W / 2, BOX.y - 26, `${c.remember.toUpperCase()} WILL REMEMBER THAT.`, { fontFamily: FONT.display, fontSize: '15px', color: C.amber })
+        .setOrigin(0.5).setLetterSpacing(3).setScrollFactor(0).setDepth(1300).setAlpha(0);
+      this.scene.tweens.add({ targets: t, alpha: 1, duration: 300, hold: 1800, yoyo: true, onComplete: () => t.destroy() });
+    }
     this.choices = undefined;
     this.choiceRows.forEach((r) => r.destroy());
     this.choiceRows = [];

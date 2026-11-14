@@ -98,7 +98,7 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: 'MRS. BOWLES', text: 'I voted for the tall one last election. Such a nice-looking man.' },
     { who: 'MRS. PHELPS', text: 'The other one mumbled. And he was short.' },
   ], choices: [
-    { text: 'Go and get a book.', set: { 'c09.book': 'outburst' }, next: 'l_3', reply: [{ who: EAR, text: 'Montag, no! You will ruin everything!' }, { who: 'MILDRED', text: "Guy! ...Ladies, every fireman gets to bring one book home a year, to show how silly the old days were. Isn't that right, dear?" }] },
+    { text: 'Go and get a book.', set: { 'c09.book': 'outburst' }, remember: 'Mildred', next: 'l_3', reply: [{ who: EAR, text: 'Montag, no! You will ruin everything!' }, { who: 'MILDRED', text: "Guy! ...Ladies, every fireman gets to bring one book home a year, to show how silly the old days were. Isn't that right, dear?" }] },
     { text: 'Bite your tongue.', set: { 'c09.book': 'restraint' }, next: 'l_3', reply: [{ who: EAR, text: 'Good.' }, { who: 'MILDRED', text: "Guy has a surprise! Every fireman gets one old book a year, to show how silly it all was. Read us something, dear." }] },
   ] },
   l_3: { set: { 'c09.read': true }, lines: [
@@ -131,7 +131,7 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: EAR, text: "He's muddying the water. Don't let him in." },
   ], choices: [
     { text: 'Keep quiet.', set: { 'st.reply': 'quiet' } },
-    { text: '"Then why did you read them?"', set: { 'st.reply': 'ask' }, reply: [{ who: 'BEATTY', text: "To know what I'm burning. I read enough to be sure." }] },
+    { text: '"Then why did you read them?"', set: { 'st.reply': 'ask' }, remember: 'Beatty', reply: [{ who: 'BEATTY', text: "To know what I'm burning. I read enough to be sure." }] },
   ] },
   st_alarm: { lines: [
     { who: 'BEATTY', text: 'What a pulse! Like the day after a war.' },

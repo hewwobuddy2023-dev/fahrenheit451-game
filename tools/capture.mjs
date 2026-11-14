@@ -60,7 +60,7 @@ for (const [name, room, x, flags, fx] of cases.filter(([n]) => n.includes(only))
     await page.waitForTimeout(220);
   }
   if (fx) await page.evaluate((fx) => window.__qa.scene.kit.fx[fx]?.(), fx);
-  await page.waitForTimeout(1600);
+  await page.waitForTimeout(fx === 'ignite' ? 3800 : 1600); // the house fire builds over ~3 s
   await page.screenshot({ path: `${out}/${name}.jpg`, quality: 85 });
   console.log('captured', name);
 }

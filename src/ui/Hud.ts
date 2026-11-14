@@ -8,7 +8,8 @@ export class Hud {
   touchRight = false;
   touchAct = false;
   touchDown = false;
-  private held = new Map<number, 'left' | 'right' | 'act' | 'down'>();
+  touchRun = false;
+  private held = new Map<number, 'left' | 'right' | 'act' | 'down' | 'run'>();
   private diveUi?: Phaser.GameObjects.Container;
   private timer?: Phaser.GameObjects.Text;
   private scene: Phaser.Scene;
@@ -57,8 +58,9 @@ export class Hud {
       const [a, at] = btn(W - 72, H - 66, 47, 'ACT');
       const [p, pt] = btn(W - 46, 112, 32, 'II');
       const [d, dt] = btn(W - 184, H - 66, 47, 'DIVE');
+      const [u, ut] = btn(272, H - 62, 38, 'RUN');
       const release = (p: Phaser.Input.Pointer) => { this.held.delete(p.id); this.syncTouch(); };
-      for (const [obj, action] of [[l, 'left'], [r, 'right'], [a, 'act'], [d, 'down']] as const) {
+      for (const [obj, action] of [[l, 'left'], [r, 'right'], [a, 'act'], [d, 'down'], [u, 'run']] as const) {
         obj.on('pointerdown', (p: Phaser.Input.Pointer) => {
           this.held.set(p.id, action); this.syncTouch();
           if (action === 'act') opts.onAct();
@@ -76,7 +78,7 @@ export class Hud {
       });
       p.on('pointerdown', opts.onPause);
       this.diveUi = scene.add.container(0, 0, [d, dt]).setVisible(false);
-      this.touchUi = scene.add.container(0, 0, [l, lt, r, rt, a, at, p, pt, this.diveUi]).setScrollFactor(0, 0, true).setDepth(1001);
+      this.touchUi = scene.add.container(0, 0, [l, lt, r, rt, u, ut, a, at, p, pt, this.diveUi]).setScrollFactor(0, 0, true).setDepth(1001);
     }
     this.syncVisibility();
     const off = onInputMode(() => { this.syncVisibility(); this.setObjective(this.lastObjective, this.lastDone); });
@@ -114,7 +116,7 @@ export class Hud {
   private syncTouch() {
     const actions = new Set(this.held.values());
     this.touchLeft = actions.has('left'); this.touchRight = actions.has('right');
-    this.touchAct = actions.has('act'); this.touchDown = actions.has('down');
+    this.touchAct = actions.has('act'); this.touchDown = actions.has('down'); this.touchRun = actions.has('run');
   }
 
   toast(title: string, sub: string) {

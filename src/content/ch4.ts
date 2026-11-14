@@ -26,6 +26,8 @@ export const SCRIPTS4: Record<string, Script> = {
   h5_out: { lines: [{ who: N, text: 'The walls hiss and go dark one by one. The house begins to shudder.' }] },
   h5_out_locked: { lines: [{ who: 'BEATTY', text: '(from the doorway) Not finished, Montag.' }] },
 
+  lw_cb_ask: { lines: [{ who: 'BEATTY', text: 'You asked me once why I read them. Now you know. To be ready for a night like this.' }] },
+  lw_cb_book: { lines: [{ who: 'BEATTY', text: "Your wife turned in the alarm. After that business with her friends and the book, she didn't wait long." }] },
   lw_arrest: { lines: [
     { who: 'BEATTY', text: "When you're quite finished: you're under arrest." },
     { who: N, text: "Beatty strikes you across the head. The green bullet falls out of your ear onto the grass. He picks it up, smiling." },
@@ -151,12 +153,14 @@ export const ROOMS4: Record<string, RoomDef> = {
     ],
     objective: (f) => !f['ch4.books'] ? 'Take the books by the back fence' : 'Run. The alley, to the left',
     enter: [{ key: 'e.lawn2', steps: [
-      { say: 'lw_arrest' }, { wait: 300 },
+      { if: (f) => f['c09.book'] === 'outburst', then: [{ say: 'lw_cb_book' }] },
+      { say: 'lw_arrest' }, { if: (f) => f['st.reply'] === 'ask', then: [{ say: 'lw_cb_ask' }] }, { wait: 300 },
       { flash: 0xffffff, ms: 900 }, { fade: 'out', ms: 250 }, { npc: 'beatty', show: false }, { wait: 1100 }, { fade: 'in', ms: 900 },
       { say: 'lw_after' }, { say: 'lw_hound' }, { fx: 'houndLeap' }, { prompt: 'PRESS [E]  ·  FIRE', ms: 1800, miss: 'lw_miss' }, { fx: 'houndBurn' }, { flash: 0xff8040, ms: 400 },
       { say: 'lw_hound2' },
     ] }],
     hotspots: [
+      { id: 'fence', x: 1190, label: 'Vault the garden fence', vault: true },
       { id: 'books', x: 1420, label: 'The books by the fence', required: true, when: (f) => !f['ch4.books'], script: 'lw_books' },
       { id: 'run', x: 120, label: 'Run down the alley', required: true, requires: ['ch4.books'], lockedScript: 'lw_run_locked', exit: { room: 'boulevard', x: 150 } },
     ],
