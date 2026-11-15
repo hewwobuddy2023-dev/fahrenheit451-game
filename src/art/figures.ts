@@ -160,6 +160,7 @@ function details(c: Ctx, o: Fig, walk: number | null, breath: number, pose?: Pos
 }
 
 function frame(c: Ctx, x: number, y: number, o: Fig, walk: number | null, breath: number, pose?: Pose) {
+  if (pose?.lie) o = { ...o, hat: 'none', hair: o.hair ?? 'short', stripe: false, badge: undefined }; // in bed: no helmet
   const s = o.tall ?? 1;
   const bob = 0; // feet stay on the walk plane; torso supplies the walking rise below
   c.save();
@@ -168,6 +169,7 @@ function frame(c: Ctx, x: number, y: number, o: Fig, walk: number | null, breath
   c.save(); c.translate(2, -1); c.fillStyle = o.rim; body(c, o, walk, breath, 'rim', pose); c.restore();
   c.fillStyle = o.coat; body(c, o, walk, breath, 'base', pose);
   details(c, o, walk, breath, pose);
+  if (pose?.lie) { c.fillStyle = '#8c8a96'; poly(c, [-24, -86, -10, -92, 8, -92, 15, -82, 17, 2, -24, 2]); c.fillStyle = 'rgba(255,255,255,0.18)'; c.fillRect(-24, -88, 3, 90); } // blanket over the legs
   c.restore();
 }
 

@@ -15,7 +15,7 @@ export interface Choice {
   next?: string;     // continue with another script (its lines, choices and set)
   when?: Cond;
   remember?: string;
-  suspicion?: number; // with Script.suspicion: a wrong answer raises a visible meter instead of a free retry  // who will remember: shown only when a later scene reads this choice's flag (tests/callbacks.test.ts)
+  suspicion?: number; // with Script.suspicion: a wrong answer raises a visible meter by this much (1 or 2) instead of a free retry  // who will remember: shown only when a later scene reads this choice's flag (tests/callbacks.test.ts)
 }
 
 export interface Script {
@@ -27,8 +27,8 @@ export interface Script {
   top?: boolean;
   /** Set pieces: while the letterbox bars are closed, lines play as subtitles inside the bottom bar (nothing in frame is covered). */
   sub?: boolean;
-  /** A watched conversation: at 3 suspicion the `caught` lines play and the player restarts its first choice. */
-  suspicion?: { label: string; caught: Line[] };
+  /** A watched conversation: it starts at 1 of 3. At 3 the `caught` beats play (lines, or scene steps between them) and the player restarts the first choice at 1. */
+  suspicion?: { label: string; caught: (Line | { steps: Step[] })[] };
 }
 
 /** Cutscene steps, run in order by the room scene. */
@@ -66,6 +66,7 @@ export interface Hotspot {
   hold?: { flag: string; ms: number; fx?: 'hose' | 'flame' | 'pull'; target?: number; pressure?: boolean;
     sweep?: [number, number]; // the spray travels from one x to the other as the hold fills
     also?: Flags;            // extra flags set when the hold completes
+    carry?: { x: number; y: number }; // a book travels from this point into Montag's hands and under his coat as the hold fills
   };
   watcher?: string;          // T2: blocked while this npc is watching
   watchedScript?: string;
@@ -84,6 +85,7 @@ export interface Npc {
   when?: Cond;
   watch?: { period: number; on: number; phase?: number }; // T2 watcher rhythm (ms)
   back?: boolean;            // stands deeper in the room (behind the walk line)
+  scale?: number;            // overrides the figure's drawn size (default 1, or 0.9 for `back`)
   follow?: Cond;             // walks alongside Montag while true
   distracted?: Cond;         // faces away from Montag (towards the screens) even while answering
   pose?: (f: Flags) => string | undefined; // resting pose (e.g. seated) instead of standing idle
@@ -129,6 +131,8 @@ export interface RoomDef {
   barks?: Bark[];
   /** Line shown on the chapter card when this room ends a chapter (instead of the journal count). */
   coda?: string;
+  /** Loose furniture the kit does not draw (a bedside chair): an existing texture placed behind the actors. */
+  props?: { tex: string; x: number; y: number; depth?: number; tint?: number }[];
 }
 
 export interface Bark { x: number; who: string; text: string; when?: Cond; cue?: string; fx?: string; range?: number }

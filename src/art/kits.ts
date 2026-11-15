@@ -551,23 +551,41 @@ const attic: Kit = (s) => {
     }
     c.strokeStyle = '#4a3420'; c.lineWidth = 4; c.beginPath(); c.moveTo(706, F - 70); c.lineTo(1006, F - 290); c.stroke(); // handrail
     for (let i = 0; i < 10; i += 2) c.fillRect(706 + i * 30, F - 70 - i * 22, 3, 60);  // balusters
-    // attic roof beams and heaps of books
+    // the head of the stairs: a landing and the dark doorway Montag climbs into
+    c.fillStyle = '#080504'; c.fillRect(978, 40, 80, 126);
+    c.fillStyle = '#3a2a1c'; c.fillRect(972, 34, 92, 8); c.fillRect(972, 34, 8, 134); c.fillRect(1056, 34, 8, 134);
+    radial(c, 1018, 120, 90, 'rgba(242,165,74,A)', 0.16);
+    c.fillStyle = '#5a4028'; c.fillRect(965, 166, 110, 6);
+    // roof trusses over the heaps: upright pairs of rafters meeting at the ridge, with a tie beam (nothing here slopes like a stair)
     c.fillStyle = '#120c08';
-    for (let x = 1000; x < RW; x += 140) poly(c, [x, 0, x + 20, 0, x + 120, F - 160, x + 100, F - 160]);
+    for (const cx of [1180, 1620]) {
+      poly(c, [cx - 124, F - 150, cx - 106, F - 150, cx + 10, 0, cx - 10, 0]); poly(c, [cx + 124, F - 150, cx + 106, F - 150, cx - 10, 0, cx + 10, 0]);
+      c.fillRect(cx - 118, F - 176, 236, 12);
+    }
     // a small attic window and the dusty shaft of light it throws across the heaps
     c.fillStyle = '#3a2c20'; c.fillRect(1356, 30, 88, 64); c.fillStyle = '#c9b48a'; c.fillRect(1362, 36, 76, 52); c.fillStyle = '#3a2c20'; c.fillRect(1398, 36, 4, 52); c.fillRect(1362, 60, 76, 3);
     c.fillStyle = 'rgba(242,205,150,0.09)'; poly(c, [1362, 90, 1438, 90, 1560, F - 40, 1260, F - 40]);
-    // books heaped in mounds: stacked spines with cream page edges, tallest in the middle of each heap
-    const r = rng(8);
-    for (const [cx, w, h] of [[1150, 170, 120], [1420, 230, 160], [1680, 160, 110]] as const) {
-      for (let row = 0; row < h / 8; row++) {
-        const y = F - 6 - row * 8, half = w * Math.sqrt(1 - (row * 8) / h);
-        for (let x = cx - half; x < cx + half; x += 24 + r() * 10) {
-          const bw = 18 + r() * 12;
-          c.fillStyle = ['#6b2a1a', '#2a3a5a', '#7a6a3a', '#4a5a3a', '#5a2a3a'][Math.floor(r() * 5)]; c.fillRect(x, y - 7, bw, 7);
-          c.fillStyle = 'rgba(222,206,170,0.75)'; c.fillRect(x + 2, y - 5, bw - 4, 1);   // page edges
+    // books heaped in irregular mounds: single books of different sizes, tilted more toward the edges, with loose ones slid down the slopes
+    const r = rng(8), tones = ['#6b2a1a', '#2a3a5a', '#7a6a3a', '#4a5a3a', '#5a2a3a', '#3a3a44', '#8a5a2a', '#24402f'];
+    const book = (x: number, y: number, bw: number, bh: number, a: number) => {
+      c.save(); c.translate(x, y); c.rotate(a); if (r() < 0.5) c.scale(-1, 1);
+      c.fillStyle = tones[Math.floor(r() * tones.length)]; c.fillRect(-bw / 2, -bh / 2, bw, bh);        // cloth cover
+      c.fillStyle = 'rgba(0,0,0,0.3)'; c.fillRect(-bw / 2, bh / 2 - 2, bw, 2); c.fillRect(-bw / 2, -bh / 2, 4, bh);  // shadowed underside and spine
+      c.fillStyle = 'rgba(255,255,255,0.13)'; c.fillRect(-bw / 2, -bh / 2, bw, 1.5);
+      c.fillStyle = 'rgba(201,168,90,0.75)'; c.fillRect(-bw / 2 + 6, -bh / 2 + 1, 1.5, bh - 2); c.fillRect(-bw / 2 + 10, -bh / 2 + 1, 1, bh - 2); // gilt bands
+      c.fillStyle = 'rgba(224,208,172,0.9)'; c.fillRect(bw / 2 - 5, -bh / 2 + 1.5, 5, bh - 3);          // page block at the open end
+      c.fillStyle = 'rgba(70,50,30,0.35)'; for (let l = 3; l < bh - 2; l += 2) c.fillRect(bw / 2 - 5, -bh / 2 + l, 5, 0.6);
+      c.restore();
+    };
+    for (const [cx, w, h] of [[1150, 200, 128], [1430, 260, 170], [1690, 170, 112]] as const) {
+      const prof = (x: number) => h * Math.pow(Math.max(0, 1 - Math.abs(x - cx) / (w / 2)), 0.85) * (0.8 + 0.2 * Math.sin(x * 0.05 + cx));
+      for (let y = F - 6; y > F - h; y -= 7) {
+        for (let x = cx - w / 2; x < cx + w / 2; x += 20 + r() * 14) {
+          if (prof(x) < F - y) continue;
+          book(x + r() * 8 - 4, y - 3 + r() * 3, 26 + r() * 16, 7 + r() * 5, (r() - 0.5) * (0.2 + 0.9 * Math.abs(x - cx) / (w / 2)));
         }
       }
+      for (let i = 0; i < 10; i++) { const side = r() < 0.5 ? -1 : 1; book(cx + side * (w / 2 - 14 + r() * 46), F - 6 - r() * 4, 22 + r() * 12, 7 + r() * 4, side * (0.25 + r() * 0.9)); }
     }
     for (let x = 200; x < 640; x += 110) { c.fillStyle = '#2a1c12'; c.fillRect(x, 120, 90, 200); c.fillStyle = '#4a3220'; for (let y = 130; y < 310; y += 30) c.fillRect(x + 4, y, 82, 4); for (let y = 134; y < 310; y += 30) for (let b = x + 6; b < x + 84; b += 7) { c.fillStyle = ['#6b2a1a', '#2a3a5a', '#7a6a3a'][(b + y) % 3]; c.fillRect(b, y - 18, 6, 18); } }
     radial(c, 1400, 60, 200, 'rgba(242,165,74,A)', 0.2);

@@ -237,21 +237,33 @@ await check('hybrid: the first E press on a touch device both switches to keyboa
   } finally { s.close(); }
 });
 
-await check("pillow: three wrong answers raise Beatty's suspicion to 3/3, play his consequence and restart the first decision", async () => {
+await check("pillow: starts at 1/3, a wrong answer adds 1 or 2, 3/3 plays Beatty's discovery, goes to black and restarts the first decision at 1/3 with nothing saved", async () => {
   const s = await desktop({ v: 1, room: 'home2', x: 900, flags: { 'c04.book': true, 'c04.plea': 'plead' } });
   try {
     const r = s.scene(), q = s.w.__qa;
-    const to = async (first) => { for (let i = 0; i < 200 && q.options()[0] !== first; i++) { q.adv(); await s.advance(120); } assert.equal(q.options()[0], first); };
-    await to('Let her.'); q.choose(0); await s.advance(100);
-    assert.match(r.dialogue.meter.text, /1\/3/);
-    await to('Let her.'); q.choose(1);
-    await to('Pin the pillow with your elbow. "Fine game."'); q.choose(1); await s.advance(100);
+    let saves = 0; const save = r.session.checkpoint.bind(r.session); r.session.checkpoint = (...a) => { saves++; return save(...a); };
+    const to = async (first) => { for (let i = 0; i < 300 && q.options()[0] !== first; i++) { q.adv(); await s.advance(120); } assert.equal(q.options()[0], first); };
+    await to('Let her.'); await s.advance(100);
+    assert.match(r.dialogue.meter.text, /1\/3/, 'the meter starts at 1');
+    const rows = r.dialogue.choiceRows.map((row) => row.list[0]), meterBottom = r.dialogue.meter.y + r.dialogue.meter.height / 2;
+    assert.ok(meterBottom <= Math.min(...rows.map((b) => b.y - b.displayHeight / 2)), 'the meter sits above the panel, never over a choice row');
+    q.choose(0); await s.advance(100);                       // wrong: +1
     assert.match(r.dialogue.meter.text, /2\/3/);
-    await to('Pin the pillow with your elbow. "Fine game."'); q.choose(0);
-    await to(`"Sit down, Millie. We're talking."`); q.choose(1); await s.advance(100);
-    assert.match(r.dialogue.meter.text, /0\/3/, 'meter resets after the consequence');
-    await to('Let her.'); // back to the first decision, not a free retry of the third
+    await to('Let her.'); q.choose(2);                       // wrong: +2, caught
+    for (let i = 0; i < 80 && !/3\/3/.test(r.dialogue.meter.text); i++) await s.advance(50);
+    assert.match(r.dialogue.meter.text, /3\/3/, 'the meter reads 3/3 through the consequence');
+    let sawBeatty = false, black = false;
+    for (let i = 0; i < 400 && !(q.options().length && /1\/3/.test(r.dialogue.meter.text)); i++) {
+      if (/What is this/.test(q.line())) sawBeatty = true;
+      if (r.cameras.main.fadeEffect.isRunning && r.cameras.main.fadeEffect.direction) black = true;
+      if (q.mode() === 'dialogue' && !q.options().length) q.adv();
+      await s.advance(120);
+    }
+    assert.ok(sawBeatty, 'Beatty says "What is this?"'); assert.ok(black, 'the scene fades to black');
+    assert.equal(q.options()[0], 'Let her.', 'back at the first decision, not a free retry of the third');
+    assert.match(r.dialogue.meter.text, /1\/3/, 'meter reset to 1');
     assert.equal(r.session.flags['c05.done'], undefined);
+    assert.equal(saves, 0, 'the failed attempt saved no checkpoint');
   } finally { s.close(); }
 });
 

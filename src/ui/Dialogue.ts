@@ -3,7 +3,7 @@ import { SequencePuzzle } from './SequencePuzzle.ts';
 import { sound } from '../audio.ts';
 import { controls, isTouch, onInputMode } from '../input.ts';
 import { C, FONT, H, W, text } from '../view.ts';
-import type { Choice, Line, Script } from '../content/types.ts';
+import type { Choice, Line, Script, Step } from '../content/types.ts';
 import type { Flags } from '../state.ts';
 
 const BOX = { x: 80, y: 384, w: W - 160, h: 140 };
@@ -12,6 +12,7 @@ const MIN_H = 70;             // one line of text plus the advance hint
 const TOP = 72;               // framed scripts: panel top sits just under the journal chip
 const SUB_Y = H - 24;         // subtitles: centred in the 48 px letterbox bar
 const STEP = 3;   // characters revealed per tick
+const START_SUSPICION = 1; // Beatty is already a little curious when he sits down
 const ARM_MS = 400; // choices ignore confirm presses this long after appearing
 const TICK = 55;  // ms per tick (~55 chars/s, ~18 text redraws/s)
 
@@ -26,6 +27,8 @@ export class Dialogue {
   puzzle?: SequencePuzzle;
   onPause?: () => void;
   onSpeaker?: (who: string) => void;
+  /** Runs scene steps in the middle of a conversation (the panel hides until they finish). */
+  onSteps?: (steps: Step[]) => Promise<void>;
   /** True while the scene's letterbox bars are closed (set pieces can then use subtitles). */
   subtitles?: () => boolean;
   private scene: Phaser.Scene;
@@ -43,7 +46,10 @@ export class Dialogue {
   private subName: Phaser.GameObjects.Text;
   private out!: Phaser.GameObjects.Text;
   private choiceRows: Phaser.GameObjects.Container[] = [];
-  private queue: Line[] = [];
+  private queue: (Line | { steps: Step[] })[] = [];
+  private staging = false;
+  private caughtReset = false;
+  private panelTop = BOX.y;
   private full = '';
   private shown = 0;
   private typing?: Phaser.Time.TimerEvent;
@@ -98,7 +104,7 @@ export class Dialogue {
   }
 
   advance() {
-    if (!this.open) return;
+    if (!this.open || this.staging) return;
     if (this.puzzle) return this.puzzle.action('act');
     if (this.choices) return this.pick();
     if (this.shown < this.full.length) return this.finishLine();
@@ -106,6 +112,7 @@ export class Dialogue {
   }
 
   move(d: number) {
+    if (this.staging) return;
     if (this.puzzle) return this.puzzle.action(d < 0 ? 'up' : 'down');
     if (!this.choices) return;
     this.sel = (this.sel + d + this.choices.length) % this.choices.length;
@@ -114,7 +121,7 @@ export class Dialogue {
 
   /** QA hook: choose option i directly. */
   choose(i: number) {
-    if (!this.choices) return false;
+    if (!this.choices || this.staging) return false;
     this.sel = Math.min(i, this.choices.length - 1);
     this.armedAt = 0; // QA hook: an explicit, deliberate pick
     this.pick();
@@ -130,12 +137,13 @@ export class Dialogue {
     if (script.set) Object.assign(this.acc, script.set);
     this.queue = [...script.lines];
     this.retry = undefined;
-    this.watch = script.suspicion; this.suspicion = 0; this.firstChoices = undefined; this.meter?.setVisible(false);
+    this.watch = script.suspicion; this.suspicion = START_SUSPICION; this.caughtReset = false; this.firstChoices = undefined; this.meter?.setVisible(false);
     this.next();
   }
 
   private next() {
     const line = this.queue.shift();
+    if (line && 'steps' in line) return this.stage(line.steps);
     if (line) return this.show(line);
     if (this.script?.puzzle) {
       const def = this.script.puzzle;
@@ -145,6 +153,7 @@ export class Dialogue {
       this.scene.events.once('shutdown', () => { this.puzzle?.destroy(); this.puzzle = undefined; });
       return;
     }
+    if (this.caughtReset) { this.caughtReset = false; this.suspicion = START_SUSPICION; } // the meter shows 3/3 through the consequence, then starts over
     if (this.retry) return this.showChoices(this.retry, this.retrySel);
     if (this.script?.choices) {
       const list = this.script.choices.filter((c) => !c.when || c.when({ ...this.flags, ...this.acc }));
@@ -152,6 +161,12 @@ export class Dialogue {
       if (list.length) return this.showChoices(list);
     }
     this.close();
+  }
+
+  private stage(steps: Step[]) {
+    this.staging = true;
+    this.root.setVisible(false); this.meter?.setVisible(false);
+    void (this.onSteps?.(steps) ?? Promise.resolve()).then(() => { this.staging = false; this.root.setVisible(true).setAlpha(1); this.next(); });
   }
 
   /** Subtitle mode hides the panel and types into the letterbox bar; tapping anywhere advances. */
@@ -220,7 +235,6 @@ export class Dialogue {
     this.firstChoices ??= choices;
     this.setSub(false);
     this.root.setY(0); // choices always sit at the bottom, where touch players expect them
-    this.paintMeter();
     this.choices = choices;
     this.sel = keep;
     // A key press that dismissed the previous line must not also confirm a choice.
@@ -233,6 +247,7 @@ export class Dialogue {
     const gap = 68;
     const top = Math.min(BOX.y, BOX.y + BOX.h - choices.length * gap - 24);
     this.paintPanel(top);
+    this.paintMeter(); // above the panel, never over the choice rows
     this.name.setY(top - 13);
     this.nameBg.setY(top - 26);
     this.choiceRows = choices.map((c, i) => {
@@ -250,6 +265,8 @@ export class Dialogue {
   }
 
   private paintPanel(y: number) {
+    this.panelTop = y;
+    this.meter?.setY(y - 22);
     const h = BOTTOM - y;
     this.panel.clear().fillStyle(C.panel, 0.96).fillRect(BOX.x, y, BOX.w, h)
       .lineStyle(1, C.emberN, 0.55).strokeRect(BOX.x + 0.5, y + 0.5, BOX.w - 1, h - 1)
@@ -286,7 +303,7 @@ export class Dialogue {
         if (this.suspicion >= 3) {
           // a real setback: the scene plays its consequence and the conversation goes back to its first decision
           this.queue.push(...this.watch.caught);
-          this.suspicion = 0; this.retry = this.firstChoices; this.retrySel = 0;
+          this.suspicion = 3; this.caughtReset = true; this.retry = this.firstChoices; this.retrySel = 0;
           sound.cue('caught');
         }
         this.paintMeter();
@@ -307,10 +324,10 @@ export class Dialogue {
 
   private paintMeter() {
     if (!this.watch) return;
-    this.meter ??= text(this.scene, BOX.x + BOX.w, BOX.y - 22, '', { fontFamily: FONT.display, fontSize: '14px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 10, y: 4 } })
+    this.meter ??= text(this.scene, BOX.x + BOX.w, this.panelTop - 22, '', { fontFamily: FONT.display, fontSize: '14px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 10, y: 4 } })
       .setOrigin(1, 0.5).setLetterSpacing(3).setScrollFactor(0).setDepth(1300);
     // text, not colour alone: readable when muted and for colour-blind players
-    this.meter.setText(`${this.watch.label}  ${'■'.repeat(this.suspicion)}${'□'.repeat(3 - this.suspicion)}  ${this.suspicion}/3`).setVisible(true);
+    this.meter.setY(this.panelTop - 22).setText(`${this.watch.label}  ${'■'.repeat(this.suspicion)}${'□'.repeat(3 - this.suspicion)}  ${this.suspicion}/3`).setVisible(true);
     this.meter.setColor(this.suspicion >= 2 ? C.ember : C.amber);
   }
 

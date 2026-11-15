@@ -48,6 +48,8 @@ export function paintFx(scene: Phaser.Scene) {
   });
   paint(scene, 'streak', 2, 18, (c) => { c.fillStyle = vgrad(c, 0, 18, [[0, 'rgba(200,215,230,0)'], [1, 'rgba(200,215,230,0.7)']]); c.fillRect(0, 0, 2, 18); });
   paint(scene, 'leaf', 10, 6, (c) => { c.fillStyle = '#8a4a22'; c.beginPath(); c.ellipse(5, 3, 5, 2.5, 0.3, 0, Math.PI * 2); c.fill(); });
+  // the hidden book seen whole: red cloth cover, gilt spine band, cream page block
+  paint(scene, 'tome', 30, 22, (c) => { c.fillStyle = '#d9cba8'; c.fillRect(2, 3, 27, 17); c.fillStyle = '#7a2a1c'; c.fillRect(0, 0, 28, 19); c.fillStyle = '#4e1a10'; c.fillRect(0, 0, 4, 19); c.fillStyle = '#c9a85a'; c.fillRect(6, 4, 17, 2); c.fillRect(6, 13, 17, 1); });
   paint(scene, 'book', 22, 8, (c) => { c.fillStyle = '#d9cba8'; c.fillRect(0, 2, 22, 6); c.fillStyle = '#6b2a1a'; c.fillRect(0, 0, 22, 3); });
 
   // Eight padded frames. The old 64px cells clipped tongues wider than their
