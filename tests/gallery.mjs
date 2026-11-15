@@ -4,7 +4,7 @@ import { simulate } from './support/simulation.mjs';
 import { campaign } from './support/campaign.mjs';
 import { CHAPTER_STARTS } from '../src/content.ts';
 const phase = process.argv[2] ?? 'after';
-const output = `docs/qa/day2-${phase}`;
+const output = `docs/qa/gallery-${phase}`;
 await mkdir(output, { recursive: true });
 const cases = [
   ['ch1-burn','burn',1060,0,{'e.burn':true},'ignite'],

@@ -12,27 +12,27 @@ export const CHAPTERS = [
 
 /** Journal entries (CHALLENGES.md is authoritative). Connections describe the novel; no quotations. */
 export const CHALLENGES: ChallengeInfo[] = [
-  { id: 1, title: 'The Burn', part: 1, connection: 'The novel opens with Montag burning a house of books, and enjoying it.' },
-  { id: 2, title: "Clarisse's Question", part: 1, connection: 'Clarisse notices the world and asks Montag whether he is happy.' },
-  { id: 3, title: 'Parlor Walls', part: 1, connection: 'Mildred lives inside the TV walls; she hears her husband but will not listen.' },
-  { id: 4, title: "The Woman's House", part: 1, connection: 'An old woman stays with her books; Montag takes one.' },
-  { id: 5, title: "Beatty's Argument", part: 1, connection: 'Beatty explains how people chose to stop reading.' },
-  { id: 6, title: 'The Hidden Books', part: 1, connection: 'Montag shows Mildred the books he has hidden for a year.' },
-  { id: 7, title: 'Find Faber', part: 2, connection: 'Montag calls the old professor he never reported.' },
+  { id: 1, title: 'The Burn', part: 1, connection: 'Montag burns a house of books, and enjoys it.' },
+  { id: 2, title: "Clarisse's Question", part: 1, connection: 'Clarisse asks Montag if he is happy.' },
+  { id: 3, title: 'Parlor Walls', part: 1, connection: 'Mildred lives inside the parlor walls and does not listen.' },
+  { id: 4, title: "The Woman's House", part: 1, connection: 'An old woman stays with her books. Montag takes one.' },
+  { id: 5, title: "Beatty's Argument", part: 1, connection: 'Beatty explains how people stopped reading.' },
+  { id: 6, title: 'The Hidden Books', part: 1, connection: 'Montag shows Mildred the books he has hidden.' },
+  { id: 7, title: 'Find Faber', part: 2, connection: 'Montag calls the old professor.' },
   { id: 8, title: 'The Sieve and the Sand', part: 2, connection: 'On the subway, Montag tries to hold on to what he reads.' },
   { id: 9, title: 'Dover Beach', part: 2, connection: "Montag reads a poem to Mildred's friends." },
-  { id: 10, title: "Montag's House", part: 3, connection: 'Montag is made to burn his own house; Beatty dies.' },
-  { id: 11, title: 'The Boulevard', part: 3, connection: 'Running from the city, Montag crosses a wide, lit road.' },
-  { id: 12, title: 'The Count of Ten', part: 3, connection: 'The Mechanical Hound and the whole city hunt Montag.' },
-  { id: 13, title: 'The River', part: 3, connection: 'The river carries Montag out of the city.' },
+  { id: 10, title: "Montag's House", part: 3, connection: 'Montag has to burn his own house.' },
+  { id: 11, title: 'The Boulevard', part: 3, connection: 'Montag runs across a wide, lit road.' },
+  { id: 12, title: 'The Count of Ten', part: 3, connection: 'The Hound and the whole city hunt Montag.' },
+  { id: 13, title: 'The River', part: 3, connection: 'The river carries Montag away.' },
   { id: 14, title: 'The Book People', part: 3, connection: "Granger's group keeps books alive by memory." },
-  { id: 15, title: "The Fireman's Choice", part: 3, connection: 'The war comes; Montag decides what to carry forward.' },
+  { id: 15, title: "The Fireman's Choice", part: 3, connection: 'The war comes. Montag decides what to carry.' },
 ];
 
 export const RULES: ChallengeRule[] = [
   { id: 1, required: ['c01.p1', 'c01.p2', 'c01.p3', 'c01.lit'] },
   { id: 2, required: ['c02.n1', 'c02.n2', 'c02.n3', 'c02.asked'] },
-  { id: 3, required: ['c03.t3', 'c03.script'] }, // the walls are optional (Option A, approved Nov 14): talking and the script's last page complete it
+  { id: 3, required: ['c03.t3', 'c03.script'] }, // the walls are optional: talking and the script's last page complete it
   { id: 4, required: ['c04.book', 'c04.plea'] },
   { id: 5, required: ['c05.done'] },
   { id: 6, required: ['c06.chair', 'c06.vent', 'c06.millie', 'c06.still'] },

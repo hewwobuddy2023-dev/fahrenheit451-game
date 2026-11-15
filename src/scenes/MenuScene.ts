@@ -13,7 +13,7 @@ import { addAtmosphere, C, FONT, H, W, onActions, setupCamera, text } from '../v
 const CREDITS = [
   "An interactive adaptation of Ray Bradbury's Fahrenheit 451 (1953). Dialogue is original or paraphrased, not text from the novel; alternate endings are adaptations.",
   'Engine: Phaser 3 (MIT). Fonts: Oswald, IBM Plex Sans (SIL OFL 1.1), Special Elite (Apache 2.0).',
-  'Artwork combines original code paintings and an original generated city backdrop. Atmospheric audio is synthesized for this project. Student project, 2026.',
+  'Artwork combines original code paintings and an original city backdrop. Atmospheric audio is synthesized for this project.',
 ];
 
 export class MenuScene extends Phaser.Scene {
@@ -48,12 +48,12 @@ export class MenuScene extends Phaser.Scene {
     text(this, 82, 214, "THE FIREMAN'S CHOICE", { fontFamily: FONT.type, fontSize: '22px', color: C.creamDim }).setOrigin(0, 0.5).setLetterSpacing(4);
     this.add.rectangle(82, 248, 120, 2, C.emberN).setOrigin(0, 0.5);
     this.branding = this.add.container(0, 0, this.children.list.slice(brandStart));
-    text(this, 82, H - 34, "An interactive adaptation of Ray Bradbury's novel  ·  Student project", {
+    text(this, 82, H - 34, "An interactive adaptation of Ray Bradbury's novel", {
       fontSize: '12px', color: C.muted,
     }).setOrigin(0, 0.5);
     text(this, W - 28, H - 34, isTouch() ? 'TAP A ROW  ·  LANDSCAPE RECOMMENDED' : 'ARROWS / W S  ·  ENTER', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
       .setOrigin(1, 0.5).setLetterSpacing(2);
-    text(this, W - 24, H - 12, `CANDIDATE · ${BUILD.sha.slice(0, 7)}`, { fontSize: '10px', color: C.creamDim }).setOrigin(1);
+    if (new URLSearchParams(location.search).has('diagnostics')) text(this, W - 24, H - 12, `${BUILD.version} · ${BUILD.sha.slice(0, 7)}`, { fontSize: '10px', color: C.creamDim }).setOrigin(1);
     addAtmosphere(this);
     onActions(this, (a) => {
       if (this.busy) return;
@@ -84,13 +84,13 @@ export class MenuScene extends Phaser.Scene {
     this.show([
       { label: 'Continue', enabled: !!save, note: save ? undefined : 'no saved game', action: () => save && this.start(new Session(save)) },
       { label: 'New Game', action: () => save ? this.confirmNew() : this.start(this.fresh(false)) },
-      { label: 'Presentation Mode', action: () => this.chapters() },
+      { label: 'Chapter Select', action: () => this.chapters() },
       { label: 'Settings & credits', action: () => this.settings() },
     ]);
   }
 
   private confirmNew() {
-    this.panel('RESTART YOUR STORY?', ['Starting again replaces your normal checkpoint. Presentation Mode lets you demonstrate chapters without changing that save.']);
+    this.panel('RESTART YOUR STORY?', ['Starting again replaces your saved checkpoint. Chapter Select lets you visit any chapter without touching that save.']);
     this.show([
       { label: 'Keep current game', action: () => this.main() },
       { label: 'Restart from the beginning', action: () => this.start(this.fresh(false)) },
@@ -115,9 +115,8 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private chapters() {
-    this.panel('PRESENTATION MODE', [
-      'A quick demonstration route for the class share. Choices work normally, but nothing is saved and it never counts as a real playthrough.',
-      'Each chapter starts with the earlier choices set to defaults.',
+    this.panel('CHAPTER SELECT', [
+      'Jump to any chapter. Progress made here is not saved.',
     ]);
     this.show([
       ...CHAPTERS.map((name, i) => ({

@@ -1,4 +1,4 @@
-// Character painter v2: filled silhouettes with head profiles, hands and coat tails,
+// Character painter: filled silhouettes with head profiles, hands and coat tails,
 // a 4-frame breathing idle and a 12-frame walk. Every cast member is one parameter set.
 import Phaser from 'phaser';
 import { paint, poly, type Ctx } from './core.ts';

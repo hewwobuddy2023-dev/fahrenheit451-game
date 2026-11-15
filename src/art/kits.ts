@@ -37,7 +37,7 @@ function nightSky(s: Phaser.Scene, key = 'k:sky', moon = true, glow = 0.35) {
     [[420, glow], [1050, glow * 0.8], [1400, glow * 0.6]].forEach(([x, a]) => radial(c, x, 430, 280, 'rgba(232,104,46,A)', a));
   });
   const sky = s.add.image(0, 0, key).setOrigin(0).setScrollFactor(0.12).setDepth(0);
-  if (!key.includes('wild') && s.textures.exists('city:backdrop')) s.add.image(0, -15, 'city:backdrop').setOrigin(0).setDisplaySize(1600, 534).setScrollFactor(0.18).setAlpha(0.85).setDepth(0.2).setName('city-layer');
+  if (!key.includes('wild') && s.textures.exists('city:backdrop')) s.add.image(0, -15, 'city:backdrop').setOrigin(0).setDisplaySize(1600, 534).setScrollFactor(0.18).setAlpha(0.85).setDepth(0.2).setName('city-backdrop-layer');
   return sky;
 }
 
@@ -122,7 +122,7 @@ function windowGlow(c: Ctx, x: number, y: number, w: number, h: number, col: str
   c.fillStyle = 'rgba(0,0,0,0.5)'; c.fillRect(x + w / 2 - 1, y, 2, h); c.fillRect(x, y + h / 2 - 1, w, 2);
 }
 
-// ---------------- the firehouse (from M1, re-based on the new floor line) ----------------
+// ---------------- the firehouse ----------------
 
 export const LAMPS = [470, 1110, 1520, 2010];
 const WINDOWS = [160, 760, 1300, 1900];
@@ -198,7 +198,7 @@ const station: Kit = (s, room) => {
   const bulb = s.add.image(2065, F - 204, 'glow').setScale(0.55).setTint(C.redN).setAlpha(0).setBlendMode(ADD).setDepth(3);
   s.add.image(2290, 470, 'k:truck').setOrigin(0.5, 1).setDepth(4.5);
   paint(s, 'k:station:beam', 60, H, (c) => { c.fillStyle = '#060404'; c.fillRect(14, 0, 32, H); c.fillRect(4, 0, 52, 16); c.fillStyle = 'rgba(242,165,74,0.15)'; c.fillRect(45, 16, 1, H); });
-  // one foreground beam only: a second one at 1900 swept across the kerosene tanks and the kennel (ch1 v2 render review)
+  // one foreground beam only: a second one at 1900 swept across the kerosene tanks and the kennel
   occluder(s, 'k:station:beam', 900, 1.32);
   dust(s, RW);
   let alarm: Phaser.Tweens.Tween | undefined;
@@ -421,7 +421,7 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
           speedY: { min: -240, max: -150 }, speedX: { min: -55, max: 65 }, gravityY: 100,
           lifespan: { min: 3000, max: 4000 }, frequency: calm ? 420 : 90, duration: 2800, maxParticles: calm ? 6 : 28,
           rotate: { min: -30, max: 30 }, scaleY: 1.8,
-          // wing beat: the page folds and opens (pass 1 render: at 1x they read as sparks, so 1.8x); reduced motion keeps it still
+          // wing beat: the page folds and opens (scaled up 1.8x, otherwise they read as sparks); reduced motion keeps it still
           scaleX: calm ? 1.8 : { onUpdate: (_p: unknown, _k: string, t: number) => (0.25 + Math.abs(Math.sin(t * 26)) * 0.95) * 1.8 },
           color: [0xfff2dc, 0xffc070, 0xff6a28, 0x2a140c], alpha: { start: 1, end: 0.2 },
         }).setDepth(5.6);

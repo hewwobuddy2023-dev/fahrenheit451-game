@@ -17,7 +17,7 @@ for(let i=0;i<5;i++){
   assert.equal(s.scene().session.demo,true);assert.equal(s.scene().room.id,CHAPTER_STARTS[i].room);
   await campaign(s).settle();assert.equal(s.save(),before);
   await s.tap(914,112);await s.tap(500,338);await s.until(()=>s.scene().sys.settings.key==='menu','demo quit');assert.equal(s.save(),before);
-  console.log(`PASS touch Presentation chapter ${i+1} and quit never alter normal save`);
+  console.log(`PASS touch Chapter Select chapter ${i+1} and quit never alter normal save`);
  }finally{s.close();}
 }
 {
@@ -38,7 +38,7 @@ for(let i=0;i<5;i++){
   const r=s.scene();await s.advance(50);await s.tap(888,474);const line=r.dialogue.current;
   for(let i=0;i<5;i++)await s.key('Enter',true,true);assert.equal(r.dialogue.current,line);await s.key('Enter',false);
   for(let i=0;i<20&&!r.dialogue.choosing;i++)await s.tap(480,450);
-  // Chapter 1 v2: Beatty's nod ends in the tone choice, and the lighting steps follow; mid-event state must not be checkpointed
+  // Chapter 1: Beatty's nod ends in the tone choice, and the lighting steps follow; mid-event state must not be checkpointed
   assert.ok(r.dialogue.choosing);await s.render();await s.advance(450);const before=s.save();await s.tap(400,r.dialogue.choiceRows[0].list[0].y);
   for(let i=0;i<60&&!r.session.flags['c01.lit'];i++){await s.advance(100);if(r.mode==='dialogue')await s.tap(480,450);}
   assert.ok(r.session.flags['c01.igniter'],'the choice records Montag lighting his own igniter');

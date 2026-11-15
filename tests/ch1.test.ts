@@ -39,7 +39,7 @@ test('Chapter 1 hints escalate in three steps and never point at finished work',
   for (const [room, add] of path) {
     Object.assign(f, add);
     const r = ROOMS[room];
-    assert.ok(r.quietUi && r.hints, `${room} uses the redesigned UI`);
+    assert.ok(r.quietUi && r.hints, `${room} uses the quiet UI`);
     const h = r.hints!(f);
     assert.equal(h.length, 3);
     h.forEach((s) => assert.ok(s.length > 10 && s.length <= 140, `${room}: hint length "${s}"`));
@@ -69,7 +69,7 @@ function use(h: Hotspot, f: Record<string, boolean | string>) {
   run(h.steps ?? []);
 }
 
-test('Option A: the walls never gate the conversation, and Challenge 3 does not need them', () => {
+test('the walls never gate the conversation, and Challenge 3 does not need them', () => {
   const hs = ROOMS.home1.hotspots;
   for (let mask = 0; mask < 8; mask++) {
     const f: Record<string, boolean | string> = { 'h1.day': true };

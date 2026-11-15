@@ -44,7 +44,7 @@ const x1 = await page.evaluate(() => window.__qa.scene.player.x);
 check('keyboard movement (D)', x1 > r0.x + 60, `${Math.round(r0.x)} -> ${Math.round(x1)}`);
 const touchUi = await page.evaluate(() => !!window.__qa.scene.hud.touchUi?.visible);
 check('desktop shows no touch buttons', !touchUi);
-// x 1060 is a pile in the classroom build and the single pour point in the Chapter 1 redesign
+// x 1060 is a pile in older builds and the single pour point now
 await page.evaluate(() => window.__qa.go(1060)); await page.waitForTimeout(300);
 await page.keyboard.down('e'); await page.waitForTimeout(3500); await page.keyboard.up('e');
 const soaked = await page.evaluate(() => ['c01.p1', 'c01.p2', 'c01.p3'].some((k) => window.__qa.scene.session.flags[k]));
@@ -59,7 +59,7 @@ await page.waitForFunction(() => window.__game.scene.isActive('room'), null, { t
 const cont = await page.evaluate(() => ({ room: window.__qa.scene.room.id, p1: window.__qa.scene.session.flags['c01.p1'] }));
 check('Continue restores the saved checkpoint', !!saved && cont.room === 'burn' && cont.p1 === true, JSON.stringify(cont)); // the pour sets p1 too
 
-// 4. Every chapter opens on the live build (save-seeded Continue, as a returning student would)
+// 4. Every chapter opens on the live build (save-seeded Continue, as a returning player would)
 const starts = [['burn', 640, 1], ['station2', 2200, 2], ['home3', 900, 3], ['lawn', 640, 4], ['river', 200, 5]];
 for (const [room, x, ch] of starts) {
   await page.evaluate(([room, x]) => localStorage.setItem('f451.save', JSON.stringify({ v: 1, room, x, flags: {} })), [room, x]);

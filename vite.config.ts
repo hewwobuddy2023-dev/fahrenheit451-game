@@ -11,6 +11,6 @@ if (!process.env.F451_BUILD_SHA && existsSync('.git')) {
 // Relative base works on GitHub Pages (/fahrenheit451-game/) and locally without a path rewrite.
 export default defineConfig({
   base: './',
-  define: { __BUILD_INFO__: JSON.stringify({ sha: sourceSha, date: new Date().toISOString(), environment: process.env.F451_ENV || 'candidate-local', version: '1.0' }) },
+  define: { __BUILD_INFO__: JSON.stringify({ sha: sourceSha, date: new Date().toISOString(), environment: process.env.F451_ENV || 'web', version: '1.0' }) },
   build: { target: 'es2022', chunkSizeWarningLimit: 1600, assetsInlineLimit: 0 },
 });

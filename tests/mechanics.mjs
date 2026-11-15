@@ -8,7 +8,7 @@ for(const [room,id,flag] of [['subway','read','c08.verse'],['camp','granger','c1
  const s=await simulate({save:{v:1,room,x:room==='camp'?1080:620,flags},lowres:true});
  try{
   await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','memory Continue');await campaign(s).settle();
-  const r=s.scene();if(room==='camp')assert.equal(r.children.list.some(o=>o.name==='city-layer'),false,'city panorama must not survive the bombing horizon');const h=r.room.hotspots.find(h=>h.id===id);s.w.__qa.go(h.x);await s.advance(50);await s.tap(888,474);
+  const r=s.scene();if(room==='camp')assert.equal(r.children.list.some(o=>o.name==='city-backdrop-layer'),false,'city panorama must not survive the bombing horizon');const h=r.room.hotspots.find(h=>h.id===id);s.w.__qa.go(h.x);await s.advance(50);await s.tap(888,474);
   for(let n=0;n<40&&!r.dialogue.puzzle;n++)await s.tap(480,450);
   assert.equal(r.dialogue.puzzle.state.phase,'study');assert.ok(!r.session.flags[flag]);
   await s.screenshot(`docs/qa/mechanics/${room}-study.webp`);
@@ -28,7 +28,7 @@ for(const [room,id,flag] of [['subway','read','c08.verse'],['camp','granger','c1
  const s=await simulate({save:{v:1,room:'burn',x:1060,flags:{'e.burn':true}},lowres:true});
  try{
   await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','hose Continue');await campaign(s).settle();
-  // Chapter 1 redesign: one kerosene pour with no pressure gauge; holding always progresses
+  // Chapter 1: one kerosene pour with no pressure gauge; holding always progresses
   const r=s.scene();await s.touch('touchstart',888,474);await s.advance(1000);assert.ok(r.holdMs>800,'a held pour makes steady progress');assert.equal(r.pressureLabel.visible,false,'no pressure gauge');await s.touch('touchend',888,474);assert.ok(!r.session.flags['c01.p3']);
   await s.screenshot('docs/qa/mechanics/pour-partial.webp');
   const before=r.holdMs;await s.tap(914,112);await s.advance(5000);assert.equal(r.holdMs,before,'pause freezes the pour');await s.tap(500,234);

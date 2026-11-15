@@ -1,10 +1,10 @@
-// Chapter 1 v2 moments, captured mid-gameplay in real Chromium/WebGL: each shot loads a save, uses the
+// Chapter 1 moments, captured mid-gameplay in real Chromium/WebGL: each shot loads a save, uses the
 // real interaction (E at the hotspot), advances dialogue until a given line is on screen, then captures.
-// Usage: node tools/ch1-v2-shots.mjs <baseURL> <outDir> [width height]
+// Usage: node tools/ch1-moments.mjs <baseURL> <outDir> [width height]
 import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 
-const [base = 'http://localhost:5173', out = 'docs/qa/ch1-v2/moments', w = '1366', h = '768'] = process.argv.slice(2);
+const [base = 'http://localhost:5173', out = 'docs/qa/ch1/moments', w = '1366', h = '768'] = process.argv.slice(2);
 await mkdir(out, { recursive: true });
 const soaked = { 'e.burn': true, 'c01.p1': true, 'c01.p2': true, 'c01.p3': true };
 const ch1 = { ...soaked, 'c01.lit': true, 'c01.igniter': true, 'c01.tone': 'eager' };

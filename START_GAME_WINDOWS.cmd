@@ -7,9 +7,6 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-if exist "02_PRODUCTION_BUILD\dist\index.html" (
-  node "01_SOURCE\fahrenheit451-game\tools\serve-review.cjs" "02_PRODUCTION_BUILD\dist"
-) else (
-  node "tools\serve-review.cjs"
-)
+if not exist node_modules call npm install
+call npm run dev -- --open
 pause

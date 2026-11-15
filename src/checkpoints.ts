@@ -1,7 +1,7 @@
 import { ROOMS } from './content.ts';
 import type { SaveData } from './state.ts';
 
-/** Recover v1 checkpoints written by M2 between a completed conversation and its room transition.
+/** Recover older checkpoints written between a completed conversation and its room transition.
  * New checkpoints are atomic at event boundaries. Existing saves keep their choices and progress.
  */
 export function restoreCheckpoint(save: SaveData | null): SaveData | null {

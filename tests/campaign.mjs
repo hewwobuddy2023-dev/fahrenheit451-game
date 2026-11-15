@@ -9,11 +9,11 @@ const chapters=[];
 function expect(room,done){assert.equal(s.scene().room.id,room);assert.equal(s.w.__qa.done().length,done);console.log(`PASS campaign ${room}: ${done}/15`);}
 try{
   await s.advance(700);await s.tap(430,346);await s.until(()=>s.scene().sys.settings.key==='room','start');await d.settle();
-  // Chapter 1 v2: one kerosene pour, then Montag lights his own igniter on Beatty's nod
+  // Chapter 1: one kerosene pour, then Montag lights his own igniter on Beatty's nod
   for(const id of ['douse','light'])await d.visit(id);
   expect('station1',1);await d.visit('out');
   for(const id of ['meet','moon','dew','signs','house','home'])await d.visit(id);
-  // parlor (Option A): she hears him with the walls loud; one wall turned off mid-talk; two walls never touched
+  // parlor: she hears him with the walls loud; one wall turned off mid-talk; two walls never touched
   await d.visit('t1');assert.ok(s.scene().session.flags['c03.t1'],'loud walls do not block the conversation');
   for(const id of ['w1','t2','t3','script','door'])await d.visit(id);
   expect('station2',3);chapters.push(s.save());
@@ -63,7 +63,7 @@ try{
   for(const raw of chapters){const saved=JSON.parse(raw);const t=await simulate({save:saved});try{await t.advance(700);await t.tap(430,282);await t.until(()=>t.scene().sys.settings.key==='room','chapter Continue');assert.equal(t.scene().room.id,saved.room);assert.deepEqual({...t.scene().session.flags},saved.flags);console.log('PASS Continue',saved.room);}finally{t.close();}}
   const completed=JSON.parse(s.save());assert.ok(completed.flags['c15.seen']);
   const t=await simulate({save:completed});try{await t.advance(700);await t.tap(430,282);await t.until(()=>t.scene().sys.settings.key==='end','completed ending Continue');await t.advance(3000);await t.tap(480,450);await t.until(()=>t.scene().sys.settings.key==='menu','ending title');console.log('PASS completed ending Continue and return to title');}finally{t.close();}
-  // Explore other outcomes: R returns to Granger's question as Presentation Mode; a different ending never touches the save.
+  // Explore other outcomes: R returns to Granger's question as Chapter Select; a different ending never touches the save.
   {const t=await simulate({save:completed});const e=campaign(t);try{
     await t.advance(700);await t.tap(430,282);await t.until(()=>t.scene().sys.settings.key==='end','end card');await t.advance(3000);
     const saved=t.w.localStorage.getItem('f451.save');

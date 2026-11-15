@@ -228,7 +228,7 @@ test('missing or stalled decorative backdrop never gates the title indefinitely'
   await page.addInitScript(()=>localStorage.clear()); // each fault starts as a fresh visitor
   for(const fault of ['abort','stall']) {
     let hits=0;
-    await page.route('**/city-*.webp', async route=>{ hits++;
+    await page.route('**/city-backdrop-*.webp', async route=>{ hits++;
       if(fault==='abort') await route.abort();
       else {await new Promise(r=>setTimeout(r,6500));await route.continue().catch(()=>{});}
     });
@@ -239,7 +239,7 @@ test('missing or stalled decorative backdrop never gates the title indefinitely'
     await tap(page,430,346,info);await scene(page,'room');await settle(page,info);
     expect((await state(page)).room).toBe('burn');
     await page.screenshot({path:info.outputPath(`procedural-${fault}-fallback-native.png`)});
-    await page.unroute('**/city-*.webp');
+    await page.unroute('**/city-backdrop-*.webp');
   }
 });
 

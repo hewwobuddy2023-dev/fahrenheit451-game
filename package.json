@@ -12,7 +12,7 @@
     "test:simulation": "node tests/simulation.mjs",
     "test:campaign": "node tests/campaign.mjs",
     "test:regression": "node tests/regression.mjs",
-    "test:day2": "node tests/day2.mjs",
+    "test:storage": "node tests/storage.mjs",
     "test:browser": "playwright test",
     "test:campaign:all": "node tests/campaign-all.mjs",
     "test:gallery": "node tests/gallery.mjs",

@@ -1,5 +1,5 @@
 // Chapter 5 — The Fire That Warms (end of Part Three). The river, Granger's fire, the war, three endings.
-// Public-domain text: KJV Ecclesiastes 3:1-2. Preservation follows the novel; Defiance and Submission are adaptations.
+// Public-domain text: KJV Ecclesiastes 3:1-2. Preservation, Defiance and Submission are the three endings.
 import type { Flags } from '../state.ts';
 import type { RoomDef, Script, Step } from './types.ts';
 

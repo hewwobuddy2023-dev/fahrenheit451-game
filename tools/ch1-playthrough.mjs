@@ -1,4 +1,4 @@
-// Keyboard-only Chapter 1 playthrough from New Game, the way a student plays it (no teleports, no QA hooks
+// Keyboard-only Chapter 1 playthrough from New Game, the way a player plays it (no teleports, no QA hooks
 // driving progress). Records a video and logs objectives, prompts, timings and stalls.
 // Usage: node tools/ch1-playthrough.mjs [baseURL] [outDir]
 import { chromium } from '@playwright/test';
@@ -56,7 +56,7 @@ for (let step = 0; step < 900; step++) {
     const after = await see();
     if (after.mode !== 'play' || after.objective !== v.objective) continue; // the prompt did something; look again before walking
   }
-  // a student walks toward what the objective names and what they can see on screen (Mildred on the sofa, the door)
+  // a player walks toward what the objective names and what they can see on screen (Mildred on the sofa, the door)
   const left = /door|Leave for work/i.test(v.objective) || (/Mildred|script/i.test(v.objective) && v.x > 1800);
   const dir = left ? 'a' : 'd';
   await page.keyboard.down(dir); await page.waitForTimeout(450); await page.keyboard.up(dir); walkMs += 450;

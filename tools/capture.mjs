@@ -4,12 +4,12 @@
 import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 
-const [base = 'http://127.0.0.1:5181', out = 'docs/qa/sprint-after', only = ''] = process.argv.slice(2);
+const [base = 'http://127.0.0.1:5181', out = 'docs/qa/capture', only = ''] = process.argv.slice(2);
 await mkdir(out, { recursive: true });
 
 const ch = (n) => ({ ...Object.fromEntries(Array.from({ length: 50 }, () => []).flat()) , n });
 const done = (upTo, extra = {}) => {
-  // Earlier challenges' flags, as Presentation Mode seeds them (staging only, never saved as play).
+  // Earlier challenges' flags, as Chapter Select seeds them (staging only, never saved as play).
   const f = {
     'c01.p1': true, 'c01.p2': true, 'c01.p3': true, 'c01.lit': true, 'c02.n1': 'look', 'c02.n2': 'look', 'c02.n3': 'look', 'c02.asked': true,
     'c03.w1': true, 'c03.w2': true, 'c03.w3': true, 'c03.t3': true, 'c03.script': true, 'c04.book': true, 'c04.plea': 'plead', 'c05.done': true,

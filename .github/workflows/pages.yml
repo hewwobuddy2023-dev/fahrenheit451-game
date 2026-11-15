@@ -2,7 +2,7 @@ name: Test, build and deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, feat/m1-vertical-slice, feat/m2-chapters]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -23,7 +23,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npm run test:simulation && npm run test:campaign:all && npm run test:regression && npm run test:day2 && npm run test:cinematics && npm run test:mechanics
+      - run: npm run test:simulation && npm run test:campaign:all && npm run test:regression && npm run test:storage && npm run test:cinematics && npm run test:mechanics
       - run: npm run build # runs tsc --noEmit first
       - uses: actions/upload-pages-artifact@v5
         if: github.event_name != 'pull_request'

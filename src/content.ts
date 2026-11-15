@@ -13,14 +13,14 @@ export type { ChallengeInfo } from './content/challenges.ts';
 export const SCRIPTS: Record<string, Script> = { ...SCRIPTS1, ...SCRIPTS2, ...SCRIPTS3, ...SCRIPTS4, ...SCRIPTS5 };
 export const ROOMS: Record<string, RoomDef> = { ...ROOMS1, ...ROOMS2, ...ROOMS3, ...ROOMS4, ...ROOMS5 };
 
-/** Flags for a Presentation Mode start: earlier challenges done with neutral default choices (demo only, never saved). */
+/** Flags for a Chapter Select start: earlier challenges done with neutral default choices (demo only, never saved). */
 function before(id: number, extra: Record<string, boolean | string> = {}) {
   const f: Record<string, boolean | string> = {};
   for (const r of R) if (r.id < id) for (const k of r.required) f[k] = true;
   return { ...f, ...extra };
 }
 
-/** Where each chapter begins (title-screen Presentation Mode and new games). */
+/** Where each chapter begins (title-screen Chapter Select and new games). */
 export const CHAPTER_STARTS: { room: string; x: number; flags: Record<string, boolean | string> }[] = [
   { room: 'burn', x: 640, flags: {} },
   { room: 'station2', x: 2200, flags: before(4, { 'c01.tone': 'eager', 'c02.k': 'perfume' }) },

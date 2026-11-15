@@ -15,36 +15,23 @@ test-results/
 .DS_Store
 Thumbs.db
 .vscode/settings.json
-# source book, copyrighted full text and private documents
+AGENTS.md
+*.local
+npm-debug.log*
+# source book and other private reference material
 *.mobi
 *.epub
-02_PRIVATE_REFERENCE_DO_NOT_PUSH/
-private/
-book_sources/
-*_full_novel*
 *.azw
 *.azw3
 *.kfx
-F451_PRIVATE_REFERENCE/
-*.local
-npm-debug.log*
-
-# Reproducible staged review captures (delivered in the review ZIP, not runtime)
-docs/qa/day2-before/
-docs/qa/day2-after/
-
-# Reproducible capture outputs (distributed with the review package)
-docs/qa/day2-*/
-docs/qa/mechanics/
-
-# local review build packages (never published from here)
-review-build/
-# extracted private book text
+*_full_novel*
 *SEARCHABLE*.txt
 BOOK_SOURCE/
-
-# gameplay recordings are delivered in the preview package, not committed
-docs/qa/ch1-playthrough*/*.webm
-docs/qa/ch1-playthrough/
-
-docs/qa/ch1-v2/playthrough*/*.webm
+private/
+book_sources/
+*_DO_NOT_PUSH/
+F451_PRIVATE_REFERENCE/
+# working notes, screenshots and local builds
+docs/
+PROMPTS/
+review-build/

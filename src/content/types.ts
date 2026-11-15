@@ -121,7 +121,7 @@ export interface RoomDef {
   objective: (f: Flags) => string;
   hotspots: Hotspot[];
   enter?: { key: string; steps: Step[]; when?: Cond }[]; // each runs once (flag `key`)
-  /** Redesigned rooms (Chapter 1 slice): no permanent control ribbon, quiet progress notes, a small hint pill. */
+  /** Rooms with the quiet UI: no permanent control ribbon, quiet progress notes, a small hint pill. */
   quietUi?: boolean;
   /** Escalating hints for the current state: a nudge, then the precise target, then direct guidance. */
   hints?: (f: Flags) => [string, string, string];

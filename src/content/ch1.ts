@@ -1,7 +1,6 @@
-// Chapter 1 — The Hearth and the Salamander (v2).
+// Chapter 1 — The Hearth and the Salamander.
 // Montag is content; nothing here announces what comes later (the Hound's menace belongs to Chapter 2).
-// Exact novel text is limited to short excerpts verified against the owner's ebook and listed in
-// docs/LITERARY_FIDELITY.md: "It was a pleasure to burn.", "Are you happy?", "Am I what?",
+// Exact novel text is limited to a few short excerpts: "It was a pleasure to burn.", "Are you happy?", "Am I what?",
 // "Well, goodbye, dear.", "Does it have a happy ending?" and "I haven't read that far."
 // Every other line is original adaptation dialogue.
 // Flag names are unchanged so challenge rules, saves and later callbacks keep working.
@@ -83,7 +82,7 @@ export const SCRIPTS1: Record<string, Script> = {
     { who: N, text: 'Two technicians come with their machines, work without looking at her, and leave. They get calls like this every night.' },
   ] },
 
-  // ---- 03 Parlor Walls (Option A): she hears every word and does not listen ----
+  // ---- 03 Parlor Walls: she hears every word and does not listen ----
   // Turning a wall off is optional. It changes the room and her reactions, never whether the talk goes on.
   m_w1: { set: { 'c03.w1': true }, lines: [
     { who: N, text: 'You turn the first wall off. A man and a woman go on shouting without a sound.' },

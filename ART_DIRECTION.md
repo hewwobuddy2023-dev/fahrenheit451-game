@@ -4,7 +4,7 @@
 
 - Game view: 2D side-view, striking silhouettes, layered illustrated backgrounds, a few subtle looped environmental animations. Designed for Chromebook readability at common 1366×768 viewport, adapted to 960×540 logical view.
 - Typography: readable sans for objectives/dialogue, restrained period-inspired display typography for title and broadcasts. Licensed fonts only; system fonts are acceptable.
-- UI: clean main menu (Play, Continue, Settings, Credits, Presentation Mode), high-contrast dialogue; small objective label, interaction prompt and optional journal with clear 1–15 progress.
+- UI: clean main menu (New Game, Continue, Chapter Select, Settings, Credits), high-contrast dialogue; small objective label, interaction prompt and optional journal with clear 1–15 progress.
 - Analog artifacts: occasional CRT television scanline/static during **transitions or televised scenes**, subtle vignette/film grain optional. Don't continuously obscure gameplay or text.
 - Camera: gentle movement and scene transition, no excessive shake/motion blur. Keep motion accessible and predictable.
 - Characters: minimal but identifiable silhouettes and purposeful expressive poses; no laborious full skeletal cutscenes. No jumping animations.
@@ -17,29 +17,16 @@
 
 - Initial compressed download <=20 MB ideal, measure build output before asserting.
 - Favor modest static/webp/png assets, small sprite sheets; avoid high-res video and ambient WAV loops.
-- Create placeholder art matching final palette during M1; do not spend an entire milestone polishing one backdrop while 14 challenges remain.
+- Block in placeholder art in the final palette first; polish one backdrop only after every challenge is playable.
 
 ## QA checklist
 
 Check against low-effect preset; check menus/dialogue at Chromebook size; inspect contrast with/without grain; ensure text doesn't touch edges or overlap; touch hit targets usable on iPhone landscape; validate all font fallback and licensed assets.
 
-## Work reusable polish pass — November 9
+## Notes on the current art
 
-- Flame atlas: 8 smooth phase frames, 96×144 padded cells (previously 6×64×112). Transparent cell edges avoid clipped tongues and neighboring-frame bleed. Source-over painted bodies retain orange; separate emissive glows, embers and smoke remain additive where appropriate. Regression checks verify side padding in every generated frame.
-- River: a small 8-frame surface silhouette, arm stroke, bob and wake replaces the upright walk cycle until the shore flag. Contact shadow returns on land. Movement speed, hazard rules, timers and collision positions are unchanged.
-- Wider touch rows, wrapped choices, explicit per-target fixed scroll factors, DIVE and mobile-specific control wording. Title no longer asks for a nonexistent room sky texture. Latin-only font CSS reduces unused font output.
-- Comparison captures in `docs/qa/` are Canvas simulations using fallback fonts, not browser/WebGL or iPhone screenshots. Real-device visual approval is outstanding.
-
-
-## Day 2 composition pass
-
-Reusable baked cast details and interior trim, static ground planes/reflections, branching tree silhouettes and a distant forest layer improve separation across five chapters. Foreground fades use both sprite widths so the swimmer remains visible. Scripted walk/pole-slide/fall poses own their animation/position instead of being overwritten by normal frame updates. Fresh opening now creates its truck texture before display. Existing flame atlas and float/wake remain intact.
-
-No interactive decorative layers, new particle density, full 3D or external art. Reduced motion suppresses decorative grain, camera shake/flash and fast subway background scrolling. Original synthesized room ambience and bounded interaction cues follow this palette without a loud soundtrack. Review native WebGL color captures; Canvas fixtures ignore some tints.
-
-
-## candidate direction
-
-The new isolated branch tests hybrid original city backdrop + editable architecture/props, retaining the existing walk plane and non-interactive parallax layers. Detailed facades, practical industrial fittings, curved parlor frames/broadcast figures, books and visible investigation props support the charcoal/olive/cyan/ember palette. A working hose pose adds context; the cast remains stylized and requires owner/art-direction review. Forest uses gentler analog strength and a brighter cast tint; the generated city layer is deliberately absent from its bombing horizon.
-
-`docs//VISUAL_DIRECTION.md` and `ASSET_PROVENANCE.md` define the intended standard and original generation prompt. Review the actual eleven-scene and native captures; a standalone generated image is not evidence of the final game. Optional analog effects are disabled/scaled down independently of essential hazards. No claim of a complete professional art overhaul is made without owner review.
+- Flame atlas: 8 smooth frames in padded 96x144 cells so tongues never clip or bleed into neighboring frames. Painted bodies keep their orange; glows, embers and smoke are additive.
+- River: a small 8-frame surface silhouette with arm stroke, bob and wake replaces the walk cycle until the shore.
+- Cast details, interior trim, static ground planes, branching tree silhouettes and a distant forest layer separate the five chapters. Scripted walk, pole-slide and fall poses own their animation.
+- A distant city backdrop and detailed set dressing (facades, industrial fittings, curved parlor frames, books and investigation props) support the charcoal, olive, cyan and ember palette. The forest uses gentler analog effects and a brighter cast tint.
+- No interactive decorative layers, extra particle density, 3D or external art. Reduced motion suppresses grain, camera shake, flashes and fast subway scrolling. Optional analog effects are scaled down independently of essential hazards.

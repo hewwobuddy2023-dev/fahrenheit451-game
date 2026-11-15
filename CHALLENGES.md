@@ -1,4 +1,4 @@
-# 15 NOVEL-LINKED MANDATORY CHALLENGES (M2, approved 2026-11-09)
+# 15 NOVEL-LINKED MANDATORY CHALLENGES
 
 All 15 are required in an ordinary single run, in the novel's order, tracked by number in the journal. Completion is derived from flags (`src/content/challenges.ts` → `RULES`). Novel plot is not rewritten by player choices; only the two alternate endings diverge, and they are labelled as adaptations.
 
@@ -22,7 +22,7 @@ Mechanic types: **T1** inspect/choose · **T2** act while watched · **T3** hold
 | 14 | 5 | Granger's fire (P3) | T5 study/reconstruct Ecclesiastes 3:1–2 (KJV) as his offering; meet the book people | `c14.recall met` | Untimed |
 | 15 | 5 | The war and the morning (P3) | Choose Preservation / Defiance / Submission at the fire; the shared bombing; that ending's epilogue | `c15.ending seen` | All three always offered; earlier flags change wording and consequences |
 
-## Changes from the pre-M2 table
+## Notes
 - 01 is now the opening burn (was an equipment check that the novel doesn't have).
 - 05 and 06 are swapped to match the novel: Beatty's bedside argument comes before the vent reveal. The claims-matching quiz is gone.
 - 11–13 use the novel's own set pieces (the boulevard, the count of ten, the river) instead of an invented spotlight scene.
@@ -32,4 +32,4 @@ Mechanic types: **T1** inspect/choose · **T2** act while watched · **T3** hold
 King James Bible, Matthew 6:28 and Ecclesiastes 3:1–2 (1611; public domain in the US. Note: in the UK the KJV remains under Crown letters patent). Matthew Arnold, "Dover Beach" (1867; author died 1888; public domain). Alexander Pope, "A little learning is a dangerous thing" (1711; public domain). No sentences from Bradbury's novel are reproduced in the game.
 
 
-details/retained scenes are explicit in `docs//CHALLENGE_REDESIGN_MATRIX.md`. Existing completion flags stay compatible. Source-first recall is untimed, with optional reference/hints and local retry. Hose assist is available; finite dive state resets on local capture. No new combat or extra mandatory challenge ID.
+Completion flags are stable across versions. Source-first recall is untimed, with optional reference/hints and local retry. Hose assist is available; finite dive state resets on local capture. No new combat or extra mandatory challenge ID.

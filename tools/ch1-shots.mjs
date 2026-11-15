@@ -1,4 +1,4 @@
-// Chapter 1 shot list (real Chromium/WebGL), identical camera positions before and after the redesign.
+// Chapter 1 shot list (real Chromium/WebGL).
 // Usage: node tools/ch1-shots.mjs <baseURL> <outDir> [width height]
 // Shots use saves and the game's own state/fx; nothing is drawn into the screenshot by this tool.
 import { chromium } from '@playwright/test';
@@ -48,7 +48,7 @@ for (const [name, room, x, flags, action] of shots) {
     // walk into the house trigger and stop on Clarisse's question
     await qa(() => window.__qa.go(2025));
     for (let i = 0; i < 120; i++) {
-      const t = await qa(() => window.__qa.line()); // v2 plays the question as a letterbox subtitle
+      const t = await qa(() => window.__qa.line()); // the question plays as a letterbox subtitle
       if (/happy\?/i.test(t)) break;
       await qa(() => { const q = window.__qa; if (q.options().length) q.choose(0); else q.adv(); });
       await page.waitForTimeout(220);

@@ -322,7 +322,7 @@ export class RoomScene extends Phaser.Scene {
       if (!fct) return;
       const img = o as Phaser.GameObjects.Image;
       const sx = img.x - cam.scrollX * fct, overlap = (img.displayWidth + p.displayWidth) / 2 + 8;
-      // fades for Montag and for anyone on screen (a lamppost hid Clarisse pointing at the moon in the pass 1 render)
+      // fades for Montag and for anyone on screen (a lamppost hid Clarisse pointing at the moon)
       const hides = [p, ...this.npcs.filter((n) => n.spr.visible).map((n) => n.spr)].some((a) => Math.abs(sx - (a.x - cam.scrollX)) < overlap);
       img.setAlpha(hides ? 0.22 : 1);
     });

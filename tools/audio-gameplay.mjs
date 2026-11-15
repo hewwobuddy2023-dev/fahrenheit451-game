@@ -1,4 +1,4 @@
-// Real-gameplay audio check in Chromium for the redesigned Chapter 1 (plus the river dive).
+// Real-gameplay audio check in Chromium for Chapter 1 (plus the river dive).
 // Real key presses drive the game; we log which cues fire and read the audio engine's live state.
 // Usage: node tools/audio-gameplay.mjs [baseURL]. Proves triggering, state and cleanup, NOT how it sounds.
 import { chromium } from '@playwright/test';

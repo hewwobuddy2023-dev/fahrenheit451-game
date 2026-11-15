@@ -1,43 +1,34 @@
-# GAME SPEC v0.9 — DESIGN LOCK FOR PREFLIGHT
+# Game spec
 
-**Working title:** Fahrenheit 451: The Fireman's Choice (title may change only with approval).
-**Audience:** high-school English, students may not know the book.
-**Target duration:** 10–15 minutes, including 15 discrete meaningful challenges.
-**Primary device:** low-end Chromebook Chrome on school Wi-Fi; secondary desktop Chrome and iPhone Safari.
+**Working title:** Fahrenheit 451: The Fireman's Choice.
+**Primary device:** low-end Chromebook Chrome; secondary desktop Chrome and iPhone Safari.
+**Target length:** about 25-30 minutes for a first run, with 15 discrete challenges.
 
-## Gameplay essentials
+## Gameplay
 
-- 2D cinematic side-view, short connected 2D rooms. No jumping, no large open world. Horizontal A/D or arrow movement, E/interact, Enter/Space for appropriate dialogue advancement, Esc pause; prevent double-action due to key-repeat. Touch left/right/interact and large dialogue taps for phone landscape.
-- Movement slow/cinematic but responsive; don't sacrifice clarity to immersion.
-- Objective -> inspect/explore -> dialogue/short logic or memory puzzle or one pursuit -> completion recorded -> checkpoint -> next scene.
-- 5 narrative chapters, 3 challenge IDs each, all available sequentially in standard mode. `CHALLENGES.md` is authoritative.
-- Three fully distinct ending sequences; earlier dialogue/choices influence framing or access, but all three should be testable without unrecoverable lockout. Preserve storyline's major beats; label invented alternative conclusions.
-- Mechanical Hound: scripted, telegraphed, predictable, local restart/checkpoint. One separate brief detection/hiding encounter acceptable; no large AI behavior system.
-- Dialogue: short original in-character text, readable boxes, strong contrast, occasional speaker portrait if inexpensive; no verbose VN wall of text.
-- Brief in-engine cutscenes / illustrative story cards; no full-motion videos or labor-intensive 3D animation.
-- Journal: 15 numbered objectives with completion flags and short real-book connection text. Do not falsify completion in normal mode.
-- Accessibility: Story/Normal difficulty optional if inexpensive; no timed text readability pressure, mute, pause, text sizes readable at 1366x768, avoid color-only clues.
-- Presentational demo: clearly separate 'Presentation Mode' demonstrating choice, short puzzle, brief pursuit and ending within 3–5 minutes; does not fake a normal playthrough or grade proof.
+- 2D cinematic side-view, short connected rooms. No jumping, no open world. A/D or arrow movement, E to interact, Enter/Space to advance dialogue, Esc pause; key-repeat never double-fires an action. Touch has left/right/interact buttons and large dialogue taps for phone landscape.
+- Slow, cinematic but responsive movement. Clarity comes before immersion.
+- Flow: objective, explore, dialogue or short logic/memory puzzle or one pursuit, completion recorded, checkpoint, next scene.
+- 5 chapters, 3 challenges each, played in order. `CHALLENGES.md` is authoritative.
+- Three distinct endings. Earlier choices influence framing, and all three are reachable without lockout. Invented endings are labelled as such.
+- Mechanical Hound: scripted, telegraphed, predictable, with a local restart. No large AI system.
+- Dialogue: short original in-character text in readable boxes with strong contrast.
+- In-engine cutscenes and story cards only; no video or 3D.
+- Journal: 15 numbered objectives with completion flags. Completion is never faked in a normal run.
+- Accessibility: no timed reading, mute, pause, text readable at 1366x768, no colour-only clues, reduced motion, assisted hose.
+- Chapter Select: jump to any chapter. It never writes the normal save.
 
-## Performance / runtime
+## Performance and runtime
 
-- Working candidate stack: Phaser 3 + TypeScript + Vite. Verify actual stable versions and official template at implementation time; do not assume Phaser 3/4 API interchangeability.
-- Client-only static app with localStorage checkpoint and state schema, safe reset, no accounts/backend, no runtime third-party API.
-- Logical design around 960×540 scaling, no edge cropping of critical UI. 60fps target / 30fps acceptable; <20MB compressed initial asset goal is aspirational, must measure. Asset load/sizes must be inspected.
-- Prefer sprite sheets, small reusable illustrated/scalable backgrounds, pre-rendered lighting; avoid perpetual full-screen postprocessing and massive textures. Automatically adjust *cosmetic* effects; never change gameplay collision/timing/choices.
-- Github Pages hosted under owner/repo; correct Vite base and asset URLs; must handle refresh and cache invalidation; direct URL should work on Chromebook. v.gd is optional tested redirect, never sole entry point.
+- Phaser 3 + TypeScript + Vite. Client-only static app with a localStorage checkpoint, no accounts, backend or runtime third-party API.
+- Logical view 960x540, scaled, with no critical UI cropped at the edges. 60 fps target, 30 fps acceptable.
+- Small sprite sheets and baked backgrounds; no perpetual full-screen post-processing or huge textures. Cosmetic effects scale down automatically; gameplay timing and choices never change.
+- Hosted on GitHub Pages with the correct Vite base path; refresh and direct URLs work.
 
-## Explicit non-goals
+## Non-goals
 
-Network multiplayer, account system, leaderboards, actual external AI at runtime, full stealth AI, open-world pathfinding, voice acting, large cinematics, realistic 3D, overbuilt inventory, 60-minute campaigns. Unapproved feature additions prohibited.
+Multiplayer, accounts, leaderboards, runtime AI services, full stealth AI, open-world pathfinding, voice acting, large cinematics, realistic 3D, inventory systems.
 
-## Definition of Done
+## Done means
 
-All mandatory challenge IDs tested in one normal run; three endings reachable; objective journal truthful; build/test clean; no critical visual overlap on Chromebook; Pages loads via school Wi-Fi; backup/demo route tested; teacher rubric deliverables completed from actual evidence.
-
-
-## candidate addendum — newer owner direction, Nov 10
-
-The isolated `work/cinematic-gameplay-rebuild` candidate continues Day 2 rather than replacing the engine. Owner target is cinematic 2.5D/analog horror, more active observation/pressure/stealth/memory/escape and a 25–30-minute first-time experience without padded travel. Actual duration/enjoyment remain unmeasured. Retain 15 mandatory gates, three endings, local saves, mobile repairs and non-saving Presentation Mode.
-
-Implementation status and evidence: `docs//QA_RESULTS.md`, challenge matrix, handoff and rollback. Some original dialogue-led scenes are deliberately retained; do not claim every planned mechanic is finished. Separate preview publication is authorized only if isolated from production; current capability/authentication blocker and owner setup steps are in PREVIEW_SETUP.md. Production integration requires owner approval.
+All 15 challenges completable in one normal run, three endings reachable, journal truthful, build and tests clean, no critical visual overlap at Chromebook size.

@@ -36,7 +36,7 @@ export class Hud {
       .setInteractive({ useHandCursor: true }).on('pointerdown', opts.onJournal);
 
     if (opts.demo) {
-      text(scene, W - 24, 58, 'PRESENTATION MODE  ·  NOT SAVED', { fontFamily: FONT.display, fontSize: '11px', color: C.ember })
+      text(scene, W - 24, 58, 'CHAPTER SELECT  ·  NOT SAVED', { fontFamily: FONT.display, fontSize: '11px', color: C.ember })
         .setOrigin(1, 0).setLetterSpacing(2).setScrollFactor(0).setDepth(1001);
     }
 

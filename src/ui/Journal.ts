@@ -13,7 +13,7 @@ export function openJournal(scene: Phaser.Scene, flags: Flags, onClose: () => vo
   g.lineStyle(1, 0x3a2f29, 1).lineBetween(70, 92, W - 70, 92);
   const parts: Phaser.GameObjects.GameObject[] = [g];
   parts.push(
-    text(scene, 70, 50, 'CASE JOURNAL', { fontFamily: FONT.type, fontSize: '28px' }),
+    text(scene, 70, 50, 'JOURNAL', { fontFamily: FONT.type, fontSize: '28px' }),
     text(scene, W - 70, 66, `${done.size} / 15 COMPLETE`, { fontFamily: FONT.display, fontSize: '16px', color: C.amber })
       .setOrigin(1, 0.5).setLetterSpacing(3),
   );
@@ -29,7 +29,7 @@ export function openJournal(scene: Phaser.Scene, flags: Flags, onClose: () => vo
       mark,
       text(scene, x + 22, y, String(ch.id).padStart(2, '0'), { fontFamily: FONT.display, fontSize: '16px', color: ok ? C.amber : C.muted }),
       text(scene, x + 50, y, ch.title, { fontSize: '16px', fontStyle: '600', color: ok ? C.cream : C.creamDim }),
-      text(scene, x + 50, y + 21, ok ? ch.connection : `Part ${ch.part}  ·  not yet completed`, {
+      text(scene, x + 50, y + 21, ok ? ch.connection : `Part ${ch.part}`, {
         fontSize: '12px', color: ok ? C.creamDim : C.muted, wordWrap: { width: 360 },
       }),
     );

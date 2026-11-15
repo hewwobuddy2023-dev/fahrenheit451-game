@@ -10,9 +10,9 @@ const steps = [
   ['input', 'node', ['tests/input.mjs']],
   ['simulation', 'node', ['tests/simulation.mjs']],
   ['regression', 'node', ['tests/regression.mjs']],
-  ['day2', 'node', ['tests/day2.mjs']],
+  ['storage', 'node', ['tests/storage.mjs']],
   ['cinematics', 'node', ['tests/cinematics.mjs']],
-  ['', 'node', ['tests/mechanics.mjs']],
+  ['mechanics', 'node', ['tests/mechanics.mjs']],
   ['campaign:all', 'node', ['tests/campaign-all.mjs']],
   ['build', 'npx', ['vite', 'build']],
 ];

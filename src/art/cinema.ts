@@ -1,4 +1,4 @@
-// Final-sprint set pieces: parlor broadcasts, approaching cars, helicopters, the running Hound,
+// Set pieces: parlor broadcasts, approaching cars, helicopters, the running Hound,
 // the boulevard billboard and surveillance poles. All painted once into textures (no shaders,
 // no per-frame drawing); animation is sprite frames and tweens only.
 import Phaser from 'phaser';

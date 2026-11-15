@@ -1,14 +1,14 @@
-# Fahrenheit 451: The Fireman’s Choice — Rulebook draft
+# Fahrenheit 451: The Fireman’s Choice — Rulebook
 
-An original browser adaptation of Ray Bradbury’s novel. Review this rulebook against the final classroom build before submitting.
+An original browser adaptation of Ray Bradbury’s novel.
 
 ## Goal
-Guide Guy Montag through five chapters and fifteen numbered challenges. Explore each room, follow the objective, and decide how to respond to the people he meets. The main story follows the novel’s event order. At Granger’s fire, choose one of three conclusions. Preservation is closest to the novel; Defiance and Submission are labeled alternate adaptations. The city’s destruction occurs in every conclusion.
+Guide Guy Montag through five chapters and fifteen numbered challenges. Explore each room, follow the objective, and decide how to respond to the people he meets. The main story follows the novel’s event order. At Granger’s fire, choose one of three conclusions. Preservation follows the novel; Defiance and Submission are alternate endings. The city’s destruction occurs in every conclusion.
 
 There are no points for violence, no combat system, and no lives to run out of. A missed encounter returns you to a nearby checkpoint or repeats that question.
 
 ## Start
-Open the GitHub Pages game in Chrome or Safari. Choose **New Game** to begin. If a valid checkpoint exists, **Continue** resumes it; New Game asks before replacing it. The game runs without an account or installation. Use landscape orientation on a phone.
+Open the game in Chrome or Safari. Choose **New Game** to begin. If a valid checkpoint exists, **Continue** resumes it; New Game asks before replacing it. The game runs without an account or installation. Use landscape orientation on a phone.
 
 | Action | Keyboard | Phone |
 |---|---|---|
@@ -24,7 +24,7 @@ Open the GitHub Pages game in Chrome or Safari. Choose **New Game** to begin. If
 
 **Beatty's suspicion (pillow scene):** wrong answers fill a meter shown on screen as text (`BEATTY'S SUSPICION ■■□ 2/3`). At 3/3, Beatty nearly checks the pillow and the conversation restarts at its first decision.
 
-**After an ending:** press R, or tap the amber line, to go back to Granger's question and explore the other endings. This replay runs in Presentation Mode and never changes your saved game. The **Preservation** ending is the one closest to the novel; Defiance and Submission are invented "what if" outcomes.
+**After an ending:** press R, or tap the amber line, to go back to Granger's question and try another ending. This replay never changes your saved game. The **Preservation** ending follows the novel; Defiance and Submission are "what if" outcomes.
 | Journal | J | JOURNAL |
 | Pause | Esc or P | II |
 | Resume | Esc or choose Resume | Tap Resume |
@@ -48,10 +48,10 @@ Normal play saves after a complete story event, hold action, or room transition.
 
 The journal lists all fifteen challenges and derives completion from actual game flags. A normal run must complete all fifteen.
 
-## Presentation Mode
-Choose any chapter for a short classroom demonstration. Earlier flags are supplied as demonstration defaults, clearly labeled, and never written to the normal save. They are not proof that those challenges were earned. Quit to title and choose another chapter as needed.
+## Chapter Select
+Choose any chapter from the title screen. Earlier flags are filled in with default choices and are never written to the normal save, so those challenges are not counted as earned. Quit to the title to pick another chapter.
 
-## Sound, motion and stepping away (Day 2)
+## Sound, motion and stepping away
 
 Sound begins after your first tap or key press. Press **M** to mute or unmute. On a phone, use **Settings & credits** on the title or **Sound** in the pause menu. The sound is original synthesized ambience and quiet feedback; no music download is needed. If the browser blocks sound, the story still plays.
 
@@ -60,7 +60,7 @@ Sound begins after your first tap or key press. Press **M** to mute or unmute. O
 Switching tabs, locking the device or losing browser focus pauses the complete scene. Tap the return button or press Enter before continuing. Reading, escape timers and Hound cues wait for your return. During pause or the journal, movement stops immediately. On a small phone, rotate to landscape for readable text and larger targets.
 
 
-## candidate controls
+## Hose, hints and the river
 
 The opening hose only soaks books in its FLOW pressure band. Hold to raise pressure; release to vent. Overpressure pauses flow but keeps partial progress. Settings → Audio & accessibility offers assisted hose (ordinary hold), sound check, volume presets and analog-effects toggle. H or the ? button gives optional contextual hints.
 

@@ -53,7 +53,7 @@ export function completedIds(rules: ChallengeRule[], flags: Flags): number[] {
   return rules.filter((r) => isComplete(r, flags)).map((r) => r.id);
 }
 
-/** Live session. Demo sessions never touch storage, so Presentation Mode cannot fake real progress. */
+/** Live session. Demo sessions never touch storage, so Chapter Select cannot fake real progress. */
 export class Session {
   room: string;
   x: number;

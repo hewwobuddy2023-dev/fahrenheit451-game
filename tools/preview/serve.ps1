@@ -1,6 +1,6 @@
-# Fahrenheit 451 - Chapter 1 redesign preview server (Windows, no installs needed).
+# Fahrenheit 451 - Chapter 1 preview server (Windows, no installs needed).
 # Serves the built game from this folder at http://localhost:8451/ and opens it in the default browser.
-# Saves made here belong to "localhost:8451" only; they can never touch the classroom site's saved game.
+# Saves made here belong to "localhost:8451" only; they can never touch the live site's saved game.
 $ErrorActionPreference = 'Stop'
 $root = Join-Path $PSScriptRoot 'game'
 $port = 8451

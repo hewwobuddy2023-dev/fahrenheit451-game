@@ -39,7 +39,7 @@ await check('desktop: no touch arrows/ACT button; prompt, hint and objective say
     assert.equal(promptKey(r), 'E');
     assert.ok(noAct(r.controlHint.text), r.controlHint.text);
     assert.ok(noAct(r.hud.objective.text), r.hud.objective.text);
-    // Chapter 1 redesign: the objective states the intention, never a counter; the prompt carries the control
+    // Chapter 1: the objective states the intention, never a counter; the prompt carries the control
     assert.ok(/kerosene/i.test(r.hud.objective.text) && !/\d\s*\/\s*\d/.test(r.hud.objective.text), r.hud.objective.text);
     assert.equal(r.near?.id, 'douse'); assert.ok(/^HOLD\s+SOAK THE BOOKS$/.test(r.promptText.text), r.promptText.text);
   } finally { s.close(); }
@@ -89,7 +89,7 @@ await check('desktop: holding E continuously at the hose always finishes (no dea
       await s.advance(400);
       const p = r.session.flags['c01.p3'] ? Infinity : r.holdMs;
       assert.ok(p > last, `progress stalled at ${r.holdMs}`);
-      assert.equal(r.pressureLabel.visible, false, 'no pressure gauge in the redesigned burn');
+      assert.equal(r.pressureLabel.visible, false, 'no pressure gauge in the burn');
       last = p;
     }
     await s.key('KeyE', false);

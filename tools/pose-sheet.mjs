@@ -2,7 +2,7 @@
 // Usage: node tools/pose-sheet.mjs <baseURL> <out.png>
 import { chromium } from '@playwright/test';
 
-const [base = 'http://localhost:5173', out = 'docs/qa/ch1-v2/poses.png'] = process.argv.slice(2);
+const [base = 'http://localhost:5173', out = 'docs/qa/ch1/poses.png'] = process.argv.slice(2);
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1200, height: 800 } });
 await page.goto(`${base}/?debug`);

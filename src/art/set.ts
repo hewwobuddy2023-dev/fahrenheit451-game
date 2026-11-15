@@ -18,7 +18,7 @@ function ovalLamp(c: Ctx, x: number, y: number) {
   c.fillStyle='#c7c8a0';c.beginPath();c.ellipse(x,y,20,3,0,0,Math.PI*2);c.fill();
 }
 export function setDressing(s: Phaser.Scene, room: RoomDef) {
-  const family=room.kit.split(':')[0], key=`k:${family}:${room.id}`, F=FLOOR_TOP;
+  const family=room.kit.split(':')[0], key=`k:${family}:set:${room.id}`, F=FLOOR_TOP;
   paint(s,key,room.width,F,(c)=>{
     const r=rng(room.width+room.chapter*451);
     if(['station','subway','faber'].includes(family)) {
