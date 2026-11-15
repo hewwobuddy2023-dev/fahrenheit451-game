@@ -1,6 +1,6 @@
 /** Original editable set dressing. Painted once per room; no input objects or full-screen shaders. */
 import Phaser from 'phaser';
-import { paint, poly, rng, vgrad, type Ctx } from './core.ts';
+import { paint, poly, radial, rng, vgrad, type Ctx } from './core.ts';
 import { FLOOR_TOP } from '../view.ts';
 import { settings } from '../settings.ts';
 import type { RoomDef } from '../content/types.ts';
@@ -21,7 +21,7 @@ export function setDressing(s: Phaser.Scene, room: RoomDef) {
   const family=room.kit.split(':')[0], key=`k:${family}:set:${room.id}`, F=FLOOR_TOP;
   paint(s,key,room.width,F,(c)=>{
     const r=rng(room.width+room.chapter*451);
-    if(['station','subway','faber'].includes(family)) {
+    if(['station','subway'].includes(family)) {
       pipe(c,40,64,room.width-100,160);pipe(c,170,84,Math.min(700,room.width-200),150);
       for(let x=140;x<room.width;x+=420){ovalLamp(c,x,100);c.fillStyle='rgba(105,137,118,0.12)';poly(c,[x-16,106,x+16,106,x+110,F,x-100,F]);}
       // Inspection panels with round meters, wires and enamel labels.
@@ -32,27 +32,35 @@ export function setDressing(s: Phaser.Scene, room: RoomDef) {
     }
     if(family==='home') {
       // Actual investigation props at the content hotspots: rotary phone and file-wallet.
-      c.fillStyle='#28302b';c.beginPath();c.roundRect(247,337,85,26,[12,12,3,3]);c.fill();
-      c.fillStyle='#101714';c.beginPath();c.roundRect(245,318,89,15,7);c.fill();
-      c.strokeStyle='#899081';c.lineWidth=2;c.beginPath();c.arc(291,347,13,0,Math.PI*2);c.stroke();
-      for(let a=0;a<10;a++){const angle=a/10*Math.PI*2;c.fillStyle='#151d19';c.beginPath();c.arc(291+Math.cos(angle)*9,347+Math.sin(angle)*9,2,0,Math.PI*2);c.fill();}
-      c.strokeStyle='#121916';c.lineWidth=2;c.beginPath();c.moveTo(251,327);for(let y=331;y<378;y+=4)c.bezierCurveTo(238,y,259,y,248,y+4);c.stroke();
+      // hall table with a rotary telephone: enamel body, handset across the cradle, finger dial, curling cord
+      c.fillStyle='#5a4630';c.fillRect(226,352,130,8);c.fillStyle='#3a2c1e';c.fillRect(236,360,8,32);c.fillRect(338,360,8,32);c.fillStyle='rgba(255,230,180,0.18)';c.fillRect(226,352,130,1);
+      c.fillStyle='#8a2c24';poly(c,[246,352,336,352,324,326,258,326]);c.fillStyle='rgba(255,255,255,0.18)';c.fillRect(260,327,62,2);
+      c.fillStyle='#1a1214';c.beginPath();c.roundRect(244,312,94,13,6);c.fill();for(const x of [250,332]){c.beginPath();c.arc(x,318,9,0,Math.PI*2);c.fill();}c.fillStyle='rgba(255,255,255,0.15)';c.fillRect(256,313,70,2);
+      c.fillStyle='#d8d0b8';c.beginPath();c.arc(291,340,12,0,Math.PI*2);c.fill();c.fillStyle='#4a1a16';c.beginPath();c.arc(291,340,3.5,0,Math.PI*2);c.fill();
+      for(let a=0;a<10;a++){const angle=0.9+a/10*Math.PI*1.7;c.fillStyle='#2a1612';c.beginPath();c.arc(291+Math.cos(angle)*8.4,340+Math.sin(angle)*8.4,1.8,0,Math.PI*2);c.fill();}
+      c.strokeStyle='#14100f';c.lineWidth=2;c.beginPath();c.moveTo(246,346);for(let y=350;y<388;y+=5)c.bezierCurveTo(232,y,254,y,242,y+5);c.stroke();
       c.fillStyle='#40372d';poly(c,[973,348,1023,343,1028,373,977,378]);c.fillStyle='#c9b995';poly(c,[980,351,1019,347,1021,367,983,372]);
       c.fillStyle='#4b5144';c.fillRect(985,355,11,10);c.fillStyle='#746b56';c.fillRect(1000,353,15,2);c.fillRect(1000,358,13,2);
       // (the parlor script now lives in Mildred's hands, drawn by her seated pose)
       // Hall arch and bevels read as recesses, not a wall-sized black block.
-      for(const x of [215,1130,1460]){c.fillStyle='rgba(0,0,0,0.2)';poly(c,[x,85,x+34,102,x+34,F,x,F]);c.strokeStyle='#515460';c.lineWidth=2;c.beginPath();c.moveTo(x,85);c.lineTo(x+34,102);c.lineTo(x+34,F);c.stroke();}
+      for(const x of [215,1130,1460]){c.fillStyle=vgrad(c,85,F,[[0,'rgba(0,0,0,0.12)'],[1,'rgba(0,0,0,0)']]);poly(c,[x,85,x+34,102,x+34,F,x,F]);}
       c.fillStyle='#43504a';c.beginPath();c.ellipse(590,334,45,9,0,0,Math.PI*2);c.fill();c.fillRect(555,334,70,36);c.fillStyle='#141c18';c.fillRect(561,370,5,22);c.fillRect(616,370,5,22);
-      for(let i=0;i<11;i++){const x=588+(r()-.5)*52,y=270-r()*80;c.strokeStyle='#33473a';c.lineWidth=3;c.beginPath();c.moveTo(589,333);c.quadraticCurveTo(x,280,x,y);c.stroke();c.fillStyle='#4b5e4a';c.beginPath();c.ellipse(x,y,5,18,-.6,0,Math.PI*2);c.fill();}
+      const dead=room.id==='home5';for(let i=0;i<11;i++){const x=588+(r()-.5)*52,y=270-r()*(dead?40:80);c.strokeStyle=dead?'#3a2c1e':'#33473a';c.lineWidth=3;c.beginPath();c.moveTo(589,333);c.quadraticCurveTo(x,280,x,y);c.stroke();c.fillStyle=dead?'#5a4630':'#4b5e4a';c.beginPath();c.ellipse(x,y,5,dead?9:18,dead?.9:-.6,0,Math.PI*2);c.fill();}
       for(const x of [1660,1980,2300]){c.strokeStyle='#657078';c.lineWidth=5;c.beginPath();c.roundRect(x-153,57,306,256,22);c.stroke();c.strokeStyle='#1a2227';c.lineWidth=7;c.beginPath();c.roundRect(x-147,63,294,244,17);c.stroke();
         c.fillStyle='#1d252a';c.fillRect(x-110,316,220,17);for(let n=0;n<8;n++){c.fillStyle=n===3?'#a06944':'#52605c';c.beginPath();c.arc(x-90+n*25,324,3,0,Math.PI*2);c.fill();}}
-      // Soft curved sofa back, seams and cylindrical feet behind the live cast.
-      c.fillStyle=vgrad(c,336,391,[[0,'#5b4550'],[1,'#241f29']]);c.beginPath();c.roundRect(1770,340,160,49,[20,20,5,5]);c.fill();c.strokeStyle='#78636b';c.lineWidth=1;c.stroke();c.beginPath();c.moveTo(1850,345);c.lineTo(1850,384);c.stroke();
     }
     if(family==='attic'||family==='faber'){
       // Differently sized bound volumes, page blocks and spine bands.
       for(let i=0;i<45;i++){const x=family==='attic'?220+r()*420:900+r()*230,y=family==='attic'?150+Math.floor(r()*5)*30:255-r()*20,w=5+r()*9,h=12+r()*20;c.save();c.translate(x,y);c.rotate((r()-.5)*.3);c.fillStyle=['#6d4030','#4d6050','#5a5c72','#8b7b51'][i%4];c.fillRect(0,-h,w,h);c.fillStyle='#b2a18a';c.fillRect(1,-h+3,w-2,1);c.fillRect(1,-3,w-2,1);c.restore();}
       c.strokeStyle='#8b7753';c.lineWidth=2;c.beginPath();c.arc(room.width-250,180,21,0,Math.PI*2);c.stroke();c.lineWidth=1;c.beginPath();c.moveTo(room.width-250,180);c.lineTo(room.width-250,167);c.lineTo(room.width-241,180);c.stroke();
+    }
+    if(family==='faber'){
+      // a professor's room: every shelf stocked, a pendant lamp, the radio and a bench lamp (plus the green bead, his invention)
+      for(const y of [150,198,246,294,340])for(let x=404;x<592;){const w=5+Math.floor(r()*8),h=18+Math.floor(r()*24);c.fillStyle=['#6d4030','#4d6050','#5a5c72','#8b7b51','#7a3a3a','#3f5a6a'][Math.floor(r()*6)];c.fillRect(x,y-h,w,h);c.fillStyle='rgba(255,235,200,0.35)';c.fillRect(x+1,y-h+3,w-2,1);x+=w+1;if(r()<.08)x+=12;}
+      c.fillStyle='#0a0908';c.fillRect(299,40,2,118);poly(c,[270,170,330,170,316,150,284,150]);radial(c,300,172,130,'rgba(255,214,150,A)',0.3);
+      c.fillStyle='#6a4a2c';c.beginPath();c.roundRect(905,224,62,36,5);c.fill();c.fillStyle='#b8a47a';c.fillRect(911,231,28,23);c.fillStyle='rgba(60,40,20,0.35)';for(let y=233;y<254;y+=4)c.fillRect(911,y,28,1);c.fillStyle='#e0d6b4';c.fillRect(944,231,17,10);c.fillStyle='#2a1e12';c.beginPath();c.arc(947,249,3,0,Math.PI*2);c.arc(958,249,3,0,Math.PI*2);c.fill();
+      c.fillStyle='#3a8a5a';c.beginPath();c.ellipse(1010,257,9,4,0,0,Math.PI*2);c.fill();c.fillStyle='rgba(255,255,255,0.35)';c.fillRect(1006,255,5,1);
+      c.fillStyle='#5a4630';c.beginPath();c.ellipse(1090,259,13,4,0,0,Math.PI*2);c.fill();c.fillRect(1088,234,4,25);c.fillStyle='#d8b878';poly(c,[1068,236,1112,236,1103,212,1077,212]);radial(c,1090,226,80,'rgba(255,214,140,A)',0.45);
     }
     if(family==='forest'){
       for(let i=0;i<36;i++){let x=r()*room.width,y=F-12-r()*70;c.strokeStyle='#30453a';c.lineWidth=1;c.beginPath();c.moveTo(x,F);c.quadraticCurveTo(x-12,y,x+5,y-15);c.stroke();}

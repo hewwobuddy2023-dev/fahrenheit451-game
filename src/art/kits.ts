@@ -41,11 +41,11 @@ function nightSky(s: Phaser.Scene, key = 'k:sky', moon = true, glow = 0.35) {
   return sky;
 }
 
-function skyline(s: Phaser.Scene, key: string, width: number, lit: number, base = 330, col = '#120d0e') {
+function skyline(s: Phaser.Scene, key: string, width: number, lit: number, base = 330, col = '#120d0e', tall = 160) {
   paint(s, key, width, H, (c) => {
     const r = rng(width + lit * 1000);
     for (let x = -20; x < width;) {
-      const w = 30 + r() * 80, h = 60 + r() * 160;
+      const w = 30 + r() * 80, h = 60 + r() * tall;
       c.fillStyle = col; c.fillRect(x, base - h, w, H);
       if (r() > 0.6) c.fillRect(x + w / 2 - 1, base - h - 30, 2, 32);
       for (let wy = base - h + 10; wy < base; wy += 12) for (let wx = x + 6; wx < x + w - 6; wx += 10) {
@@ -88,8 +88,6 @@ function interiorTrim(c: Ctx, width: number, floor: number) {
   poly(c, [0, 0, width, 0, width - 32, 36, 32, 36]);
   c.fillRect(0, floor - 15, width, 15);
   c.fillStyle = 'rgba(224,205,168,0.13)'; c.fillRect(0, floor - 16, width, 1);
-  c.fillStyle = 'rgba(0,0,0,0.2)';
-  for (let x = 34; x < width; x += 320) c.fillRect(x, 38, 2, floor - 54);
   c.strokeStyle = 'rgba(220,200,170,0.08)'; c.lineWidth = 1;
   c.beginPath(); c.moveTo(0, 24); c.lineTo(width, 24); c.stroke();
 }
@@ -99,11 +97,14 @@ function occluder(s: Phaser.Scene, key: string, x: number, factor = 1.3) {
   return s.add.image(x, H, key).setOrigin(0.5, 1).setScrollFactor(factor).setDepth(60).setData('occluder', factor);
 }
 
-function lampPost(s: Phaser.Scene) {
-  paint(s, 'k:lamppost', 40, H, (c) => {
-    c.fillStyle = '#070505'; c.fillRect(17, 60, 6, H - 60); c.fillRect(8, 56, 28, 8); c.fillRect(30, 56, 4, 14);
-    c.fillStyle = 'rgba(242,165,74,0.5)'; c.fillRect(23, 66, 1, H - 70);
+/** A street lamp planted in the pavement: it scrolls with the street, so no foreground sprite slides across the scene. */
+function lampPost(s: Phaser.Scene, x: number) {
+  paint(s, 'k:lamppost', 40, 476, (c) => {
+    c.fillStyle = hgrad(c, 17, 23, [[0, '#0c0909'], [1, '#1f1814']]); c.fillRect(17, 60, 6, 416);
+    c.fillStyle = '#0c0909'; c.fillRect(8, 56, 28, 8); c.fillRect(30, 56, 4, 14); c.fillRect(13, 440, 14, 36);
+    c.fillStyle = '#ffd08a'; c.fillRect(31, 70, 2, 3);
   });
+  return s.add.image(x, 476, 'k:lamppost').setOrigin(0.5, 1).setDepth(3);
 }
 
 function cones(s: Phaser.Scene, xs: number[], y: number, tint: number, alpha = 0.45) {
@@ -132,10 +133,7 @@ const station: Kit = (s, room) => {
   nightSky(s);
   paint(s, 'k:station:wall', RW, F, (c) => {
     c.fillStyle = vgrad(c, 0, F, [[0, '#231c18'], [1, '#161211']]); c.fillRect(0, 0, RW, F);
-    for (let x = 0; x < RW; x += 200) {
-      c.fillStyle = '#0d0a09'; c.fillRect(x, 56, 3, 250);
-      c.fillStyle = 'rgba(120,96,80,0.35)'; for (let y = 70; y < 300; y += 24) c.fillRect(x + 7, y, 2, 2);
-    }
+
     c.fillStyle = '#1a1412'; c.fillRect(0, 300, RW, F - 300);
     c.fillStyle = '#2b221e'; c.fillRect(0, 296, RW, 8);
     c.fillStyle = 'rgba(0,0,0,0.35)'; for (let y = 322; y < F; y += 22) c.fillRect(0, y, RW, 1);
@@ -188,7 +186,7 @@ const station: Kit = (s, room) => {
   stationProps(s);
   s.add.image(300, 52, 'k:pole').setOrigin(0.5, 0).setDepth(3).setScale(1, (F - 52) / 420);
   s.add.image(620, F, 'k:rack').setOrigin(0.5, 1).setDepth(3);
-  s.add.image(1110, 452, 'k:table').setOrigin(0.5, 1).setDepth(4.6);
+  s.add.image(1110, 456, 'k:table').setOrigin(0.5, 1).setDepth(4.6);
   s.add.image(1520, F, 'k:pump').setOrigin(0.5, 1).setDepth(3);
   s.add.image(1770, F, 'k:kennel').setOrigin(0.5, 1).setDepth(3);
   const hound = s.add.image(1770, F - 6, 'k:hound').setOrigin(0.5, 1).setDepth(3);
@@ -197,9 +195,6 @@ const station: Kit = (s, room) => {
   s.add.image(2010, F, 'k:dispatch').setOrigin(0.5, 1).setDepth(3);
   const bulb = s.add.image(2065, F - 204, 'glow').setScale(0.55).setTint(C.redN).setAlpha(0).setBlendMode(ADD).setDepth(3);
   s.add.image(2290, 470, 'k:truck').setOrigin(0.5, 1).setDepth(4.5);
-  paint(s, 'k:station:beam', 60, H, (c) => { c.fillStyle = '#060404'; c.fillRect(14, 0, 32, H); c.fillRect(4, 0, 52, 16); c.fillStyle = 'rgba(242,165,74,0.15)'; c.fillRect(45, 16, 1, H); });
-  // one foreground beam only: a second one at 1900 swept across the kerosene tanks and the kennel
-  occluder(s, 'k:station:beam', 900, 1.32);
   dust(s, RW);
   let alarm: Phaser.Tweens.Tween | undefined;
   return {
@@ -248,10 +243,22 @@ function stationProps(s: Phaser.Scene) {
     c.strokeStyle = '#3b2a1e'; c.lineWidth = 7; for (const r of [24, 16]) { c.beginPath(); c.arc(84, 204, r, 0, Math.PI * 2); c.stroke(); }
     c.fillStyle = hgrad(c, 100, 140, [[0, '#7a5220'], [0.5, '#ffe2a0'], [1, '#8a5a22']]); poly(c, [104, 196, 142, 190, 142, 198, 104, 206]);
   });
-  paint(s, 'k:table', 200, 70, (c) => {
-    c.fillStyle = '#1a1310'; c.fillRect(30, 18, 6, 52); c.fillRect(164, 18, 6, 52);
-    c.fillStyle = '#3a2a20'; c.fillRect(14, 10, 172, 10); c.fillStyle = 'rgba(242,165,74,0.35)'; c.fillRect(14, 10, 172, 1);
-    const r = rng(9); for (let i = 0; i < 7; i++) { c.save(); c.translate(50 + r() * 100, 9); c.rotate((r() - 0.5) * 0.6); c.fillStyle = '#e4d6b6'; c.fillRect(-5, -2, 10, 3); c.restore(); }
+  // the card table, seen from a little above: a real tabletop with a hand dealt, a deck, a few coins and a mug
+  paint(s, 'k:table', 200, 84, (c) => {
+    c.fillStyle = '#1a1310'; c.fillRect(24, 44, 6, 40); c.fillRect(170, 44, 6, 40);
+    c.fillStyle = '#2a1e16'; c.fillRect(10, 32, 180, 10);
+    c.fillStyle = vgrad(c, 12, 32, [[0, '#5a4030'], [1, '#3e2c20']]); poly(c, [28, 12, 172, 12, 194, 32, 6, 32]);
+    c.fillStyle = 'rgba(255,225,170,0.3)'; c.fillRect(6, 32, 188, 1);
+    const card = (x: number, y: number, rot: number, suit: number) => {
+      c.save(); c.translate(x, y); c.rotate(rot); c.fillStyle = '#f0e8d4'; c.fillRect(-6, -8, 12, 16); c.strokeStyle = 'rgba(40,30,20,0.5)'; c.lineWidth = 1; c.strokeRect(-6, -8, 12, 16);
+      c.fillStyle = suit % 2 ? '#a82a22' : '#1a1412';
+      if (suit % 2) poly(c, [0, 5, -4, 0, 0, -4, 4, 0]); else { c.beginPath(); c.arc(0, -1, 3.5, 0, Math.PI * 2); c.fill(); c.fillRect(-1, 0, 2, 5); }
+      c.restore();
+    };
+    [[56, 22, -0.5, 0], [70, 21, -0.2, 1], [84, 21, 0.1, 2], [98, 22, 0.35, 3], [112, 23, 0.6, 1]].forEach(([x, y, r, k]) => card(x, y, r, k));
+    c.save(); c.translate(140, 22); c.rotate(-0.12); c.fillStyle = '#244057'; c.fillRect(-7, -9, 14, 18); c.strokeStyle = '#e4d6b6'; c.lineWidth = 1; c.strokeRect(-5, -7, 10, 14); c.restore();
+    for (const [x, y] of [[40, 24], [44, 22], [162, 26]]) { c.fillStyle = '#c8a24a'; c.beginPath(); c.ellipse(x, y, 4, 2, 0, 0, Math.PI * 2); c.fill(); }
+    c.fillStyle = '#d9cba8'; c.fillRect(176, 14, 9, 9); c.fillStyle = '#2a1e16'; c.fillRect(177, 15, 7, 2); c.strokeStyle = '#d9cba8'; c.lineWidth = 1.5; c.beginPath(); c.arc(186, 19, 3, -1.2, 1.2); c.stroke();
   });
   paint(s, 'k:pump', 250, 210, (c) => {
     c.fillStyle = '#16110f'; c.fillRect(0, 194, 250, 16);
@@ -278,14 +285,25 @@ function stationProps(s: Phaser.Scene) {
     };
     d('rgba(127,214,200,0.45)', 1, -1); d('#262c2d', 0, 0);
   });
+  // the dispatch board: a felt board of address slots (some lit, some marked), a call lamp, the teletype and the desk telephone
   paint(s, 'k:dispatch', 190, 230, (c) => {
-    c.fillStyle = '#120e0c'; c.fillRect(20, 0, 150, 72); c.strokeStyle = '#2c231f'; c.lineWidth = 4; c.strokeRect(20, 0, 150, 72);
-    c.fillStyle = '#d9cba8'; c.fillRect(32, 8, 66, 12);
-    for (let r = 0; r < 3; r++) for (let i = 0; i < 7; i++) { c.fillStyle = (r * 7 + i) % 5 === 0 ? 'rgba(242,165,74,0.8)' : 'rgba(242,165,74,0.18)'; c.beginPath(); c.arc(38 + i * 12, 34 + r * 12, 3, 0, Math.PI * 2); c.fill(); }
-    c.fillStyle = '#5a1510'; c.beginPath(); c.arc(150, 26, 8, 0, Math.PI * 2); c.fill();
-    c.fillStyle = '#2e231c'; c.fillRect(0, 142, 190, 10); c.fillStyle = '#19130f'; c.fillRect(10, 152, 170, 78);
-    c.fillStyle = '#2c2420'; c.beginPath(); c.roundRect(46, 100, 104, 42, [10, 10, 2, 2]); c.fill();
-    c.fillStyle = '#d9cba8'; c.beginPath(); c.roundRect(64, 88, 66, 16, 7); c.fill(); c.fillRect(88, 136, 16, 34);
+    c.fillStyle = '#2a1f18'; c.fillRect(6, 0, 178, 130); c.fillStyle = '#1b2a22'; c.fillRect(11, 5, 168, 120);
+    c.fillStyle = '#0e0a08'; c.fillRect(11, 5, 168, 36);
+    c.fillStyle = '#e4d6b6'; c.font = '600 15px Oswald'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText('D I S P A T C H', 20, 20);
+    c.font = '500 8px Oswald'; c.fillStyle = '#a99c86'; c.fillText('ENGINE  ·  ALARM  ·  ADDRESS', 20, 34);
+    c.fillStyle = '#3a0f0c'; c.beginPath(); c.arc(150, 26, 9, 0, Math.PI * 2); c.fill(); c.strokeStyle = '#8a7a58'; c.lineWidth = 2; c.stroke();
+    for (let row = 0; row < 3; row++) for (let col = 0; col < 4; col++) {
+      const x = 17 + col * 40, y = 48 + row * 25, n = row * 4 + col;
+      c.fillStyle = '#0c1410'; c.fillRect(x, y, 36, 22);
+      c.fillStyle = '#e6dcc0'; c.fillRect(x + 2, y + 5, 32, 17);
+      c.fillStyle = 'rgba(40,30,22,0.6)'; for (let l = 0; l < 3; l++) c.fillRect(x + 5, y + 9 + l * 4, 18 + ((n * 7 + l * 5) % 10), 1);
+      c.fillStyle = n % 5 === 0 ? '#c8442a' : n % 3 === 0 ? '#f2a54a' : '#2a3a30'; c.beginPath(); c.arc(x + 5, y + 2.5, 2, 0, Math.PI * 2); c.fill();
+    }
+    c.fillStyle = '#2e231c'; c.fillRect(0, 150, 190, 10); c.fillStyle = '#19130f'; c.fillRect(10, 160, 170, 70);
+    c.fillStyle = '#2c2420'; c.beginPath(); c.roundRect(28, 128, 74, 22, [8, 8, 2, 2]); c.fill();
+    c.fillStyle = '#d9cba8'; c.fillRect(44, 116, 40, 14); c.fillStyle = 'rgba(40,30,22,0.6)'; for (let l = 0; l < 3; l++) c.fillRect(48, 119 + l * 3, 30 - l * 4, 1);
+    c.fillStyle = '#14100e'; c.beginPath(); c.roundRect(122, 138, 40, 12, [8, 8, 2, 2]); c.fill(); c.beginPath(); c.roundRect(120, 130, 44, 8, 4); c.fill();
+    c.fillStyle = '#d8d0b8'; c.beginPath(); c.arc(142, 144, 4, 0, Math.PI * 2); c.fill();
   });
   truckTexture(s);
 }
@@ -328,24 +346,101 @@ function facade(c: Ctx, x: number, w: number, h: number, base: number, o: { col:
 
 }
 
+/** Boulevard: a flat-roofed shop block with lit display windows, a striped awning and a sign band. */
+function storefront(c: Ctx, x: number, w: number, h: number, base: number, o: { col: string; sign: string; awning: string; r: () => number }) {
+  const top = base - h, r = o.r;
+  c.fillStyle = hgrad(c, x, x + w, [[0, '#0c0a0b'], [0.1, o.col], [0.9, o.col], [1, '#0c0a0b']]); c.fillRect(x, top, w, h);
+  c.fillStyle = '#3a3532'; c.fillRect(x - 3, top, w + 6, 7); c.fillStyle = 'rgba(255,230,190,0.14)'; c.fillRect(x - 3, top, w + 6, 1);
+  for (let wy = top + 20; wy < base - 120; wy += 48) for (let wx = x + 14; wx < x + w - 30; wx += 40) {
+    const lit = r() > 0.55;
+    c.fillStyle = lit ? 'rgba(242,176,92,0.62)' : 'rgba(14,18,24,0.95)'; c.fillRect(wx, wy, 26, 32);
+    c.strokeStyle = '#3a3a3a'; c.lineWidth = 2; c.strokeRect(wx, wy, 26, 32); c.fillStyle = '#3a3a3a'; c.fillRect(wx + 12, wy, 2, 32);
+  }
+  c.fillStyle = '#0a0809'; c.fillRect(x, base - 112, w, 22);
+  c.fillStyle = '#e4d6b6'; c.font = '700 14px Oswald'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(o.sign, x + w / 2, base - 101);
+  c.fillStyle = vgrad(c, base - 84, base - 4, [[0, 'rgba(255,196,120,0.85)'], [1, 'rgba(176,110,56,0.7)']]); c.fillRect(x + 10, base - 84, w - 20, 78);
+  c.fillStyle = 'rgba(20,10,6,0.55)'; for (let sx = x + 26; sx < x + w - 24; sx += 34) { c.fillRect(sx, base - 56, 20, 30); c.fillRect(sx + 4, base - 70, 12, 14); } // goods in the window
+  c.fillStyle = '#1c1612'; c.fillRect(x + w / 2 - 1, base - 84, 3, 78); c.fillRect(x + 10, base - 8, w - 20, 4);
+  for (let k = 0, ax = x + 4; ax < x + w - 4; k++, ax += 18) { c.fillStyle = k % 2 ? '#d8cdb4' : o.awning; poly(c, [ax, base - 92, ax + 18, base - 92, ax + 20, base - 76, ax - 2, base - 76]); }
+  radial(c, x + w / 2, base - 44, w * 0.7, 'rgba(255,196,120,A)', 0.12);
+}
+
+/** Lawn: a two-storey frame house with clapboard, a gable, a porch, shutters and a clipped hedge. */
+function suburbHouse(c: Ctx, x: number, w: number, h: number, base: number, o: { col: string; roof: string; r: () => number; lit?: string }) {
+  const top = base - h, r = o.r;
+  c.fillStyle = hgrad(c, x, x + w, [[0, '#0e0d0f'], [0.08, o.col], [0.92, o.col], [1, '#0e0d0f']]); c.fillRect(x, top, w, h);
+  c.fillStyle = 'rgba(255,255,255,0.045)'; for (let y = top + 7; y < base; y += 9) c.fillRect(x, y, w, 1);
+  c.fillStyle = o.roof; poly(c, [x - 16, top + 6, x + w / 2, top - 64, x + w + 16, top + 6]);
+  c.fillStyle = 'rgba(255,255,255,0.08)'; poly(c, [x - 16, top + 6, x + w / 2, top - 64, x + w / 2, top - 58, x - 8, top + 6]);
+  c.fillStyle = '#2a2220'; c.fillRect(x + w * 0.72, top - 66, 16, 48);
+  const win = (wx: number, wy: number, lit: boolean) => {
+    c.fillStyle = lit ? (o.lit ?? 'rgba(242,176,92,0.7)') : 'rgba(12,16,22,0.95)'; c.fillRect(wx, wy, 30, 40);
+    c.fillStyle = 'rgba(0,0,0,0.45)'; c.fillRect(wx + 14, wy, 2, 40); c.fillRect(wx, wy + 19, 30, 2);
+    c.fillStyle = '#3a4a3c'; c.fillRect(wx - 9, wy, 8, 40); c.fillRect(wx + 31, wy, 8, 40); // shutters
+  };
+  for (const wx of [x + 26, x + w - 56]) win(wx, top + 22, r() > 0.6);
+  win(x + 26, base - 76, r() > 0.5); win(x + w - 56, base - 76, r() > 0.5);
+  c.fillStyle = '#0a0c0c'; c.beginPath(); c.roundRect(x + w / 2 - 15, base - 66, 30, 66, [6, 6, 0, 0]); c.fill();
+  c.fillStyle = '#997952'; c.fillRect(x + w / 2 + 9, base - 34, 3, 3);
+  c.fillStyle = '#2a2624'; c.fillRect(x + w / 2 - 36, base - 80, 72, 7); poly(c, [x + w / 2 - 40, base - 80, x + w / 2 + 40, base - 80, x + w / 2 + 28, base - 90, x + w / 2 - 28, base - 90]);
+  c.fillStyle = '#34302c'; c.fillRect(x + w / 2 - 34, base - 74, 4, 74); c.fillRect(x + w / 2 + 30, base - 74, 4, 74);
+  c.fillStyle = '#3c3834'; c.fillRect(x + w / 2 - 24, base - 4, 48, 4); c.fillRect(x + w / 2 - 30, base - 1, 60, 3);
+  c.fillStyle = '#0d150f'; for (let hx = x - 6; hx < x + w + 6; hx += 14) { if (Math.abs(hx - (x + w / 2)) < 34) continue; c.beginPath(); c.ellipse(hx + 7, base - 8, 9, 10, 0, 0, Math.PI * 2); c.fill(); }
+  c.fillStyle = '#e4dccb'; c.globalAlpha = 0.5; for (let px = x - 20; px < x + w + 20; px += 11) c.fillRect(px, base - 16, 5, 16); c.fillRect(x - 20, base - 12, w + 40, 2); c.globalAlpha = 1; // white picket fence along the lawn
+}
+
+/** Alley: the backs of tall buildings: dark brick, barred windows, a fire escape, a lit back door and a dumpster. */
+function alleyBack(c: Ctx, x: number, w: number, h: number, base: number, o: { r: () => number; door?: boolean }) {
+  const top = base - h, r = o.r;
+  c.fillStyle = hgrad(c, x, x + w, [[0, '#120b0a'], [0.1, '#2a1a15'], [0.9, '#2a1a15'], [1, '#120b0a']]); c.fillRect(x, top, w, h);
+  c.fillStyle = 'rgba(0,0,0,0.25)'; for (let y = top + 8; y < base; y += 8) c.fillRect(x, y, w, 1);
+  for (let i = 0; i < 90; i++) { c.fillStyle = r() > 0.5 ? 'rgba(255,200,160,0.04)' : 'rgba(0,0,0,0.18)'; c.fillRect(x + r() * w, top + r() * h, 6 + r() * 12, 4); }
+  c.fillStyle = '#0c0807'; c.fillRect(x - 4, top, w + 8, 8);
+  for (let wy = top + 24; wy < base - 110; wy += 56) for (let wx = x + 22; wx < x + w - 60; wx += 52) {
+    c.fillStyle = r() > 0.75 ? 'rgba(242,176,92,0.5)' : 'rgba(8,10,14,0.95)'; c.fillRect(wx, wy, 24, 32);
+    c.strokeStyle = '#4a4038'; c.lineWidth = 2; c.strokeRect(wx, wy, 24, 32); c.lineWidth = 1; for (let b = wx + 6; b < wx + 24; b += 6) { c.beginPath(); c.moveTo(b, wy); c.lineTo(b, wy + 32); c.stroke(); }
+  }
+  // fire escape: landings, railings and a zig-zag ladder down the face
+  c.strokeStyle = '#0b0807'; c.lineWidth = 3;
+  for (let ly = top + 70, n = 0; ly < base - 60; ly += 56, n++) {
+    c.beginPath(); c.moveTo(x + 14, ly); c.lineTo(x + w - 54, ly); c.stroke();
+    c.lineWidth = 1; c.beginPath(); c.moveTo(x + 14, ly - 16); c.lineTo(x + w - 54, ly - 16); c.stroke(); for (let px = x + 14; px < x + w - 54; px += 12) { c.beginPath(); c.moveTo(px, ly); c.lineTo(px, ly - 16); c.stroke(); } c.lineWidth = 3;
+    c.beginPath(); c.moveTo(n % 2 ? x + 14 : x + w - 54, ly); c.lineTo(n % 2 ? x + 58 : x + w - 98, ly + 56); c.stroke();
+  }
+  c.fillStyle = '#0a0706'; c.fillRect(x + w - 16, top + 10, 8, h - 10); // drain pipe
+  const dx = x + w * 0.45;
+  c.fillStyle = '#080605'; c.fillRect(dx, base - 70, 38, 70);
+  if (o.door) { c.fillStyle = 'rgba(255,196,120,0.55)'; c.fillRect(dx + 4, base - 66, 30, 66); radial(c, dx + 19, base - 6, 90, 'rgba(255,190,110,A)', 0.3); }
+  c.fillStyle = '#1b2420'; c.fillRect(x + 10, base - 36, 58, 34); c.fillStyle = '#2c3a34'; c.fillRect(x + 6, base - 42, 66, 8); c.fillStyle = '#0a0f0d'; c.fillRect(x + 14, base - 2, 6, 2); c.fillRect(x + 58, base - 2, 6, 2);
+  c.fillStyle = '#1a1614'; c.beginPath(); c.roundRect(x + w - 70, base - 30, 22, 30, 3); c.fill(); c.fillRect(x + w - 74, base - 33, 30, 4);
+}
+
 function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Kit {
   return (s, room) => {
     const RW = room.width, F = FLOOR_TOP;
     nightSky(s, 'k:sky', variant !== 'alley', variant === 'boulevard' ? 0.2 : 0.32);
-    skyline(s, 'k:street:mid', W + (RW - W) * 0.5 + 40, 0.05, 300);
-    addLayer(s, 'k:street:mid', 0.5, 0.5).setTint(0x8a7a78);
+    // each street has its own far skyline: low roofs in the suburb, lit towers on the boulevard, a dark canyon in the alley
+    const mid = `k:street:mid:${variant}`;
+    skyline(s, mid, W + (RW - W) * 0.5 + 40, variant === 'boulevard' ? 0.16 : variant === 'lawn' ? 0.03 : 0.05, 300, variant === 'alley' ? '#0d0909' : '#120d0e', variant === 'lawn' ? 40 : variant === 'boulevard' ? 220 : 160);
+    addLayer(s, mid, 0.5, 0.5).setTint(0x8a7a78);
     const key = `k:street:${variant}`;
     paint(s, key, RW, F, (c) => {
       const r = rng(RW + variant.length);
       for (let x = 0; x < RW; x += 260) tree(c, x + r() * 100, F - 20, 160 + r() * 80, '#0e0a0a', r);
       if (variant === 'boulevard') {
-        c.fillStyle = '#0a0809'; c.fillRect(0, F - 230, RW, 230);
-        for (let x = 40; x < RW; x += 400) facade(c, x, 240, 200 + r() * 40, F, { col: '#141012', lit: 'rgba(242,165,74,0.4)', r });
+        // a long block of shops, with the porcelain gas station near the far end
+        const gx = RW - 560;
+        for (let x = 0, k = 0; x < RW; k++) {
+          const w = 190 + r() * 90, h = 190 + r() * 60;
+          if (x + w > gx - 10 && x < gx + 290) { x = gx + 290; continue; }
+          storefront(c, x, w, h, F, { col: ['#1c1618', '#241a18', '#161a1c', '#201c14'][k % 4], sign: ['CAFE', 'DRUGS', 'HATS', 'SHOES', 'BAKERY', 'BAR', 'TAILOR'][k % 7], awning: ['#7a2a22', '#2a4a5a', '#3a5a3a', '#6a4a22'][k % 4], r });
+          x += w + 4;
+        }
         c.fillStyle = '#d8d6d0'; c.fillRect(RW - 520, F - 120, 220, 120); c.fillStyle = '#a8a6a0'; c.fillRect(RW - 540, F - 140, 260, 22); // porcelain gas station
-        c.fillStyle = '#1a1416'; c.font = '700 14px Oswald'; c.fillText('G A S', RW - 450, F - 124);
+        c.fillStyle = '#1a1416'; c.font = '700 14px Oswald'; c.textAlign = 'left'; c.fillText('G A S', RW - 450, F - 124);
+        c.fillStyle = '#8a2a1e'; c.fillRect(RW - 500, F - 46, 14, 46); c.fillRect(RW - 440, F - 46, 14, 46); c.fillStyle = '#e8e0cc'; c.fillRect(RW - 498, F - 40, 10, 10); c.fillRect(RW - 438, F - 40, 10, 10); // two pumps
       } else if (variant === 'alley') {
-        c.fillStyle = '#100c0c'; c.fillRect(0, F - 260, RW, 260);
-        for (let x = 0; x < RW - 300; x += 220) facade(c, x, 200, 230, F, { col: '#171214', r, tvs: true });
+        for (let x = 0, k = 0; x < RW; k++) { const w = 180 + r() * 70; alleyBack(c, x, w, 270 + r() * 40, F, { r, door: k % 3 === 1 }); x += w + 2; }
         c.fillStyle = '#2a2018'; for (let x = 0; x < RW - 300; x += 18) c.fillRect(x, F - 90, 10, 90); // board fence
       } else {
         for (let x = 0; x < RW; x += 330) {
@@ -358,14 +453,15 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
               { col: cols[k % 4], r, tvs: k % 3 !== 1, lit: k % 5 === 2 ? 'rgba(242,190,120,0.55)' : undefined, old: k % 4 === 3 });
             continue;
           }
+          if (variant === 'lawn') { const k = Math.round(x / 330); suburbHouse(c, x + 40, 190 + (k * 29) % 40, 150 + (k * 31) % 30, F - 10, { col: ['#2c2d30', '#302c28', '#242c2e', '#2e2a30'][k % 4], roof: ['#161416', '#1c1514', '#121618'][k % 3], r }); continue; }
           facade(c, x + 30, 240, 170 + r() * 30, F - 10, { col: '#1a1517', r, tvs: true });
         }
         if (variant === 'burn') facade(c, 860, 600, 300, F - 10, { col: '#2a201b', lit: 'rgba(242,165,74,0.75)', old: true, r });
-        if (variant === 'lawn') { facade(c, 760, 380, 200, F - 10, { col: '#221c1d', r }); facade(c, 1200, 260, 180, F - 10, { col: '#141012', r }); }
+        if (variant === 'lawn') { suburbHouse(c, 760, 380, 190, F - 10, { col: '#3a3532', roof: '#1a1414', r, lit: 'rgba(255,170,80,0.8)' }); suburbHouse(c, 1210, 250, 160, F - 10, { col: '#26282c', roof: '#121416', r }); }
         if (variant === 'corner') { facade(c, RW - 340, 300, 190, F - 10, { col: '#2a2420', lit: 'rgba(255,214,150,0.85)', r: () => 0.9 }); radial(c, RW - 190, F - 100, 220, 'rgba(255,200,120,A)', 0.25); }
         if (variant === 'corner') { c.fillStyle = '#0a0808'; c.fillRect(30, F - 120, 120, 120); radial(c, 90, F - 40, 90, 'rgba(240,225,190,A)', 0.4); c.fillStyle = '#d9cba8'; c.font = '600 12px Oswald'; c.fillText('S U B W A Y', 50, F - 100); }
       }
-      if (variant === 'corner' || variant === 'burn') {
+      if (variant === 'corner' || variant === 'burn' || variant === 'lawn') {
         // a strip of lawn in front of the houses: the books die on it, and Clarisse's dew lies on it
         c.fillStyle = '#0f150e'; c.fillRect(0, F - 10, RW, 10);
         const g = rng(77);
@@ -375,11 +471,10 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
       speckle(c, RW, F, 9000, 21);
     });
     addLayer(s, key, 1, 1);
-    lampPost(s);
     const posts: number[] = [];
-    for (let x = 500; x < RW; x += 700) { occluder(s, 'k:lamppost', x, 1.3); posts.push(x); }
+    for (let x = 500; x < RW; x += 700) { lampPost(s, x); posts.push(x); }
     const lights: Light[] = posts.map((x) => ({ x, y: 120, color: C.amberN, r: 320 }));
-    for (const x of posts) s.add.image(x, 70, 'cone').setOrigin(0.5, 0).setScale(1.2, 1.25).setTint(C.amberN).setAlpha(0.3).setBlendMode(ADD).setDepth(2).setScrollFactor(1.3);
+    for (const x of posts) s.add.image(x, 70, 'cone').setOrigin(0.5, 0).setScale(1.2, 1.25).setTint(C.amberN).setAlpha(0.3).setBlendMode(ADD).setDepth(2);
     const fx: Record<string, () => void> = {};
     let update: ((f: Flags) => void) | undefined;
     if (variant === 'burn') {
@@ -447,6 +542,24 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
       s.add.image(320, 470, 'k:truck').setOrigin(0.5, 1).setDepth(3);
       update = (f) => { if (f['c10.w3']) first('housefire', () => [820, 960, 1100].forEach((x) => fireAt(s, x, F - 20, 3, false, 2.5))); };
     }
+    if (variant === 'boulevard') {
+      // the five traffic lanes the cars run down, drawn in perspective (hazard lanes sit at x..x+90 on the walk line), with raised islands between them
+      const L = [620, 820, 1020, 1220, 1420], vx = 1065, hy = 250, ox = 380;
+      const px = (x: number, y: number) => vx + (x - vx) * (y - hy) / (480 - hy) - ox;
+      paint(s, 'k:boulevard:lanes', 1500, H - F, (c) => {
+        const quad = (x0: number, x1: number, y0: number, y1: number) => poly(c, [px(x0, y0), y0 - F, px(x1, y0), y0 - F, px(x1, y1), y1 - F, px(x0, y1), y1 - F]);
+        for (let i = 0; i <= L.length; i++) {
+          const a = i ? L[i - 1] + 98 : L[0] - 190, b = i < L.length ? L[i] - 8 : L[L.length - 1] + 98 + 190;
+          c.fillStyle = '#3c3935'; quad(a, b, F, H); c.fillStyle = '#6c665a'; quad(a, a + 5, F, H); quad(b - 5, b, F, H);
+        }
+        for (const x of L) {
+          c.fillStyle = 'rgba(4,4,6,0.45)'; quad(x - 8, x + 98, F, H);
+          c.fillStyle = 'rgba(232,222,184,0.6)'; quad(x - 8, x - 6, F, H); quad(x + 96, x + 98, F, H);
+          for (let y = F + 4; y < H;) { const len = 26 * (y - hy) / 230; c.fillStyle = 'rgba(240,206,110,0.7)'; quad(x + 43, x + 47, y, Math.min(H, y + len)); y += len * 2.1; }
+        }
+      });
+      s.add.image(ox, F, 'k:boulevard:lanes').setOrigin(0).setDepth(1.2);
+    }
     if (variant === 'boulevard' || variant === 'alley') dust(s, RW, 0x9ab8c4);
     return {
       floor: variant === 'boulevard'
@@ -461,49 +574,138 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
 
 export const PARLOR = [1660, 1980, 2300];
 
+const HOME_LOOK: Record<string, { top: string; bot: string; dot: string; wain: string; bed: [string, string, string, string]; sofa: [string, string] }> = {
+  home1: { top: '#4d4753', bot: '#35303b', dot: 'rgba(255,235,210,0.05)', wain: '#2b2731', bed: ['#4a4650', '#d8d4da', '#7b8aa3', '#efecf2'], sofa: ['#6a5160', '#3a2c37'] },
+  home2: { top: '#3b4a43', bot: '#27322d', dot: 'rgba(200,235,205,0.06)', wain: '#1f2824', bed: ['#3d3a34', '#cfd0c8', '#8a6a52', '#e6e4da'], sofa: ['#4f5e52', '#26302a'] },
+  home3: { top: '#343f4e', bot: '#212836', dot: 'rgba(190,210,240,0.05)', wain: '#1a202a', bed: ['#383c48', '#c4c9d4', '#56667f', '#e0e4ec'], sofa: ['#4a5468', '#252a38'] },
+  home4: { top: '#55473b', bot: '#372d25', dot: 'rgba(255,220,180,0.06)', wain: '#2a221c', bed: ['#4a3a2e', '#d8cfc0', '#9a5a46', '#efe6d6'], sofa: ['#7a4e46', '#3c2622'] },
+  home5: { top: '#2e211e', bot: '#150f0e', dot: 'rgba(0,0,0,0)', wain: '#0e0908', bed: ['#1a1412', '#3a322c', '#2a201c', '#4a403a'], sofa: ['#3a2a2a', '#1a1212'] },
+};
+
+/** Side-on bed: tall headboard, low footboard, mattress, folded blanket, pillow. A ruined one is bare and scorched. */
+function bedTexture(s: Phaser.Scene, key: string, pal: [string, string, string, string], ruin: boolean) {
+  paint(s, key, 220, 100, (c) => {
+    const [frame, sheet, blanket, pillow] = pal;
+    c.fillStyle = '#0e0c10'; c.fillRect(16, 88, 7, 12); c.fillRect(196, 88, 7, 12);
+    c.fillStyle = frame; c.fillRect(8, 72, 204, 16);
+    c.beginPath(); c.roundRect(0, 14, 18, 86, [9, 9, 0, 0]); c.fill();
+    c.beginPath(); c.roundRect(206, 52, 12, 48, [4, 4, 0, 0]); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.1)'; c.fillRect(4, 22, 2, 70); c.fillRect(209, 58, 2, 36);
+    c.fillStyle = sheet; c.beginPath(); c.roundRect(16, 50, 192, 26, 7); c.fill();
+    if (ruin) {
+      c.fillStyle = '#0c0807'; for (const [x, w] of [[40, 50], [110, 70], [170, 30]]) { c.beginPath(); c.ellipse(x + w / 2, 62, w / 2, 9, 0, 0, Math.PI * 2); c.fill(); }
+      c.strokeStyle = '#080505'; c.lineWidth = 2; c.beginPath(); c.moveTo(60, 50); c.lineTo(72, 60); c.lineTo(66, 70); c.stroke();
+      c.fillStyle = blanket; poly(c, [130, 46, 210, 54, 208, 76, 150, 72, 140, 60]);
+      return;
+    }
+    c.fillStyle = blanket; c.beginPath(); c.roundRect(66, 40, 142, 36, [10, 6, 5, 5]); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.14)'; c.fillRect(70, 42, 134, 3);
+    c.fillStyle = 'rgba(0,0,0,0.22)'; c.fillRect(66, 60, 142, 2); c.fillRect(150, 44, 2, 32);
+    c.fillStyle = pillow; c.beginPath(); c.ellipse(40, 44, 29, 11, -0.06, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = 'rgba(0,0,0,0.25)'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(40, 44, 29, 11, -0.06, 0.1, Math.PI * 0.9); c.stroke();
+  });
+}
+
+/** A proper sofa: rolled arms, back cushions, two seat cushions, short legs. */
+function sofaTexture(s: Phaser.Scene, key: string, pal: [string, string], ruin: boolean) {
+  paint(s, key, 230, 112, (c) => {
+    const [lit, dark] = pal;
+    c.fillStyle = '#0e0c10'; for (const x of [22, 198]) c.fillRect(x, 100, 8, 12);
+    c.fillStyle = vgrad(c, 8, 70, [[0, lit], [1, dark]]); c.beginPath(); c.roundRect(24, 8, 182, 70, [22, 22, 4, 4]); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,0.12)'; c.lineWidth = 1; c.beginPath(); c.moveTo(115, 14); c.lineTo(115, 70); c.stroke();
+    c.fillStyle = vgrad(c, 60, 100, [[0, lit], [1, dark]]); c.beginPath(); c.roundRect(20, 58, 190, 42, [10, 10, 6, 6]); c.fill();
+    c.strokeStyle = 'rgba(0,0,0,0.3)'; c.beginPath(); c.moveTo(115, 60); c.lineTo(115, 98); c.stroke();
+    c.fillStyle = dark; for (const x of [0, 204]) { c.beginPath(); c.roundRect(x, 42, 26, 58, [13, 13, 5, 5]); c.fill(); }
+    c.fillStyle = 'rgba(255,255,255,0.1)'; for (const x of [4, 208]) c.fillRect(x, 46, 3, 30);
+    if (ruin) { c.fillStyle = '#d9cba8'; poly(c, [90, 60, 112, 52, 128, 62, 118, 74, 98, 72]); c.strokeStyle = '#0a0606'; c.lineWidth = 2; c.beginPath(); c.moveTo(150, 20); c.lineTo(168, 46); c.lineTo(160, 66); c.stroke(); }
+  });
+}
+
+/** Floor litter for the ruined house: paper, glass, a toppled chair leg. */
+function debrisTexture(s: Phaser.Scene) {
+  paint(s, 'k:debris', 300, 34, (c) => {
+    const r = rng(77);
+    for (let i = 0; i < 26; i++) {
+      c.save(); c.translate(10 + r() * 280, 8 + r() * 22); c.rotate((r() - 0.5) * 1.4);
+      c.fillStyle = ['#d9cba8', '#8a7a58', '#2a2120', '#9fb4b8'][i % 4]; c.globalAlpha = i % 4 === 3 ? 0.55 : 0.9;
+      if (i % 4 === 3) poly(c, [0, 0, 7, 2, 3, 6]); else c.fillRect(-9, -3, 18, 6);
+      c.restore();
+    }
+  });
+}
+
 const home: Kit = (s, room) => {
-  const RW = 2600, F = FLOOR_TOP;
-  paint(s, 'k:home:wall', RW, F, (c) => {
-    c.fillStyle = vgrad(c, 0, F, [[0, '#24242a'], [1, '#18181c']]); c.fillRect(0, 0, RW, F);
+  const RW = 2600, F = FLOOR_TOP, id = room.id, look = HOME_LOOK[id] ?? HOME_LOOK.home1, ruin = id === 'home5';
+  paint(s, `k:home:wall:${id}`, RW, F, (c) => {
+    const r = rng(RW + id.length * 7);
+    c.fillStyle = vgrad(c, 0, F, [[0, look.top], [1, look.bot]]); c.fillRect(0, 0, RW, F);
+    // quiet diamond paper pattern (dots, not lines: nothing that can read as a seam)
+    c.fillStyle = look.dot;
+    for (let y = 50; y < F - 90; y += 34) for (let x = (y / 34) % 2 ? 18 : 0; x < RW; x += 36) poly(c, [x, y - 4, x + 4, y, x, y + 4, x - 4, y]);
     c.fillStyle = '#121216'; c.fillRect(0, 0, RW, 40);
-    c.fillStyle = 'rgba(255,255,255,0.03)'; for (let x = 0; x < RW; x += 120) c.fillRect(x, 40, 1, F - 40);
+    c.fillStyle = look.wain; c.fillRect(0, 300, RW, F - 300); c.fillStyle = 'rgba(255,255,255,0.07)'; c.fillRect(0, 300, RW, 2);
+    // warm pools where the lamps hang, so the furniture reads against the wall
+    for (const x of [300, 1000, 1560]) radial(c, x, 220, 230, ruin ? 'rgba(210,90,40,A)' : 'rgba(255,214,160,A)', ruin ? 0.1 : id === 'home1' ? 0.2 : 0.12);
     // front door with its hand-print plate and speaker
     c.fillStyle = '#0d0d10'; c.fillRect(60, 150, 110, F - 150); c.fillStyle = '#c9a85a'; c.fillRect(176, 250, 12, 18);
     // hall ventilator grill (unexplained; the camera only glances at it)
     c.fillStyle = '#3a3a40'; c.fillRect(360, 90, 80, 40); c.fillStyle = '#121216'; for (let x = 364; x < 438; x += 8) c.fillRect(x, 94, 4, 32);
-    // bedroom: window with moon, twin bed headboards
+    // bedroom: window with moon, twin bed headboard shadows
     c.fillStyle = '#0a0c14'; c.fillRect(800, 110, 160, 150); radial(c, 900, 160, 40, 'rgba(220,225,235,A)', 0.4);
     c.strokeStyle = '#2e2e36'; c.lineWidth = 8; c.strokeRect(800, 110, 160, 150);
-    c.fillStyle = '#20202a'; c.fillRect(680, 250, 90, F - 250); c.fillRect(1000, 250, 90, F - 250);
-    // kitchen: brass incinerator slot, toaster
-    c.fillStyle = '#2a2a30'; c.fillRect(1240, 180, 180, F - 180); c.fillStyle = '#c9a85a'; c.fillRect(1300, 230, 60, 8);
+    if (id === 'home3') { c.fillStyle = 'rgba(120,135,160,0.85)'; for (let y = 114; y < 200; y += 12) c.fillRect(804, y, 152, 8); } // blinds half down
+    else if (!ruin) { c.fillStyle = 'rgba(150,70,70,0.55)'; c.fillRect(800, 104, 34, 160); c.fillRect(926, 104, 34, 160); } // drapes
+    // kitchen: cabinets, brass incinerator slot, toaster
+    c.fillStyle = look.wain; c.fillRect(1240, 180, 180, F - 180); c.fillStyle = 'rgba(255,255,255,0.06)'; c.fillRect(1240, 180, 180, 3); c.fillStyle = '#c9a85a'; c.fillRect(1300, 230, 60, 8);
     c.fillStyle = '#5a5a62'; c.fillRect(1380, 160, 30, 20);
-    // parlor: three wall-sized screens (content added as live layers)
-    for (const x of PARLOR) { c.fillStyle = '#060608'; c.fillRect(x - 150, 60, 300, 250); }
+    // each house keeps its own small things on the walls
+    if (id === 'home1') { c.fillStyle = '#c9b48a'; c.fillRect(1470, 130, 64, 84); c.fillStyle = '#2a2328'; c.fillRect(1476, 136, 52, 72); c.fillStyle = '#e6d8b8'; c.fillRect(1482, 142, 40, 8); for (let y = 156; y < 200; y += 6) c.fillRect(1482, y, 40 - (y % 12), 2); }
+    if (id === 'home2') {
+      c.fillStyle = '#7a5a3c'; c.fillRect(220, 110, 70, 90); c.fillStyle = '#d8c8a8'; c.beginPath(); c.ellipse(255, 150, 22, 30, 0, 0, Math.PI * 2); c.fill(); c.fillStyle = '#2a2018'; c.beginPath(); c.arc(255, 140, 9, 0, Math.PI * 2); c.fill(); c.fillRect(244, 150, 22, 16);
+      c.fillStyle = '#2a2018'; for (const x of [500, 530, 560]) { c.fillRect(x, 150, 4, 20); c.beginPath(); c.arc(x + 2, 150, 5, 0, Math.PI * 2); c.fill(); }
+    }
+    if (id === 'home3') { c.fillStyle = '#2a3040'; c.fillRect(1480, 150, 90, 44); c.fillStyle = '#9aa6b8'; for (let i = 0; i < 4; i++) c.fillRect(1488 + i * 20, 160, 10, 24); }
+    if (id === 'home4') {
+      c.fillStyle = '#e0d4b6'; c.beginPath(); c.arc(1500, 160, 24, 0, Math.PI * 2); c.fill(); c.strokeStyle = '#2a2018'; c.lineWidth = 3; c.stroke(); c.lineWidth = 2; c.beginPath(); c.moveTo(1500, 160); c.lineTo(1500, 144); c.moveTo(1500, 160); c.lineTo(1512, 166); c.stroke();
+      for (const [x, y] of [[230, 140], [290, 128]]) { c.fillStyle = '#7a5a3c'; c.fillRect(x, y, 44, 56); c.fillStyle = '#c8b898'; c.fillRect(x + 5, y + 5, 34, 46); }
+    }
+    // parlor: three wall-sized screens, dark glass with a reflection while off (the live content is a layer above)
+    for (const x of PARLOR) {
+      c.fillStyle = vgrad(c, 60, 310, [[0, '#1a2026'], [1, '#0a0d10']]); c.fillRect(x - 150, 60, 300, 250);
+      c.fillStyle = 'rgba(190,210,225,0.06)'; poly(c, [x - 150, 60, x - 40, 60, x - 150, 200]); poly(c, [x + 20, 310, x + 150, 160, x + 150, 310]);
+    }
+    if (ruin) {
+      // the house after the burning begins: soot, torn paper, cracked screens
+      for (let i = 0; i < 14; i++) { const x = r() * RW; radial(c, x, 20 + r() * 40, 90 + r() * 90, 'rgba(0,0,0,A)', 0.5); }
+      for (let i = 0; i < 40; i++) { const x = r() * RW, w = 4 + r() * 12; c.fillStyle = `rgba(8,5,4,${0.1 + r() * 0.12})`; c.fillRect(x, 30 + r() * 20, w / 3, 40 + r() * 120); }
+      c.strokeStyle = 'rgba(205,190,160,0.5)'; c.lineWidth = 1.5;
+      for (const x of PARLOR) { c.beginPath(); c.moveTo(x - 20, 150); for (let n = 0; n < 6; n++) c.lineTo(x - 20 + (r() - 0.5) * 220, 150 + (r() - 0.5) * 190); c.stroke(); c.beginPath(); c.moveTo(x + 40, 100); c.lineTo(x + 70, 190); c.lineTo(x + 110, 160); c.stroke(); }
+      c.fillStyle = 'rgba(214,190,150,0.3)'; for (let i = 0; i < 9; i++) { const x = 40 + r() * (RW - 80); poly(c, [x, 60, x + 22, 70, x + 14, 140 + r() * 60, x - 4, 100]); }
+    }
     interiorTrim(c, RW, F);
     speckle(c, RW, F, 12000, 31, 0.02);
   });
-  addLayer(s, 'k:home:wall', 1, 1);
+  addLayer(s, `k:home:wall:${id}`, 1, 1);
   // Three walls, three broadcasts: the family shouting, the audience laughing, the family turning to smile at you.
   const shows = ['tv:argue', 'tv:laugh', 'tv:family'];
   const tvs = PARLOR.map((x, i) => s.add.sprite(x - 144, 66, shows[i]).setOrigin(0).setDepth(1.5).play(shows[i]));
   const tvGlow = PARLOR.map((x, i) => s.add.image(x, 220, 'glow').setScale(4.4, 3.2).setTint([0xff7aa0, 0x80c0ff, 0xffc080][i]).setAlpha(0.26).setBlendMode(ADD).setDepth(2));
   if (!settings.reducedMotion) tvGlow.forEach((g, i) => s.tweens.add({ targets: g, alpha: 0.16, yoyo: true, repeat: -1, duration: 140 + i * 60 }));
-  paint(s, 'k:bed', 200, 70, (c) => { c.fillStyle = '#2a2830'; c.fillRect(0, 20, 200, 40); c.fillStyle = '#c8c6cc'; c.fillRect(6, 14, 188, 14); c.fillStyle = '#e0dde4'; c.fillRect(8, 6, 50, 14); c.fillStyle = '#121216'; c.fillRect(6, 60, 8, 10); c.fillRect(186, 60, 8, 10); });
-  s.add.image(740, 452, 'k:bed').setOrigin(0.5, 1).setDepth(4.6);
-  s.add.image(1060, 452, 'k:bed').setOrigin(0.5, 1).setDepth(4.6);
+  bedTexture(s, `k:bed:${id}`, look.bed, ruin);
+  for (const x of [740, 1060]) s.add.image(x, 452, `k:bed:${id}`).setOrigin(0.5, 1).setDepth(4.6);
+  sofaTexture(s, `k:sofa:${id}`, look.sofa, ruin);
+  // home1: Mildred sits center stage, a little nearer the camera; the sofa is tinted darker so she separates from it
+  const sofa = s.add.image(1830, id === 'home1' ? 478 : 452, `k:sofa:${id}`).setOrigin(0.5, 1).setDepth(4.4).setTint(id === 'home1' ? 0x9a8c96 : 0xffffff);
+  if (ruin) { sofa.setAngle(-4).setX(1836); debrisTexture(s); for (const x of [520, 1250, 1700, 2150]) s.add.image(x, 478, 'k:debris').setOrigin(0.5, 1).setDepth(4.3); }
   paint(s, 'k:chair', 90, 110, (c) => { c.fillStyle = '#3a2e36'; c.fillRect(10, 0, 70, 70); c.fillRect(0, 50, 90, 30); c.fillStyle = '#121216'; c.fillRect(8, 80, 6, 30); c.fillRect(76, 80, 6, 30); });
-  // home1: the chair sits where Mildred's seated pose meets its cushion (she sits center stage)
-  s.add.image(1830, room.id === 'home1' ? 478 : 452, 'k:chair').setOrigin(0.5, 1).setDepth(4.4).setTint(room.id === 'home1' ? 0x7a6c76 : 0xffffff); // darker, so seated Mildred separates from it
-  paint(s, 'k:doorframe', 70, H, (c) => { c.fillStyle = '#0a0a0c'; c.fillRect(18, 0, 34, H); c.fillRect(0, 0, 70, 30); c.fillStyle = 'rgba(160,200,215,0.12)'; c.fillRect(51, 30, 1, H); });
-  occluder(s, 'k:doorframe', 560, 1.3); occluder(s, 'k:doorframe', 1210, 1.3); occluder(s, 'k:doorframe', 1500, 1.3);
   const vChair = s.add.image(400, 480, 'k:chair').setOrigin(0.5, 1).setDepth(5.5).setScale(0.8).setVisible(false);
   const pile = s.add.image(470, 480, 'k:pile2').setOrigin(0.5, 1).setDepth(5.4).setVisible(false);
   paint(s, 'k:pile2', 120, 40, (c) => { const r = rng(4); for (let i = 0; i < 20; i++) { c.save(); c.translate(15 + r() * 90, 34 - r() * 18); c.rotate((r() - 0.5)); c.fillStyle = ['#d9cba8', '#6b2a1a', '#2a3a5a', '#7a6a3a', '#3a5a3a'][i % 5]; c.fillRect(-11, -3, 22, 7); c.restore(); } });
   pile.setTexture('k:pile2');
+  const warm = ruin ? 0xd0602a : 0xd8d0c0;
   return {
-    floor: { key: 'hometile', top: '#2e2d33', bottom: '#0a0a0c', line: 'rgba(255,255,255,0.05)', spacing: 90, kind: 'tile' },
-    lights: [{ x: 300, y: 200, color: 0xd8d0c0, r: 300 }, { x: 900, y: 200, color: 0x9ab0c8, r: 260 }, ...PARLOR.map((x) => ({ x, y: 220, color: 0x9ad0ff, r: 300 }))],
+    floor: { key: 'hometile', top: ruin ? '#241a17' : '#2e2d33', bottom: '#0a0a0c', line: 'rgba(255,255,255,0.05)', spacing: 90, kind: 'tile' },
+    lights: [{ x: 300, y: 200, color: warm, r: 300 }, { x: 900, y: 200, color: ruin ? 0xc06a3a : 0x9ab0c8, r: 260 }, ...PARLOR.map((x) => ({ x, y: 220, color: ruin ? 0xb05a30 : 0x9ad0ff, r: 300 }))],
     fx: { tvOff: () => tvs.forEach((t) => t.setVisible(false)), tvOn: () => tvs.forEach((t) => t.setVisible(true)),
       // the walls address Mildred: every screen still on flares toward the sofa when the play cues her
       wallCue: () => tvs.forEach((t, i) => { if (!t.visible || t.alpha < 0.5) return; s.tweens.add({ targets: tvGlow[i], alpha: 0.7, yoyo: true, repeat: 1, duration: 220 }); }),
@@ -607,7 +809,9 @@ const attic: Kit = (s) => {
 const faber: Kit = (s) => {
   const RW = 1500, F = FLOOR_TOP;
   paint(s, 'k:faber:wall', RW, F, (c) => {
-    c.fillStyle = vgrad(c, 0, F, [[0, '#3a3834'], [1, '#26241f']]); c.fillRect(0, 0, RW, F); // white plaster gone grey at night
+    c.fillStyle = vgrad(c, 0, F, [[0, '#4a4036'], [1, '#2c251e']]); c.fillRect(0, 0, RW, F); // plaster gone warm and tobacco-stained
+    c.fillStyle = '#241c15'; c.fillRect(0, 300, RW, F - 300); c.fillStyle = 'rgba(255,225,170,0.12)'; c.fillRect(0, 300, RW, 2); // wainscot
+    for (const x of [200, 760, 1200]) radial(c, x, 200, 200, 'rgba(255,205,140,A)', 0.14);
     c.fillStyle = '#121010'; c.fillRect(60, 150, 100, F - 150);
     c.fillStyle = '#2a201a'; for (let x = 400; x < 600; x += 66) c.fillRect(x, 120, 56, 220); // empty shelves
     c.fillStyle = '#3a2a1e'; for (let y = 150; y < 340; y += 48) c.fillRect(400, y, 196, 5);
@@ -622,6 +826,20 @@ const faber: Kit = (s) => {
     speckle(c, RW, F, 9000, 51, 0.02);
   });
   addLayer(s, 'k:faber:wall', 1, 1);
+  // floor furniture: a worn leather armchair, a rug under it, and a stack of books by the wall
+  paint(s, 'k:faber:chair', 120, 110, (c) => {
+    c.fillStyle = '#0e0b09'; c.fillRect(14, 96, 8, 14); c.fillRect(98, 96, 8, 14);
+    c.fillStyle = vgrad(c, 0, 80, [[0, '#4a5a3e'], [1, '#26301f']]); c.beginPath(); c.roundRect(14, 0, 92, 76, [28, 28, 4, 4]); c.fill();
+    c.fillStyle = '#334028'; c.beginPath(); c.roundRect(2, 44, 28, 52, [12, 12, 4, 4]); c.fill(); c.beginPath(); c.roundRect(90, 44, 28, 52, [12, 12, 4, 4]); c.fill();
+    c.fillStyle = '#3e4c30'; c.beginPath(); c.roundRect(26, 60, 68, 34, 6); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.1)'; c.fillRect(30, 62, 60, 2); c.fillRect(6, 48, 3, 30);
+    c.fillStyle = '#8a7a52'; for (let x = 30; x < 100; x += 14) c.fillRect(x, 16, 2, 2);
+  });
+  s.add.image(840, 456, 'k:faber:chair').setOrigin(0.5, 1).setDepth(4.4);
+  paint(s, 'k:faber:rug', 300, 22, (c) => { c.fillStyle = '#4a2a22'; c.beginPath(); c.ellipse(150, 11, 148, 10, 0, 0, Math.PI * 2); c.fill(); c.strokeStyle = '#a07a4a'; c.lineWidth = 2; c.beginPath(); c.ellipse(150, 11, 128, 7, 0, 0, Math.PI * 2); c.stroke(); c.strokeStyle = 'rgba(200,160,100,0.35)'; c.lineWidth = 1; c.beginPath(); c.ellipse(150, 11, 96, 5, 0, 0, Math.PI * 2); c.stroke(); });
+  s.add.image(800, 470, 'k:faber:rug').setOrigin(0.5, 1).setDepth(1.35);
+  paint(s, 'k:faber:stack', 90, 70, (c) => { const r = rng(6); let y = 70; for (let i = 0; i < 6; i++) { const w = 60 + r() * 26, h = 9 + r() * 5; c.fillStyle = ['#6d4030', '#4d6050', '#5a5c72', '#8b7b51'][i % 4]; c.fillRect(8 + r() * 10, y - h, w, h); c.fillStyle = 'rgba(232,212,160,0.7)'; c.fillRect(10 + r() * 10, y - h + 3, w - 6, 2); y -= h; } });
+  s.add.image(1250, 452, 'k:faber:stack').setOrigin(0.5, 1).setDepth(4.4);
   const tv = s.add.image(1315, 182, 'glow').setScale(0.9, 0.6).setTint(0x80c0ff).setAlpha(0).setBlendMode(ADD).setDepth(2);
   return {
     floor: { key: 'boards2', top: '#2e2620', bottom: '#0a0806', line: 'rgba(0,0,0,0.45)', spacing: 70, kind: 'boards' },
@@ -656,8 +874,8 @@ const subway: Kit = (s) => {
     speckle(c, RW, F, 6000, 61, 0.02);
   });
   addLayer(s, 'k:subway:wall', 1, 1);
-  paint(s, 'k:subpole', 30, H, (c) => { c.fillStyle = hgrad(c, 8, 22, [[0, '#4a4a50'], [0.5, '#d0d0d8'], [1, '#4a4a50']]); c.fillRect(8, 0, 14, H); });
-  for (let x = 300; x < RW; x += 420) occluder(s, 'k:subpole', x, 1.28);
+  paint(s, 'k:subpole', 30, 470, (c) => { c.fillStyle = hgrad(c, 10, 20, [[0, '#3a3a40'], [0.5, '#8a8a94'], [1, '#3a3a40']]); c.fillRect(10, 0, 10, 470); c.fillStyle = '#1a1a1e'; c.fillRect(4, 456, 22, 14); });
+  for (let x = 300; x < RW; x += 420) s.add.image(x, 470, 'k:subpole').setOrigin(0.5, 1).setDepth(3);
   return {
     floor: { key: 'metal', top: '#2e2c30', bottom: '#0a0a0c', line: 'rgba(255,255,255,0.06)', spacing: 40, kind: 'metal' },
     lights: [{ x: 300, y: 60, color: 0xe8e2d0, r: 300 }, { x: 900, y: 60, color: 0xe8e2d0, r: 300 }],
@@ -701,7 +919,10 @@ function forest(variant: 'river' | 'camp'): Kit {
     if (variant === 'camp') {
       paint(s, 'k:rails', RW, 30, (c) => { c.fillStyle = '#3a2e24'; for (let x = 0; x < RW; x += 26) c.fillRect(x, 6, 10, 24); c.fillStyle = '#6a5a4a'; c.fillRect(0, 8, RW, 4); c.fillRect(0, 22, RW, 4); });
       s.add.image(0, 452, 'k:rails').setOrigin(0).setDepth(1.3);
-      fireAt(s, 1000, 470, 1.4, true, 4.4);
+      // a proper bonfire (three tongues wide, so its near edge shows on arrival) with a glow that washes the trees and the near track
+      fireAt(s, 985, 470, 3, false, 4.4);
+      const beacon = s.add.image(960, 400, 'glow').setScale(14, 6).setTint(0xff8a3a).setAlpha(0.34).setBlendMode(ADD).setDepth(4.3);
+      s.tweens.add({ targets: beacon, alpha: 0.2, yoyo: true, repeat: -1, duration: 420, ease: 'Sine.easeInOut' });
       lights.push({ x: 1000, y: 430, color: 0xffb050, r: 360 });
       const tvGlow = s.add.image(1180, 440, 'glow').setScale(0.6).setTint(0x80c0ff).setAlpha(0).setBlendMode(ADD).setDepth(4);
       fx.tvOn = () => { tvGlow.setAlpha(0.5); s.tweens.add({ targets: tvGlow, alpha: 0.3, yoyo: true, repeat: -1, duration: 150 }); };
