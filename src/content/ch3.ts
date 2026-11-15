@@ -15,7 +15,7 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: N, text: 'An old man on a bench in a green park, a year ago. A hand over his coat pocket. He talked about the meaning of things, not things.' },
     { who: N, text: 'He wrote down his address for you. "For your file," he said, "in case you decide to be angry with me." Faber.' },
   ] },
-  f_phone_locked: { lines: [{ who: N, text: 'Who would you even call?' }] },
+  f_phone_locked: { lines: [{ who: N, text: 'You have no name to call yet. Check your file-wallet first.' }] },
   f_call: { lines: [
     { who: 'FABER', text: '...Yes? Mr. Montag?' },
   ], choices: [
@@ -30,7 +30,8 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: 'MILDRED', text: "The ladies are coming over tonight! And you have to give that book back to the Captain, don't you? He knows you took one." },
     { who: 'MONTAG', text: "He doesn't know which one. I'll need a copy first." },
   ] },
-  f_leave_locked: { lines: [{ who: N, text: 'Not yet. Find the old man first.' }] },
+  f_leave_locked: { lines: [{ who: N, text: 'Not yet. You have not phoned the name in the hall.' }] },
+  fb_out_locked: { lines: [{ who: 'FABER', text: "Wait. You haven't heard my plan yet. Hear me out first." }] },
 
   // ---- 08 The Sieve and the Sand (untimed recall) ----
   sb_1: { lines: [
@@ -136,7 +137,7 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: N, text: 'You drop it through the brass slot. In the bathroom, water runs.' },
     { who: N, text: 'You carry the rest of the books out to the bushes by the back fence. Just for tonight.' },
   ] },
-  l_burn_locked: { lines: [{ who: N, text: 'Not yet.' }] },
+  l_burn_locked: { lines: [{ who: N, text: 'Not yet. Read to the ladies first. The book is still in your coat.' }] },
 
   // ---- the firehouse: Beatty's duel of quotations ----
   st_duel: { lines: [
@@ -164,7 +165,13 @@ export const ROOMS3: Record<string, RoomDef> = {
   home3: {
     id: 'home3', chapter: 3, label: '', width: 2600, spawnX: 900, kit: 'home',
     npcs: [{ id: 'mildred', fig: 'mildred', name: 'MILDRED', x: 1830, face: -1 }],
-    objective: (f) => !f['c07.file'] ? 'Look in your file-wallet in the bedroom' : !f['c07.call'] ? 'Phone the name in the hall' : 'Take the subway to Faber',
+    quietUi: true,
+    objective: (f) => !f['c07.file'] ? 'Check your file-wallet in the bedroom' : !f['c07.call'] ? 'Phone the name in the hall' : 'Take the subway to Faber',
+    hints: (f) => {
+      if (!f['c07.file']) return ['The bedroom is where you left your things. Look for your file-wallet.', 'The file-wallet is right beside you, on the bedroom side.', 'Stand by the wallet and press [E] to open it.'];
+      if (!f['c07.call']) return ['You have a name now. Use the phone.', 'The phone is at the far left of the hall.', 'Walk left to the phone and press [E].'];
+      return ['It is time to leave for the subway.', 'The front door is at the far left.', 'Walk left to the door and press [E].'];
+    },
     enter: [{ key: 'e.home3', steps: [{ title: 'CHAPTER THREE', sub: 'The Sieve and the Sand' }, { say: 'f_open' }] }],
     hotspots: [
       { id: 'file', x: 1000, label: 'Your file-wallet', required: true, script: 'f_file', doneFlag: 'c07.file', doneScript: 'f_file' },
@@ -176,7 +183,11 @@ export const ROOMS3: Record<string, RoomDef> = {
   subway: {
     id: 'subway', chapter: 3, label: '', width: 1400, spawnX: 220, kit: 'subway',
     npcs: [],
-    objective: (f) => !f['c08.verse'] ? 'Sit down and read: hold on to the verse' : 'Get off at Knoll View',
+    quietUi: true,
+    objective: (f) => !f['c08.verse'] ? 'Memorize the verse on the train' : 'Get off at Knoll View',
+    hints: (f) => !f['c08.verse']
+      ? ['The train is loud. Find a quiet moment to read.', 'The Bible is ahead to the right, on your seat.', 'Walk right to the Bible and press [E]. Study the verse first, then rebuild it from memory.']
+      : ['The verse is yours now. Hold on to it.', 'The train is nearly at Knoll View.', 'Stay on the train until the station comes.'],
     hotspots: [
       { id: 'read', x: 620, label: 'Open the Bible', required: true, script: 'sb_1', doneFlag: 'c08.verse', doneScript: 'sb_end',
         steps: [{ fx: 'shake' }, { wait: 400 }, { goto: 'faber1', x: 220 }] },
@@ -186,11 +197,15 @@ export const ROOMS3: Record<string, RoomDef> = {
   faber1: {
     id: 'faber1', chapter: 3, label: '', width: 1500, spawnX: 220, kit: 'faber',
     npcs: [{ id: 'faber', fig: 'faber', name: 'FABER', x: 640, face: -1 }],
-    objective: (f) => !f['faber.ear'] ? 'Talk to Faber' : 'Go home. The ladies are coming',
+    quietUi: true,
+    objective: (f) => !f['faber.ear'] ? 'Talk to Faber' : 'Go home before the ladies arrive',
+    hints: (f) => !f['faber.ear']
+      ? ['Faber is afraid of you. Find out what he knows.', 'Faber is ahead to the right, in the middle of the room.', 'Walk right to Faber and press [E]. Answer carefully when he asks.']
+      : ['The ladies will be at the house tonight.', 'The way out is at the far left of this room.', 'Walk left and press [E] at the door to go home.'],
     enter: [{ key: 'e.faber1', steps: [{ say: 'fb_door' }] }],
     hotspots: [
       { id: 'faber', x: 640, label: 'Talk to Faber', required: true, script: 'fb_talk', doneFlag: 'faber.ear', doneScript: 'fb_ear' },
-      { id: 'out', x: 140, label: 'Go home', required: true, requires: ['faber.ear'], lockedScript: 'f_leave_locked', exit: { room: 'home4', x: 1450 } },
+      { id: 'out', x: 140, label: 'Go home', required: true, requires: ['faber.ear'], lockedScript: 'fb_out_locked', exit: { room: 'home4', x: 1450 } },
     ],
   },
 
@@ -201,7 +216,13 @@ export const ROOMS3: Record<string, RoomDef> = {
       { id: 'phelps', fig: 'lady1', name: 'MRS. PHELPS', x: 1990, face: -1, when: (f) => !f['c09.read'] },
       { id: 'bowles', fig: 'lady2', name: 'MRS. BOWLES', x: 2150, face: -1, when: (f) => !f['c09.read'] },
     ],
-    objective: (f) => !f['c09.off'] ? 'Switch off the parlor walls' : !f['c09.read'] ? 'Talk to the ladies' : !f['c09.burned'] ? 'The kitchen incinerator' : '',
+    quietUi: true,
+    objective: (f) => !f['c09.off'] ? 'Switch off the parlor walls' : !f['c09.read'] ? 'Talk to the ladies' : !f['c09.burned'] ? 'Burn the book in the incinerator' : '',
+    hints: (f) => {
+      if (!f['c09.off']) return ['The walls are loud. Mildred wants them left on.', 'The main switch is in the wall just ahead of you, to the right.', 'Stand by the wall switch and press [E] to pull it.'];
+      if (!f['c09.read']) return ['The ladies are waiting. Say something to them.', 'Mrs. Phelps and Mrs. Bowles are on the right, past Mildred.', 'Walk right to the ladies and press [E] to talk.'];
+      return ['The book is still in your coat.', 'The incinerator is just to your left.', 'Walk left to the incinerator and press [E] to burn the book.'];
+    },
     enter: [{ key: 'e.home4', steps: [{ say: 'l_open' }] }],
     hotspots: [
       { id: 'switch', x: 1560, label: 'Switch off the walls', required: true, when: (f) => !f['c09.off'], script: 'l_off' },
@@ -218,7 +239,9 @@ export const ROOMS3: Record<string, RoomDef> = {
       { id: 'black', fig: 'fireman', name: 'BLACK', x: 1060, face: 1, back: true },
       { id: 'stoneman', fig: 'fireman', name: 'STONEMAN', x: 1170, face: -1, back: true },
     ],
+    quietUi: true,
     objective: () => '',
+    hints: () => ['Beatty is waiting for you at the firehouse.', 'Listen to what he says. Nothing here needs you yet.', 'Wait for the scene to finish.'],
     enter: [{ key: 'e.station3', steps: [
       { fx: 'poleSlide' }, { say: 'st_duel' }, { fx: 'alarm' }, { say: 'st_alarm' }, { fade: 'out', ms: 900 }, { goto: 'lawn', x: 640 },
     ] }],

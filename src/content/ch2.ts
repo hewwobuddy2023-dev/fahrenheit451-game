@@ -33,7 +33,7 @@ export const SCRIPTS2: Record<string, Script> = {
     { who: 'BEATTY', text: 'Your play, Montag.' },
   ] },
   s2_cards_done: { lines: [{ who: 'BLACK', text: 'Your deal.' }] },
-  s2_quiet: { lines: [{ who: N, text: 'The dispatch board is quiet. For now.' }] },
+  s2_quiet: { lines: [{ who: N, text: 'Nothing on the board is addressed to you yet. Look in on the Hound and sit in at cards first.' }] },
   s2_alarm: { set: { 's2.alarm': true }, lines: [
     { who: N, text: 'The bell in the ceiling kicks itself two hundred times. The cards fall like snow. The chairs are empty.' },
     { who: 'BEATTY', text: 'Montag! Your helmet!' },
@@ -179,9 +179,13 @@ export const ROOMS2: Record<string, RoomDef> = {
       { id: 'black', fig: 'fireman', name: 'BLACK', x: 1060, face: 1, back: true },
       { id: 'stoneman', fig: 'fireman', name: 'STONEMAN', x: 1170, face: -1, back: true },
     ],
-    objective: (f) => {
-      const n = Number(!!f['s2.hound']) + Number(!!f['s2.cards']);
-      return n < 2 ? `The night shift: look in on the Hound and sit in at cards (${n}/2)` : 'Answer the dispatch board';
+    quietUi: true,
+    objective: (f) => !f['s2.hound'] && !f['s2.cards'] ? 'Look in on the Hound and sit in at cards' : !f['s2.hound'] ? 'Look in on the Hound' : !f['s2.cards'] ? 'Sit in at cards' : 'Answer the dispatch board',
+    hints: (f) => {
+      if (f['s2.hound'] && f['s2.cards']) return ['The shift is covered. Beatty wants an answer.', 'The dispatch board is on the right, near where you came in.', 'Walk to the dispatch board and press [E].'];
+      if (f['s2.hound']) return ['One job is left on this shift.', 'The card table is in the middle of the room, to your left.', 'Walk left to the card table and press [E] to sit in.'];
+      if (f['s2.cards']) return ['One job is left on this shift.', 'The Hound is in its kennel, to your left, past the dispatch board.', 'Walk left to the Hound and press [E] to touch it.'];
+      return ['The night shift has started. Look around the firehouse.', 'The Hound is in its kennel to your left. The card table is further left.', 'Walk left to the Hound and press [E]. Then walk on to the card table and press [E].'];
     },
     enter: [{ key: 'e.station2', steps: [{ title: 'CHAPTER TWO', sub: 'A Book Under the Pillow' }, { say: 's2_days' }] }],
     hotspots: [
@@ -200,7 +204,13 @@ export const ROOMS2: Record<string, RoomDef> = {
       { id: 'beatty', fig: 'beatty', name: 'BEATTY', x: 1380, face: -1, watch: { period: 4200, on: 1800 }, when: (f) => !f['c04.book'] },
       { id: 'stoneman', fig: 'fireman', name: 'STONEMAN', x: 1580, face: -1, back: true },
     ],
-    objective: (f) => !f['a.fell'] ? 'Climb the stairs to the attic' : !f['c04.book'] ? 'Hide the book under your coat, while Beatty is not watching' : 'Go back downstairs',
+    quietUi: true,
+    objective: (f) => !f['a.fell'] ? 'Climb the stairs to the attic' : !f['c04.book'] ? 'Hide the book under your coat' : 'Go back downstairs',
+    hints: (f) => {
+      if (!f['a.fell']) return ['Something is up here with you. Find the way up.', 'The stairs are in the middle of the attic, to the right of the old woman.', 'Walk right to the stairs. Climbing is automatic.'];
+      if (!f['c04.book']) return ['Beatty is watching the attic. Wait until he looks away.', 'The hiding spot is in the middle of the attic, close to Beatty.', 'Hold [E] there only while Beatty looks away. If he turns, the attempt resets.'];
+      return ['You have the book, and Beatty has not seen it.', 'The woman and the stairs are at the left side of the attic.', 'Walk left to the woman by the stairs.'];
+    },
     enter: [{ key: 'e.attic', steps: [{ say: 'a_open' }] }],
     hotspots: [
       { id: 'stairs', x: 700, label: '', auto: true, when: (f) => !f['a.fell'], steps: [{ fx: 'climb' }, { fx: 'books' }, { say: 'a_books' }] },
@@ -221,11 +231,17 @@ export const ROOMS2: Record<string, RoomDef> = {
       { id: 'mildred', fig: 'mildred', name: 'MILDRED', x: 790, face: -1, when: (f) => !!f['h2.day'] },
       { id: 'beatty', fig: 'beatty', name: 'BEATTY', x: 150, face: 1, when: (f) => !!f['h2.beatty'] && !f['c05.done'], pose: (f) => f['h2.sat'] && !f['c05.done'] ? 'seatedLook' : undefined },
     ],
+    quietUi: true,
     objective: (f) => {
       if (!f['c05.done']) return '';
-      if (!f['c06.chair']) return 'Bring the parlor chair to the hall ventilator';
-      if (!f['c06.vent']) return 'Hold [E] at the ventilator grill';
+      if (!f['c06.chair']) return 'Bring the chair to the hall ventilator';
+      if (!f['c06.vent']) return 'Pull the books out of the ventilator';
       return '';
+    },
+    hints: (f) => {
+      if (!f['c05.done']) return ['Beatty is sitting by your bed. Keep your answers calm.', 'Keep the book out of Beatty\'s sight.', 'Let Beatty finish before you move.'];
+      if (!f['c06.chair']) return ['The ventilator grill is high on the hall wall. You need something to stand on.', 'The parlor chair is toward the right side of the house.', 'Walk right and press [E] to take the chair, then walk left to the grill.'];
+      return ['The chair is in place. Now the grill.', 'The grill is toward the left side of the hall.', 'Walk left to the grill and hold [E] until it comes loose.'];
     },
     enter: [{ key: 'e.home2', steps: [
       { fx: 'dark' }, { walk: 836 }, { fx: 'toBed' }, { say: 'h2_night' }, { fade: 'out', ms: 900 }, { set: { 'h2.day': true } }, { fx: 'light' }, { fade: 'in', ms: 600 },

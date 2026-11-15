@@ -127,7 +127,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private settings(selected = 0) {
-    this.panel('SETTINGS', ['Sound starts after your first tap or key press. Press M at any time to mute.', 'Reduced motion removes moving grain and camera shake/flash. Story fades and essential hazards stay visible. Preferences are saved on this device.']);
+    this.panel('SETTINGS', ['Sound starts after your first tap or key. Press M to mute.', 'Reduced motion stops the grain and camera shake. Preferences are saved on this device.']);
     this.show([
       { label: `Sound: ${settings.muted ? 'OFF' : 'ON'} [M]`, action: () => { sound.toggleMute(); this.settings(0); } },
       { label: `Reduced motion: ${settings.reducedMotion ? 'ON' : 'OFF'}`, action: () => { setSetting('reducedMotion', !settings.reducedMotion); this.settings(1); } },
@@ -139,7 +139,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private audioOptions() {
-    this.panel('AUDIO & ACCESS', ['Test sound at a low device volume. Audio level and assisted hose control are local preferences, separate from story saves.', 'Assisted hose: hold to flow without managing pressure. Analog effects can be disabled independently of essential hazards.']);
+    this.panel('AUDIO & ACCESS', ['Test the sound at a low device volume.', 'Assisted hose keeps the flow steady for you. Analog effects are optional. Hazards always show.']);
     this.show([
       { label: 'Test sound (unmutes)', action: () => { if (settings.muted) sound.toggleMute(); void sound.unlock().then(() => sound.cue('complete')); } },
       { label: `Volume: ${Math.round(settings.volume * 100)}%`, action: () => { setSetting('volume', settings.volume >= 1 ? 0.4 : settings.volume < 0.7 ? 0.75 : 1); sound.refresh(); this.audioOptions(); } },
