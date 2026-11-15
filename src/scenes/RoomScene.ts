@@ -70,6 +70,7 @@ export class RoomScene extends Phaser.Scene {
   private bars?: Phaser.GameObjects.Rectangle[];
   private rim?: Phaser.GameObjects.Image;
   private linePosed?: Phaser.GameObjects.Sprite;
+  private barkTexts: Phaser.GameObjects.Text[] = [];
   private barked = new Set<Bark>();
   private playMs = 0;
   private idleMs = 0;
@@ -103,7 +104,7 @@ export class RoomScene extends Phaser.Scene {
     this.vx = 0; this.facing = 1; this.near = undefined; this.holdMs = 0;
     this.camTarget = null; this.overlay = undefined; this.caughtAt = 0;
     this.activeTime = 0;
-    this.linePosed = undefined;
+    this.linePosed = undefined; this.barkTexts = [];
     this.npcs = []; this.glows = new Map(); this.laneStrips = new Map(); this.rigs = new Map(); this.barked = new Set(); this.bars = undefined; this.playMs = 0; this.idleMs = 0; this.hintFor = ''; this.nudged = ''; this.caughtScene = false; this.beams = new Map(); this.eyes = new Map();
     // Scene restarts destroy its objects, but retain class fields. Never reuse a
     // destroyed emitter when a later chapter starts its next hold interaction.
@@ -297,7 +298,7 @@ export class RoomScene extends Phaser.Scene {
 
     // npcs: follow, face, tint
     for (const n of this.npcs) {
-      if (n.def.follow?.(f) && n.spr.visible) {
+      if (n.def.follow?.(f) && n.spr.visible && this.mode === 'play') { // she stands still while she talks, so her gestures hold
         const target = p.x + this.facing * 70;
         const nvx = Phaser.Math.Clamp((target - n.spr.x) * 4, -speed, speed);
         n.spr.x += nvx * dt;
@@ -320,9 +321,10 @@ export class RoomScene extends Phaser.Scene {
       const fct = o.getData?.('occluder') as number | undefined;
       if (!fct) return;
       const img = o as Phaser.GameObjects.Image;
-      const sx = img.x - cam.scrollX * fct, px = p.x - cam.scrollX;
-      const overlap = (img.displayWidth + p.displayWidth) / 2 + 8;
-      img.setAlpha(Math.abs(sx - px) < overlap ? 0.22 : 1);
+      const sx = img.x - cam.scrollX * fct, overlap = (img.displayWidth + p.displayWidth) / 2 + 8;
+      // fades for Montag and for anyone on screen (a lamppost hid Clarisse pointing at the moon in the pass 1 render)
+      const hides = [p, ...this.npcs.filter((n) => n.spr.visible).map((n) => n.spr)].some((a) => Math.abs(sx - (a.x - cam.scrollX)) < overlap);
+      img.setAlpha(hides ? 0.22 : 1);
     });
 
     this.updateWatchers(time);
@@ -582,7 +584,8 @@ export class RoomScene extends Phaser.Scene {
       const cx = this.cameras.main.scrollX, bx = Phaser.Math.Clamp(who.x, cx + 170, cx + W - 170); // never clipped at a screen edge
       const t = text(this, bx, who.y - 214, b.text, { fontSize: '15px', fontStyle: 'italic', color: C.cream, backgroundColor: 'rgba(13,10,9,0.78)', padding: { x: 10, y: 6 }, align: 'center', wordWrap: { width: 300 } })
         .setOrigin(0.5, 1).setDepth(1004).setAlpha(0);
-      this.tweens.add({ targets: t, alpha: 1, y: t.y - 6, duration: 220, hold: 2600 + b.text.length * 35, yoyo: true, onComplete: () => t.destroy() });
+      this.barkTexts.push(t);
+      this.tweens.add({ targets: t, alpha: 1, y: t.y - 6, duration: 220, hold: 2600 + b.text.length * 35, yoyo: true, onComplete: () => { t.destroy(); this.barkTexts = this.barkTexts.filter((x) => x !== t); } });
       if (b.cue) sound.cue(b.cue as never);
       if (b.fx) void this.fx(b.fx);
       this.react(b.who);
@@ -616,6 +619,7 @@ export class RoomScene extends Phaser.Scene {
   /** A line's gesture lasts for that line only; the next line (or the end of the talk) returns the actor to rest. */
   private onLine(line: Line | null) {
     if (this.linePosed) { this.setPose(this.linePosed); this.linePosed = undefined; }
+    if (line?.who === 'THE WALL' && this.kit.fx.wallCue) void this.fx('wallCue');
     if (!line?.pose) return;
     const spr = line.by ? this.spriteFor(line.by)
       : line.who && line.who !== 'MONTAG' ? this.npcs.find((n) => n.def.name === line.who && n.spr.visible)?.spr : this.player;
@@ -645,7 +649,7 @@ export class RoomScene extends Phaser.Scene {
     const spr = who === 'MONTAG' ? this.player : this.npcs.find((n) => n.def.name === who && n.spr.visible)?.spr;
     if (!spr || this.tweens.isTweening(spr)) return;
     const npc = this.npcs.find((n) => n.spr === spr);
-    if (npc?.def.distracted?.(this.session.flags)) spr.setFlipX(false); // answers without looking away from the walls
+    if (npc?.def.distracted?.(this.session.flags)) { if (!spr.getData('turned')) spr.setFlipX(false); } // answers without looking away from the walls
     else if (spr !== this.player) spr.setFlipX(this.player.x < spr.x);
     if (!settings.reducedMotion) this.tweens.add({ targets: spr, scaleY: spr.scaleY * 1.025, y: spr.y - 2, duration: 170, yoyo: true, ease: 'Sine.easeOut' });
   }
@@ -749,6 +753,7 @@ export class RoomScene extends Phaser.Scene {
     this.before = this.mode;
     this.mode = 'dialogue';
     this.hud.showTouch(false);
+    this.barkTexts.forEach((t) => { this.tweens.killTweensOf(t); t.destroy(); }); this.barkTexts = []; // one voice at a time
     return new Promise((res) => this.dialogue.play(script, this.session.flags, (k) => SCRIPTS[k], (acc) => {
       this.session.set(acc);
       this.mode = this.before === 'play' ? 'cutscene' : this.before;
@@ -762,7 +767,8 @@ export class RoomScene extends Phaser.Scene {
     const n = this.npcs.find((v) => v.def.name === who && v.spr.visible);
     if (!n) return;
     this.camTarget = (n.spr.x + this.player.x) / 2;
-    n.spr.setFlipX(this.player.x < n.spr.x);
+    // a distracted character keeps facing the walls unless a scripted step turned her toward Montag
+    if (!n.def.distracted?.(this.session.flags) || n.spr.getData('turned')) n.spr.setFlipX(this.player.x < n.spr.x);
     this.facing = n.spr.x > this.player.x ? 1 : -1;
   }
 
@@ -813,7 +819,7 @@ export class RoomScene extends Phaser.Scene {
       const n = this.npcs.find((v) => v.def.id === s.npc);
       if (!n) return;
       if (s.show !== undefined) n.spr.setVisible(s.show);
-      if (s.face) n.spr.setFlipX(s.face === -1);
+      if (s.face) n.spr.setFlipX(s.face === -1).setData('turned', true);
       if (s.x !== undefined) {
         const key = 'fig:' + n.def.fig;
         n.spr.play(key + ':walk').setFlipX(s.x < n.spr.x);
@@ -992,7 +998,7 @@ export class RoomScene extends Phaser.Scene {
     if (this.room.dark) this.dark?.set(this.room.dark(f), 0);
     for (const n of this.npcs) if (n.def.when) n.spr.setVisible(n.def.when(f));
     for (const n of this.npcs) if (n.def.pose && n.spr !== this.linePosed) this.setPose(n.spr);
-    for (const n of this.npcs) if (n.def.distracted) n.spr.setFlipX(n.def.distracted(f) ? false : this.player.x < n.spr.x);
+    for (const n of this.npcs) if (n.def.distracted) n.spr.setData('turned', false).setFlipX(n.def.distracted(f) ? false : this.player.x < n.spr.x);
     for (const h of this.room.hotspots) {
       const g = this.glows.get(h.id);
       if (!g) continue;

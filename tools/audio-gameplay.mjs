@@ -70,7 +70,7 @@ check('Clarisse walk uses the night ambience (wind), not the firehouse hum', (aw
 await A(() => window.__qa.go(2025));
 let duckedAtQuestion = false, sawQuestion = false;
 for (let i = 0; i < 120; i++) {
-  const t = await A(() => window.__qa.scene.dialogue?.body?.text ?? '');
+  const t = await A(() => window.__qa.line()); // the question plays as a letterbox subtitle, not in the panel
   if (/happy\?/i.test(t)) { sawQuestion = true; await page.waitForTimeout(700); duckedAtQuestion = (await engine()).ducked; break; }
   await A(() => { const q = window.__qa; if (q.options().length) q.choose(0); else q.adv(); }); await page.waitForTimeout(200);
 }
@@ -89,6 +89,12 @@ for (const x of [1660, 2000, 2300]) {
 const knobs = (await cues()).filter((c) => c === 'knob').length;
 check('each wall turned down clicks its knob', knobs === 3, `${knobs} knob cues`);
 check('all walls down: the broadcast ambience stops', (await engine()).profile === 'industrial', (await engine()).profile);
+// the chapter ends at the front door: the walls come back on, then the door opens on rain
+await A(() => { window.__qa.scene.session.set({ 'c03.t1': true, 'c03.t2': true, 'c03.t3': true, 'c03.script': true }); window.__qa.go(140); });
+await page.waitForTimeout(400); await page.keyboard.press('e');
+let rain = false;
+for (let i = 0; i < 80 && !rain; i++) { rain = (await engine()).profile === 'rain'; if (!rain) await A(() => { const q = window.__qa; if (q.mode() === 'dialogue') q.adv(); }); await page.waitForTimeout(200); }
+check('leaving for work: the door opens on the rain ambience', rain, (await engine()).profile);
 
 // 5. River (unchanged chapter): dive muffles and fully restores, including across a scene change
 await enter('river', 380, { 'e.river': true });

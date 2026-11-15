@@ -29,7 +29,6 @@ export const SCRIPTS1: Record<string, Script> = {
   b_after: { sub: true, lines: [
     { who: N, text: 'It was a pleasure to burn.', pose: 'recoil' },
     { who: N, text: 'The books rise like startled birds, wings beating, and fall burning on the lawn.' },
-    { who: N, text: 'Your face aches from grinning.' },
     { who: 'STONEMAN', text: 'Pretty one tonight.' },
     { who: 'BEATTY', text: 'Clean work. Back to the House, gentlemen.' },
   ] },
@@ -44,8 +43,7 @@ export const SCRIPTS1: Record<string, Script> = {
 
   // ---- 02 Clarisse's Question ----
   c_meet: { set: { 'c02.meet': true }, lines: [
-    { who: N, text: 'At the corner you slow down without knowing why. Leaves skate across the pavement.' },
-    { who: N, text: 'A girl stands very still, as if the wind had been expecting you.' },
+    { who: N, text: 'At the corner you slow down without knowing why. A girl stands there, very still, as if the wind had been expecting you.' },
     { who: 'CLARISSE', text: "You're the fireman. I'm the new neighbor. Clarisse McClellan." },
     { who: 'MONTAG', text: "Guy Montag. You're out late." },
     { who: 'CLARISSE', text: 'I like walking at night. You smell of kerosene. I noticed before I saw your face.' },
@@ -67,8 +65,7 @@ export const SCRIPTS1: Record<string, Script> = {
     { who: 'CLARISSE', text: 'Nobody slows down long enough to see anything smaller.' },
   ] },
   c_house: { lines: [
-    { who: N, text: 'Every light in her house is on. Voices inside, talking, laughing, at this hour.' },
-    { who: 'MONTAG', text: 'What do they find to talk about, this late?' },
+    { who: 'MONTAG', text: 'Every light in your house is on. What do they find to talk about, this late?' },
     { who: 'CLARISSE', text: 'Everything. Good night, Mr. Montag.' },
   ] },
   // the pivotal question plays as subtitles inside the letterbox, so nothing covers the two of them
@@ -78,14 +75,12 @@ export const SCRIPTS1: Record<string, Script> = {
 
   // ---- home: the night (restrained, not playable) ----
   h_dark: { lines: [
-    { who: N, text: 'The bedroom is cold and dark. You thumb the igniter for a little light.' },
-    { who: N, text: "Mildred lies on her bed with her eyes open. Tiny radios hum in her ears." },
+    { who: N, text: 'The bedroom is cold and dark. Mildred lies with her eyes open, tiny radios humming in her ears.' },
     { who: N, text: 'Something small and glass rolls away from your foot. The bottle is empty.' },
   ] },
   h_call: { lines: [
     { who: 'MONTAG', text: 'Emergency hospital. Please. Hurry.' },
-    { who: N, text: 'Two technicians arrive with their machines, do their work without looking at her, and are gone within the hour.' },
-    { who: N, text: 'They say they get calls like this every night now. You sit up until morning.' },
+    { who: N, text: 'Two technicians come with their machines, work without looking at her, and leave. They get calls like this every night.' },
   ] },
 
   // ---- 03 Parlor Walls (Option A): she hears every word and does not listen ----
@@ -125,7 +120,7 @@ export const SCRIPTS1: Record<string, Script> = {
   m_t2: { set: { 'c03.t2': true }, lines: [
     { who: 'MONTAG', text: 'The bottle was empty, Millie. You took every pill in it.' },
     { who: 'MILDRED', text: 'Me? I would never do something that silly.' },
-    { who: N, text: 'She turns a page. In the quiet room she heard every word. She has already decided the conversation is over.' },
+    { who: N, text: 'She turns a page. She heard every word. She has already decided the conversation is over.' },
   ] },
   m_t3_loud: { set: { 'c03.t3': true }, lines: [
     { who: 'MONTAG', text: 'What are you reading?' },
@@ -196,14 +191,14 @@ export const ROOMS1: Record<string, RoomDef> = {
     barks: [
       { x: 980, who: 'STONEMAN', text: 'Your deal, Black.' },
       { x: 1110, who: 'BLACK', text: 'Montag had a grin on him tonight like a jack-o\'-lantern.' },
-      { x: 1640, range: 150, who: 'MONTAG', text: 'Inside the kennel, something clicks awake.', cue: 'servo', fx: 'houndStir' },
+      { x: 1480, range: 100, who: 'MONTAG', text: 'Inside the kennel, something clicks awake.', cue: 'servo', fx: 'houndStir' }, // well before the Watch prompt, so the two never stack
     ],
     enter: [{ key: 'e.station1', steps: [{ fx: 'poleSlide' }, { say: 's1_time' }] }],
     hotspots: [
       { id: 'rack', x: 620, label: 'Hang up your helmet', script: 's1_helmet', doneFlag: 's1.helmet', doneScript: 's1_helmet' },
       { id: 'cards', x: 1110, label: 'Listen to the card game', script: 's1_cards' },
       { id: 'beatty', x: 1290, label: 'Talk to Beatty', script: 's1_beatty' },
-      { id: 'hound', x: 1770, label: 'Watch the Hound', steps: [{ cam: 1770, ms: 700 }, { fx: 'houndStir' }, { say: 's1_hound' }, { follow: true }] },
+      { id: 'hound', x: 1630, label: 'Watch the Hound', steps: [{ cam: 1740, ms: 700 }, { fx: 'houndStir' }, { say: 's1_hound' }, { follow: true }] },
       { id: 'out', x: 2250, label: 'Leave for home', required: true, exit: { room: 'corner' } },
     ],
   },
@@ -249,9 +244,9 @@ export const ROOMS1: Record<string, RoomDef> = {
     coda: 'Happy. The word follows you all the way to the firehouse.',
     dark: (f) => !f['h1.day'],
     // seated center stage on the sofa, back to the door. Loud walls: she watches them. Any wall off: she reads her part.
-    // She turns to Montag only for the goodbye, then goes back to the walls.
+    // She turns to Montag only for the goodbye (a scripted step), then goes back to the walls.
     npcs: [{ id: 'mildred', fig: 'mildred', name: 'MILDRED', x: 1824, face: 1, back: true, when: (f) => !!f['h1.day'],
-      pose: (f) => down(f) ? 'seated' : 'seatedLook', distracted: (f) => !f['c03.t3'] || !!f['c03.script'] }],
+      pose: (f) => down(f) ? 'seated' : 'seatedLook', distracted: () => true }],
     objective: (f) => {
       if (!f['h1.day']) return '';
       if (!f['c03.t1']) return 'Talk to Mildred';

@@ -419,10 +419,10 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
         s.add.particles(0, 0, 'k:page', {
           x: { min: 860, max: 1260 }, y: { min: 420, max: 455 },
           speedY: { min: -240, max: -150 }, speedX: { min: -55, max: 65 }, gravityY: 100,
-          lifespan: { min: 2800, max: 3800 }, frequency: calm ? 420 : 105, duration: 2600, maxParticles: calm ? 6 : 24,
-          rotate: { min: -30, max: 30 },
-          // wing beat: the page folds and opens; reduced motion keeps it still
-          scaleX: calm ? 1 : { onUpdate: (_p: unknown, _k: string, t: number) => 0.2 + Math.abs(Math.sin(t * 28)) * 0.9 },
+          lifespan: { min: 3000, max: 4000 }, frequency: calm ? 420 : 90, duration: 2800, maxParticles: calm ? 6 : 28,
+          rotate: { min: -30, max: 30 }, scaleY: 1.8,
+          // wing beat: the page folds and opens (pass 1 render: at 1x they read as sparks, so 1.8x); reduced motion keeps it still
+          scaleX: calm ? 1.8 : { onUpdate: (_p: unknown, _k: string, t: number) => (0.25 + Math.abs(Math.sin(t * 26)) * 0.95) * 1.8 },
           color: [0xfff2dc, 0xffc070, 0xff6a28, 0x2a140c], alpha: { start: 1, end: 0.2 },
         }).setDepth(5.6);
       });
@@ -494,7 +494,7 @@ const home: Kit = (s, room) => {
   s.add.image(1060, 452, 'k:bed').setOrigin(0.5, 1).setDepth(4.6);
   paint(s, 'k:chair', 90, 110, (c) => { c.fillStyle = '#3a2e36'; c.fillRect(10, 0, 70, 70); c.fillRect(0, 50, 90, 30); c.fillStyle = '#121216'; c.fillRect(8, 80, 6, 30); c.fillRect(76, 80, 6, 30); });
   // home1: the chair sits where Mildred's seated pose meets its cushion (she sits center stage)
-  s.add.image(1830, room.id === 'home1' ? 478 : 452, 'k:chair').setOrigin(0.5, 1).setDepth(4.4);
+  s.add.image(1830, room.id === 'home1' ? 478 : 452, 'k:chair').setOrigin(0.5, 1).setDepth(4.4).setTint(room.id === 'home1' ? 0x7a6c76 : 0xffffff); // darker, so seated Mildred separates from it
   paint(s, 'k:doorframe', 70, H, (c) => { c.fillStyle = '#0a0a0c'; c.fillRect(18, 0, 34, H); c.fillRect(0, 0, 70, 30); c.fillStyle = 'rgba(160,200,215,0.12)'; c.fillRect(51, 30, 1, H); });
   occluder(s, 'k:doorframe', 560, 1.3); occluder(s, 'k:doorframe', 1210, 1.3); occluder(s, 'k:doorframe', 1500, 1.3);
   const vChair = s.add.image(400, 480, 'k:chair').setOrigin(0.5, 1).setDepth(5.5).setScale(0.8).setVisible(false);
@@ -505,6 +505,8 @@ const home: Kit = (s, room) => {
     floor: { key: 'hometile', top: '#2e2d33', bottom: '#0a0a0c', line: 'rgba(255,255,255,0.05)', spacing: 90, kind: 'tile' },
     lights: [{ x: 300, y: 200, color: 0xd8d0c0, r: 300 }, { x: 900, y: 200, color: 0x9ab0c8, r: 260 }, ...PARLOR.map((x) => ({ x, y: 220, color: 0x9ad0ff, r: 300 }))],
     fx: { tvOff: () => tvs.forEach((t) => t.setVisible(false)), tvOn: () => tvs.forEach((t) => t.setVisible(true)),
+      // the walls address Mildred: every screen still on flares toward the sofa when the play cues her
+      wallCue: () => tvs.forEach((t, i) => { if (!t.visible || t.alpha < 0.5) return; s.tweens.add({ targets: tvGlow[i], alpha: 0.7, yoyo: true, repeat: 1, duration: 220 }); }),
       // Chapter 1 ends as the novel's scene does: the front door opens on rain
       rainDoor: () => {
         const night = s.add.rectangle(115, 150, 110, F - 150, 0x18232e, 1).setOrigin(0.5, 0).setDepth(1.6).setAlpha(0);

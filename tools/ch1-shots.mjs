@@ -48,7 +48,7 @@ for (const [name, room, x, flags, action] of shots) {
     // walk into the house trigger and stop on Clarisse's question
     await qa(() => window.__qa.go(2025));
     for (let i = 0; i < 120; i++) {
-      const t = await qa(() => window.__qa.scene.dialogue?.body?.text ?? '');
+      const t = await qa(() => window.__qa.line()); // v2 plays the question as a letterbox subtitle
       if (/happy\?/i.test(t)) break;
       await qa(() => { const q = window.__qa; if (q.options().length) q.choose(0); else q.adv(); });
       await page.waitForTimeout(220);
@@ -56,7 +56,7 @@ for (const [name, room, x, flags, action] of shots) {
     await page.waitForTimeout(900);
   } else {
     await settle();
-    if (action === 'ignite') { await qa(() => window.__qa.scene.fx('ignite')); await page.waitForTimeout(3800); }
+    if (action === 'ignite') { await qa(() => { const sc = window.__qa.scene; sc.fx('ignite'); if (sc.kit.fx.pages) sc.fx('pages'); }); await page.waitForTimeout(3800); }
     else if (action === 'leave') { await qa(() => { window.__qa.go(140); }); await page.waitForTimeout(300); await page.keyboard.press('e'); await page.waitForTimeout(2600); }
     else await page.waitForTimeout(1500);
   }

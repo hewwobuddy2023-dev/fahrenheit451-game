@@ -15,7 +15,7 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 const t0 = Date.now();
 const log = (...a) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s]`, ...a);
 // read-only observation of what the player would see
-const see = () => page.evaluate(() => { const s = window.__qa?.scene; return s ? { room: s.room.id, mode: window.__qa.mode(), x: Math.round(s.player.x), objective: s.hud.objective.text, prompt: s.prompt.visible ? s.promptText.text : '', line: s.dialogue?.open ? s.dialogue.body.text : '', options: window.__qa.options() } : {}; });
+const see = () => page.evaluate(() => { const s = window.__qa?.scene; return s ? { room: s.room.id, mode: window.__qa.mode(), x: Math.round(s.player.x), objective: s.hud.objective.text, prompt: s.prompt.visible ? s.promptText.text : '', line: s.dialogue?.open ? (s.dialogue.body.text || s.dialogue.sub.text) : '', options: window.__qa.options() } : {}; });
 
 await page.goto(`${base}/?debug`);
 await page.evaluate(() => { localStorage.clear(); });
@@ -49,7 +49,7 @@ for (let step = 0; step < 900; step++) {
   if (v.prompt) {
     if (!seen.has('p:' + v.room + v.prompt)) { seen.add('p:' + v.room + v.prompt); log('PROMPT', JSON.stringify(v.prompt)); }
     if (/^HOLD/.test(v.prompt)) { await page.keyboard.down('e'); await page.waitForTimeout(3000); await page.keyboard.up('e'); }
-    else if (/Look|Watch|Listen|Turn|Talk|Take|Light|Read|Leave|Go|Hang/i.test(v.prompt) && !seen.has('used:' + v.room + v.prompt + v.objective)) {
+    else if (/Look|Watch|Listen|Turn|Talk|Take|Light|Read|Leave|Go|Hang|Say/i.test(v.prompt) && !seen.has('used:' + v.room + v.prompt + v.objective)) {
       seen.add('used:' + v.room + v.prompt + v.objective); // a player does not repeat an action that changed nothing
       await page.keyboard.press('e'); await page.waitForTimeout(500);
     }
@@ -57,7 +57,7 @@ for (let step = 0; step < 900; step++) {
     if (after.mode !== 'play' || after.objective !== v.objective) continue; // the prompt did something; look again before walking
   }
   // a student walks toward what the objective names and what they can see on screen (Mildred on the sofa, the door)
-  const left = /Beatty|door|Leave for work/i.test(v.objective) || /Take the igniter/.test(v.objective) || (/Mildred|script/i.test(v.objective) && v.x > 1880);
+  const left = /door|Leave for work/i.test(v.objective) || (/Mildred|script/i.test(v.objective) && v.x > 1800);
   const dir = left ? 'a' : 'd';
   await page.keyboard.down(dir); await page.waitForTimeout(450); await page.keyboard.up(dir); walkMs += 450;
 }
