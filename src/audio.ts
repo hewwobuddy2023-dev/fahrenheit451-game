@@ -1,6 +1,6 @@
 import { settings, setSetting } from './settings.ts';
 
-type Cue = 'ui' | 'page' | 'step' | 'interact' | 'complete' | 'hound' | 'caught' | 'ignite' | 'ending' | 'wrong' | 'engine' | 'alarm' | 'click' | 'rush' | 'servo' | 'knob';
+type Cue = 'ui' | 'page' | 'step' | 'interact' | 'complete' | 'hound' | 'caught' | 'ignite' | 'ending' | 'wrong' | 'engine' | 'alarm' | 'click' | 'rush' | 'servo' | 'knob' | 'horn';
 /** noise bed level/cutoff, drone Hz/level, fire crackle, tension pad, slow filter swell (water, wind). */
 interface Profile { noise: number; cutoff: number; hum: number; tone: number; crackle: number; pad: number; swell: number }
 const PROFILES: Record<string, Profile> = {
@@ -43,6 +43,8 @@ const CUES: Record<Cue, { gap: number; parts: Part[] }> = {
   servo: { gap: 1500, parts: [{ tone: 'sawtooth', f: [180, 420], lp: 900, len: 0.7, vol: 0.12 }, { burst: 'bandpass', f: [4800, 5200], q: 6, at: 0.62, len: 0.03, vol: 0.35 }] },
   // a parlor wall knob turned down
   knob: { gap: 250, parts: [{ burst: 'bandpass', f: [1400, 900], q: 2, len: 0.06, vol: 0.4 }, { tone: 'sine', f: [300, 180], len: 0.12, vol: 0.12 }] },
+  // a car horn: two close square tones, held, then cut
+  horn: { gap: 900, parts: [{ tone: 'square', f: [392, 392], lp: 1800, len: 0.55, vol: 0.2 }, { tone: 'square', f: [494, 494], lp: 1800, len: 0.55, vol: 0.18 }] },
   alarm: { gap: 900, parts: [{ tone: 'square', f: [880, 880], lp: 2200, len: 0.22, vol: 0.08 }, { tone: 'square', f: [660, 660], lp: 2200, at: 0.25, len: 0.22, vol: 0.08 }] },
 };
 

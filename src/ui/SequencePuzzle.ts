@@ -14,6 +14,8 @@ export class SequencePuzzle {
   private attempts = 0;
   private hintLevel = 0;
   private message = '';
+  /** Interference puzzles: the line you could not recall is drowned out by the jingle until you read the source again. */
+  private drowned?: string;
   constructor(privateScene: Phaser.Scene, privateDef: SequenceDef, privateDone: () => void, privatePause: () => void) {
     this.scene = privateScene; this.def = privateDef; this.done = privateDone; this.pause = privatePause;
     // Stable mixed order, deliberately unrelated to the answer order. No random unfairness on retry.
@@ -25,9 +27,9 @@ export class SequencePuzzle {
   private def: SequenceDef;
   private done: () => void;
   private pause: () => void;
-  get state() { return { phase: this.phase, selected: [...this.selected], cards: [...this.cards], attempts: this.attempts }; }
+  get state() { return { phase: this.phase, selected: [...this.selected], cards: [...this.cards], attempts: this.attempts, drowned: this.drowned }; }
   action(a: 'act' | 'up' | 'down' | 'back' | 'hint') {
-    if (a === 'back') { this.phase = 'study'; this.selected = []; this.message = ''; }
+    if (a === 'back') { this.phase = 'study'; this.selected = []; this.message = ''; this.drowned = undefined; }
     else if (a === 'hint') {
       this.message = ['Read the source as an ordered thought, not as separate answers.', 'Choose the next fragment after the last line you placed.', `Next: ${this.def.fragments[this.selected.length] ?? this.def.fragments[0]}`][Math.min(2, this.hintLevel++)];
     } else if (a === 'up' || a === 'down') this.index = (this.index + (a === 'up' ? -1 : 1) + this.cards.length) % this.cards.length;
@@ -37,11 +39,16 @@ export class SequencePuzzle {
   }
   private pick(i: number) {
     const word = this.cards[i];
+    if (word === this.drowned) { sound.cue('wrong'); this.message = "The jingle drowns that line. Read the source again to hear it."; this.draw(); return; }
     if (this.selected.includes(word)) { this.message = 'Already placed. Choose another fragment, or read the source again.'; this.draw(); return; }
     sound.cue('page'); this.selected.push(word); this.message = '';
     if (this.selected.length === this.def.fragments.length) {
       if (this.selected.every((word, i) => word === this.def.fragments[i])) { this.destroy(); sound.cue('complete'); this.done(); return; }
-      this.attempts++; this.selected = []; this.message = 'The order slipped. Try again — or read the source. No earlier progress was lost.'; sound.cue('caught');
+      this.attempts++; sound.cue('caught');
+      const miss = this.selected.findIndex((w, k) => w !== this.def.fragments[k]);
+      if (this.def.interference) { this.drowned = this.def.fragments[miss]; this.message = 'The advertisement roars over a line. You must read the source again to hear it.'; }
+      else this.message = 'The order slipped. Try again — or read the source. No earlier progress was lost.';
+      this.selected = [];
     }
     this.draw();
   }
@@ -68,7 +75,7 @@ export class SequencePuzzle {
       button(245, 423, 470, 60, controls('BEGIN RECALL  ·  PRESS [E]'), () => this.action('act'), true);
     } else {
       label(60, 116, this.selected.length ? this.selected.join(' / ') : 'Place four fragments in the order you studied.', 16);
-      this.cards.forEach((word, i) => button(60 + (i % 2) * 425, 201 + Math.floor(i / 2) * 75, 412, 65, `${this.selected.includes(word) ? 'PLACED · ' : ''}${word}`, () => this.pick(i), i === this.index));
+      this.cards.forEach((word, i) => button(60 + (i % 2) * 425, 201 + Math.floor(i / 2) * 75, 412, 65, `${this.selected.includes(word) ? 'PLACED · ' : word === this.drowned ? 'DROWNED OUT · ' : ''}${word === this.drowned ? '▒▒▒▒▒▒' : word}`, () => this.pick(i), i === this.index));
       button(60, 443, 320, 54, 'READ AGAIN  ·  BACKSPACE', () => this.action('back'));
       button(396, 443, 200, 54, 'HINT  ·  H', () => this.action('hint'));
       label(617, 456, '↑ / ↓ select\nE / Enter place', 13, C.creamDim);

@@ -45,6 +45,7 @@ export const SCRIPTS4: Record<string, Script> = {
   ] },
   lw_hound: { lines: [{ who: N, text: 'Something drifts across the lawn like a cloud of grey smoke, without a sound. The Mechanical Hound.' }] },
   lw_miss: { lines: [{ who: N, text: 'Too late. It veers off, circles, and comes again.' }] },
+  lw_needle: { lines: [{ who: N, text: 'The needle grazes your thigh. Cold spreads up the leg. Your hands shake. It is already circling for another pass.' }] },
   lw_hound2: { set: { 'c10.hound': true }, lines: [
     { who: N, text: 'Fire catches the Hound in mid-leap. Its needle stabs your leg as it falls apart in the air.' },
     { who: N, text: 'Your leg goes numb. Lights are coming on down the street.' },
@@ -105,6 +106,11 @@ export const SCRIPTS4: Record<string, Script> = {
     { who: N, text: 'In every lit window, the parlor walls show the same thing: the Hound, running.' },
     { who: 'SEASHELL RADIO', text: 'Everyone in the Elm Terrace area: on the count of ten, open your front door and look out. He cannot hide if everyone looks.' },
   ] },
+  rn_caught: { lines: [
+    { who: N, text: 'Ten. Every front door on the street swings open at once. A hundred faces in the light, all turned toward you.' },
+    { who: 'SEASHELL RADIO', text: 'There he is! Lock on to him. Do not let him leave the street.' },
+    { who: N, text: 'Hands close on your coat. Then the street goes white, and black.' },
+  ] },
   rn_river: { set: { 'c12.river': true }, lines: [
     { who: N, text: 'The river. Cold and black and moving.' },
     { who: N, text: "You scrub yourself with the whiskey, change into Faber's old clothes, and walk out until there is no bottom." },
@@ -156,7 +162,7 @@ export const ROOMS4: Record<string, RoomDef> = {
       { if: (f) => f['c09.book'] === 'outburst', then: [{ say: 'lw_cb_book' }] },
       { say: 'lw_arrest' }, { if: (f) => f['st.reply'] === 'ask', then: [{ say: 'lw_cb_ask' }] }, { wait: 300 },
       { flash: 0xffffff, ms: 900 }, { fade: 'out', ms: 250 }, { npc: 'beatty', show: false }, { wait: 1100 }, { fade: 'in', ms: 900 },
-      { say: 'lw_after' }, { say: 'lw_hound' }, { fx: 'houndLeap' }, { prompt: 'PRESS [E]  ·  FIRE', ms: 1800, miss: 'lw_miss' }, { fx: 'houndBurn' }, { flash: 0xff8040, ms: 400 },
+      { say: 'lw_after' }, { say: 'lw_hound' }, { fx: 'houndLeap' }, { prompt: 'PRESS [E]  ·  FIRE', ms: 1800, miss: 'lw_miss', strike: 'lw_needle' }, { fx: 'houndBurn' }, { flash: 0xff8040, ms: 400 },
       { say: 'lw_hound2' },
     ] }],
     hotspots: [
@@ -168,11 +174,11 @@ export const ROOMS4: Record<string, RoomDef> = {
 
   boulevard: {
     id: 'boulevard', chapter: 4, label: '', width: 2200, spawnX: 150, kit: 'street:boulevard', limp: true,
-    // One shared rhythm: each lane lights 0.6 s after the one before it, a wave moving the way you walk.
-    // Caught = back to the island just before that lane, not the kerb.
+    // One shared rhythm: each lane lights 0.6 s after the one before it, a wave moving the way you walk. A car is lit for 1.3 s,
+    // dark for 2 s (a crossing takes under 1 s); the glare builds for 1.2 s first. A hit cuts to black and sends you back to the near kerb.
     hazards: [620, 820, 1020, 1220, 1420].map((x, i) => ({
-      id: 'lane' + i, from: x, to: x + 90, width: 110, period: 3600, pulse: 1000, phase: -i * 0.165,
-      look: 'headlights' as const, reset: x - 48, when: (f: Record<string, boolean | string>) => !f['c11.crossed'],
+      id: 'lane' + i, from: x, to: x + 90, width: 110, period: 3300, pulse: 1300, phase: -i * 0.18,
+      look: 'headlights' as const, reset: 572, when: (f: Record<string, boolean | string>) => !f['c11.crossed'],
     })),
     objective: (f) => !f['c11.crossed'] ? 'Cross the boulevard. Wait in the gaps between the passing cars' : !f['c11.choice'] ? "Fireman Black's house" : 'Keep going to Faber',
     enter: [{ key: 'e.boulevard', steps: [{ say: 'bv_open' }] }],
@@ -197,7 +203,7 @@ export const ROOMS4: Record<string, RoomDef> = {
 
   run: {
     id: 'run', chapter: 4, label: '', width: 2600, spawnX: 150, kit: 'street:alley', limp: true,
-    timer: { ms: 34000, reset: 150, label: 'THE COUNT', when: (f) => !!f['e.run'] && !f['c12.river'] },
+    timer: { ms: 34000, reset: 150, label: 'THE COUNT', when: (f) => !!f['e.run'] && !f['c12.river'], fail: [{ flash: 0xfff4d8, ms: 280 }, { say: 'rn_caught' }] },
     hazards: [
       // Doors open and searchlights pass on one readable beat; caught = back to the last safe gap.
       ...[520, 900, 1280, 1660, 2040].map((x, i) => ({

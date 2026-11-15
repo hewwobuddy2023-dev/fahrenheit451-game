@@ -13,6 +13,7 @@ const steps = [
   ['storage', 'node', ['tests/storage.mjs']],
   ['cinematics', 'node', ['tests/cinematics.mjs']],
   ['mechanics', 'node', ['tests/mechanics.mjs']],
+  ['minigames', 'node', ['tests/minigames.mjs']],
   ['campaign:all', 'node', ['tests/campaign-all.mjs']],
   ['build', 'npx', ['vite', 'build']],
 ];

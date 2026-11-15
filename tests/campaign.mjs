@@ -32,7 +32,7 @@ try{
   await d.visit('out',{missHound:true});await d.visit('books');await d.visit('run');
   // Force one capture, then cross the actual lanes with touch movement and safe-gap waits.
   const bv=s.scene();s.w.__qa.go(650);await s.until(()=>bv.caughtAt>0,'boulevard capture');await s.until(()=>!bv.caughtScene&&bv.mode==='play','capture cinematic ends');
-  assert.equal(Math.round(bv.player.x),620-48,'caught in lane 1 returns to the island just before it');
+  assert.equal(Math.round(bv.player.x),620-48,'caught in lane 1 returns to the near kerb');
   await d.walkTo(1700);await d.settle();assert.ok(bv.session.flags['c11.crossed']);
   await d.visit('black');await d.visit('on');await d.visit('faber');await d.visit('back');
   const run=s.scene();await s.advance(34500);assert.ok(run.caughtAt>0,'count-of-ten reset');

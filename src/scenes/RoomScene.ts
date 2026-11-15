@@ -79,6 +79,8 @@ export class RoomScene extends Phaser.Scene {
   /** The thing behind each hazard's light: an approaching car or a helicopter. */
   private rigs = new Map<string, Phaser.GameObjects.Image>();
   private caughtScene = false;
+  private caughtHz = '';                          // the hazard whose light/car is held on screen during the caught scene
+  private failScenes = 0;                          // full caught scenes played this visit (the first two; then just the quick fade)
   private pressureLabel!: Phaser.GameObjects.Text;
   private controlHint!: Phaser.GameObjects.Text;
   private camTarget: number | null = null;
@@ -86,6 +88,8 @@ export class RoomScene extends Phaser.Scene {
   private get touch() { return isTouch(); }
   private overlay?: { destroy: () => void; list?: MenuList };
   private caughtAt = 0;
+  private countShown = 0;
+  private holdMoveUntil = 0;                    // active time before which a still-held key does not move Montag (the screen is fading back in)
   private timerStart = 0;
   // Scene Clock.now is wall time and jumps after suspension. Encounter deadlines
   // use accumulated active deltas, so a background tab cannot consume a retry.
@@ -106,10 +110,10 @@ export class RoomScene extends Phaser.Scene {
     this.hose = { pressure: 0, progress: 0, overheated: false };
     this.scriptedWalk = false; this.scriptedPose = false;
     this.vx = 0; this.facing = 1; this.near = undefined; this.holdMs = 0;
-    this.camTarget = null; this.overlay = undefined; this.caughtAt = 0;
+    this.camTarget = null; this.overlay = undefined; this.caughtAt = 0; this.holdMoveUntil = 0;
     this.activeTime = 0;
     this.linePosed = undefined; this.barkTexts = [];
-    this.npcs = []; this.glows = new Map(); this.laneStrips = new Map(); this.rigs = new Map(); this.barked = new Set(); this.bars = undefined; this.playMs = 0; this.idleMs = 0; this.hintFor = ''; this.nudged = ''; this.caughtScene = false; this.beams = new Map(); this.eyes = new Map();
+    this.npcs = []; this.glows = new Map(); this.laneStrips = new Map(); this.rigs = new Map(); this.barked = new Set(); this.bars = undefined; this.playMs = 0; this.idleMs = 0; this.hintFor = ''; this.nudged = ''; this.caughtScene = false; this.caughtHz = ''; this.failScenes = 0; this.beams = new Map(); this.eyes = new Map();
     // Scene restarts destroy its objects, but retain class fields. Never reuse a
     // destroyed emitter when a later chapter starts its next hold interaction.
     this.spray = undefined;
@@ -181,7 +185,7 @@ export class RoomScene extends Phaser.Scene {
         // live danger strip under the lane: dim = clear, amber = coming, white-hot = lit
         this.laneStrips.set(hz.id, this.add.rectangle(hz.from - 14, WALK_Y + 7, hz.to - hz.from + 28, 20, 0xffffff, 0).setOrigin(0).setDepth(4.16).setBlendMode(Phaser.BlendModes.ADD));
         // the safe island just before the lane
-        this.add.rectangle(hz.reset - 22, WALK_Y + 9, 44, 16, 0x78a68b, 0.18).setOrigin(0).setDepth(4.14);
+        this.add.rectangle(hz.from - 70, WALK_Y + 9, 44, 16, 0x78a68b, 0.18).setOrigin(0).setDepth(4.14);
         for (let x = hz.from - 8; x < hz.to + 12; x += 16) marks.lineBetween(x, WALK_Y + 8, x + 10, WALK_Y + 26);
       }
       if (hz.look === 'headlights') this.rigs.set(hz.id, this.add.image((hz.from + hz.to) / 2, WALK_Y, 'car').setOrigin(0.5, 1).setVisible(false));
@@ -270,7 +274,7 @@ export class RoomScene extends Phaser.Scene {
     const p = this.player;
     let dir = 0;
     const playing = this.mode === 'play';
-    if (playing) {
+    if (playing && time >= this.holdMoveUntil) { // a held key waits half a second after a caught scene, while the screen fades back in
       if (this.keys.left.some((k) => k.isDown) || this.hud.touchLeft) dir -= 1;
       if (this.keys.right.some((k) => k.isDown) || this.hud.touchRight) dir += 1;
     }
@@ -520,6 +524,7 @@ export class RoomScene extends Phaser.Scene {
       const img = this.beams.get(hz.id)!;
       const on = !hz.when || hz.when(this.session.flags);
       const rig = this.rigs.get(hz.id);
+      if (this.caughtScene && this.caughtHz === hz.id) continue; // its light stays on Montag until the fade
       if (!on) { img.setVisible(false); rig?.setVisible(false); continue; }
       const t = ((time / hz.period) + (hz.phase ?? 0)) % 1;
       let hit = false;
@@ -548,10 +553,12 @@ export class RoomScene extends Phaser.Scene {
         img.setVisible(true);
         const bx = hz.from + (hz.to - hz.from) * (t < 0.5 ? t * 2 : 2 - t * 2);
         img.setX(bx);
-        hit = Math.abs(this.player.x - bx) < hz.width / 2;
+        // out of breath, the splash and gasp carry: the light finds you from further off
+        hit = Math.abs(this.player.x - bx) < hz.width / 2 + (this.breath.exhausted ? 120 : 0);
       }
-      if (hit && this.mode === 'play' && !this.caughtScene && time - this.caughtAt > 1200 && !(hz.dive && diving)) {
-        void this.caughtCinematic(hz.reset, hz.look === 'headlights' ? 'CAUGHT IN THE HEADLIGHTS' : hz.look === 'doorlight' ? 'A NEIGHBOUR SEES YOU' : 'THE SEARCHLIGHT FINDS YOU', img);
+      if (hit && this.mode === 'play' && !this.caughtScene && time - this.caughtAt > 900 && !(hz.dive && diving)) {
+        const msg = hz.look === 'headlights' ? 'CAUGHT IN THE HEADLIGHTS' : hz.look === 'doorlight' ? 'A NEIGHBOUR SEES YOU' : this.breath.exhausted ? 'OUT OF BREATH. YOU BREAK THE SURFACE' : 'THE SEARCHLIGHT FINDS YOU';
+        void this.caughtCinematic(hz.reset, msg, { id: hz.id, light: img, rig, horn: hz.look === 'headlights', back: hz.look === 'headlights' ? 'BACK TO THE KERB. WAIT FOR A GAP.' : undefined, steps: hz.fail });
       }
     }
     this.hazardReadout.setText(label).setVisible(!!label && this.mode === 'play');
@@ -567,46 +574,56 @@ export class RoomScene extends Phaser.Scene {
     const el = time - this.timerStart;
     const n = Math.min(10, 1 + Math.floor((el / tm.ms) * 10));
     this.hud.setTimer(`${tm.label}  ${n} / 10`);
-    if (el >= tm.ms && !this.caughtScene) void this.caughtCinematic(tm.reset, 'TEN. EVERY DOOR OPENS', undefined);
+    if (n !== this.countShown) { this.countShown = n; if (n > 1) sound.cue(n >= 9 ? 'alarm' : 'click'); } // a tick for every number; the last two ring
+    if (el >= tm.ms && !this.caughtScene) void this.caughtCinematic(tm.reset, 'TEN. EVERY DOOR OPENS', { steps: tm.fail });
   }
 
-  private caught(x: number, msg: string) {
+  private caught(x: number, msg: string, back = 'BACK TO THE LAST SAFE SPOT') {
     this.caughtAt = this.activeTime;
-    this.timerStart = this.activeTime;
+    this.timerStart = this.activeTime; this.countShown = 0; this.holdMoveUntil = this.activeTime + 500;
     sound.cue('caught');
     if (!settings.reducedMotion) this.cameras.main.flash(300, 240, 240, 255);
     this.player.x = x;
     this.breath = { air: 1, exhausted: false };
     this.vx = 0;
     if (msg) this.flashNote(msg + '  TRY AGAIN.');
-    else this.hud.note('BACK TO THE LAST SAFE SPOT');
+    else this.hud.note(back);
   }
 
   /**
-   * Short, readable failure: the light snaps onto Montag, glare and alarm, a brief push-in,
-   * a quick fade, then the checkpoint. Input is released on every path; reduced motion skips the push.
+   * Readable failure: the light (or the car) snaps onto Montag with a horn or alarm, an optional short scene (`steps`,
+   * first two times per visit), a fade to black, then the checkpoint. Held movement keys are NOT reset: the cutscene
+   * ignores them, and a key still held afterwards keeps walking. Reduced motion skips the flash and the car's rush.
    */
-  private async caughtCinematic(x: number, msg: string, light?: Phaser.GameObjects.Image) {
-    this.caughtScene = true;
+  private async caughtCinematic(x: number, msg: string, o: { id?: string; light?: Phaser.GameObjects.Image; rig?: Phaser.GameObjects.Image; horn?: boolean; back?: string; steps?: Step[] } = {}) {
+    this.caughtScene = true; this.caughtHz = o.id ?? '';
     this.caughtAt = this.activeTime;
     this.mode = 'cutscene'; this.vx = 0;
-    this.input.keyboard?.resetKeys(); this.hud.showTouch(false); this.spray?.stop();
-    const cam = this.cameras.main;
+    this.hud.showTouch(false); this.spray?.stop();
+    const cam = this.cameras.main, still = settings.reducedMotion;
     try {
-      sound.cue('caught'); sound.cue('alarm');
-      light?.setVisible(true).setAlpha(1).setX(this.player.x);
+      sound.cue(o.horn ? 'horn' : 'alarm'); sound.cue('caught');
+      o.light?.setVisible(true).setAlpha(1).setX(this.player.x);
       this.player.setTint(0xffffff);
-      if (!settings.reducedMotion) { cam.flash(220, 255, 250, 235); this.camTarget = this.player.x; }
+      if (o.rig) { // the car is on top of him: right at the camera, filling the lane
+        o.rig.setVisible(true).setAlpha(1).setX(this.player.x).setDepth(9).setOrigin(0.5, 1).setY(WALK_Y + 130);
+        if (still) o.rig.setScale(1.9); else this.tweens.add({ targets: o.rig, scale: 2.6, y: WALK_Y + 190, duration: 380, ease: 'Quad.easeIn' });
+      }
+      if (!still) { cam.flash(220, 255, 250, 235); this.camTarget = this.player.x; }
       this.flashNote(msg);
       await sleep(this, 650);
-      cam.fadeOut(220, 0, 0, 0);
-      await sleep(this, 240);
-      this.caught(x, '');
+      if (o.steps && this.failScenes++ < 2) {
+        await this.runSteps(o.steps);
+      }
+      cam.fadeOut(260, 0, 0, 0);
+      await sleep(this, 420);   // a held black: the consequence lands before the retry
+      this.caught(x, '', o.back);
+      this.caughtHz = ''; o.rig?.setScale(0.6);
       this.camTarget = null;
       cam.scrollX = Phaser.Math.Clamp(x - W / 2, 0, this.room.width - W);
-      cam.fadeIn(260, 0, 0, 0);
+      cam.fadeIn(320, 0, 0, 0);
     } finally {
-      this.caughtScene = false;
+      this.caughtScene = false; this.caughtHz = '';
       if (!this.isExit()) { this.mode = 'play'; this.hud.showTouch(true); }
     }
   }
@@ -910,19 +927,30 @@ export class RoomScene extends Phaser.Scene {
       return;
     }
     if ('prompt' in s) {
+      let misses = 0, ms = s.ms;
       for (;;) {
         const t = text(this, W / 2, 210, controls(s.prompt), { fontFamily: FONT.display, fontSize: '30px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 18, y: 10 } })
           .setOrigin(0.5).setLetterSpacing(6).setScrollFactor(0).setDepth(1150);
         sound.cue('hound');
         this.hud.showTouch(true);
-        this.promptWait = { until: this.activeTime + s.ms, hit: false };
+        this.promptWait = { until: this.activeTime + ms, hit: false };
         while (this.activeTime < this.promptWait.until && !this.promptWait.hit && !this.hud.touchAct) await sleep(this, 30);
         const hit = this.promptWait.hit || this.hud.touchAct;
         this.promptWait = undefined;
         t.destroy();
         this.hud.showTouch(false);
         if (hit) return;
-        await this.say(s.miss);
+        if (s.strike && ++misses % 2 === 0) {
+          // the second miss costs: the needle lands, the world goes red then black, and the next window is shorter
+          sound.cue('hound'); sound.cue('caught');
+          if (!settings.reducedMotion) { this.cameras.main.flash(240, 200, 30, 20); this.cameras.main.shake(180, 0.006); }
+          this.flashNote('THE NEEDLE HITS. IT GETS HARDER.');
+          await sleep(this, 700);
+          await this.say(s.strike);
+          this.cameras.main.fadeOut(360, 0, 0, 0); await sleep(this, 520); // the dialogue panel shares the camera, so fade only after it closes
+          this.cameras.main.fadeIn(420, 0, 0, 0); await sleep(this, 460); // the shorter window opens only once the screen is back
+          ms = Math.max(1300, ms - 200);
+        } else await this.say(s.miss);
       }
     }
     if ('goto' in s) return this.transition(s.goto, s.x);
