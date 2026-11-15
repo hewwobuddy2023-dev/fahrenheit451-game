@@ -12,6 +12,7 @@ const PROFILES: Record<string, Profile> = {
   pursuit: { noise: 0.16, cutoff: 780, hum: 73, tone: 0.06, crackle: 0, pad: 0.06, swell: 0.1 },
   river: { noise: 0.24, cutoff: 900, hum: 92, tone: 0.008, crackle: 0, pad: 0.03, swell: 0.7 },
   camp: { noise: 0.12, cutoff: 2200, hum: 146, tone: 0.018, crackle: 0.55, pad: 0.015, swell: 0.2 },
+  night: { noise: 0.1, cutoff: 650, hum: 46, tone: 0.012, crackle: 0, pad: 0.02, swell: 0.5 },
   ending: { noise: 0.05, cutoff: 480, hum: 130, tone: 0.025, crackle: 0.2, pad: 0.04, swell: 0.3 },
 };
 
@@ -167,7 +168,8 @@ export class Soundscape {
     this.scene = scene;
     this.profile = scene === 'menu' ? 'menu' : scene === 'end' ? 'ending' : scene === 'river' ? 'river'
       : scene === 'camp' ? 'camp' : scene === 'subway' ? 'subway' : ['lawn2', 'boulevard', 'run'].includes(scene) ? 'pursuit'
-      : ['home1', 'home4'].includes(scene) ? 'television' : ['burn', 'attic', 'home5'].includes(scene) ? 'fire' : 'industrial';
+      : ['home1', 'home4'].includes(scene) ? 'television' : ['attic', 'home5'].includes(scene) ? 'fire'
+      : ['burn', 'corner'].includes(scene) ? 'night' : 'industrial';
     for (const voice of this.voices) { try { voice.stop(); } catch { /* already ended */ } }
     this.spray = 0; this.ducked = false;
     this.setMuffle(false);
@@ -193,6 +195,9 @@ export class Soundscape {
     this.spray = level;
     if (this.context && this.sprayGain) this.sprayGain.gain.setTargetAtTime(level * 0.55, this.context.currentTime, 0.04);
   }
+
+  /** Switch the ambience within a scene (the burn turns from night to fire when it is lit). */
+  setProfile(profile: string) { if (PROFILES[profile] && profile !== this.profile) { this.profile = profile; this.apply(); } }
 
   refresh() { this.apply(); }
 

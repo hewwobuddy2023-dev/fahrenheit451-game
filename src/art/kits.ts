@@ -472,7 +472,9 @@ const home: Kit = (s, room) => {
   return {
     floor: { key: 'hometile', top: '#2e2d33', bottom: '#0a0a0c', line: 'rgba(255,255,255,0.05)', spacing: 90, kind: 'tile' },
     lights: [{ x: 300, y: 200, color: 0xd8d0c0, r: 300 }, { x: 900, y: 200, color: 0x9ab0c8, r: 260 }, ...PARLOR.map((x) => ({ x, y: 220, color: 0x9ad0ff, r: 300 }))],
-    fx: { tvOff: () => tvs.forEach((t) => t.setVisible(false)), tvOn: () => tvs.forEach((t) => t.setVisible(true)) },
+    fx: { tvOff: () => tvs.forEach((t) => t.setVisible(false)), tvOn: () => tvs.forEach((t) => t.setVisible(true)),
+      // Mildred turns the walls back up: each screen flickers to full brightness in turn
+      wallsOn: () => tvs.forEach((t, i) => s.time.delayedCall(i * 260, () => { t.setTint(0xffffff); s.tweens.add({ targets: t, alpha: { from: 0.2, to: 1 }, duration: 120, repeat: 2, yoyo: true, onComplete: () => t.setAlpha(1) }); tvGlow[i].setVisible(true); })) },
     update: (f) => {
       const off = (!!f['c09.off'] && room.id !== 'home3') || room.id === 'home5' || room.id === 'home3' || (room.id === 'home1' && !f['h1.day']);
       tvs.forEach((t) => t.setVisible(!off)); tvGlow.forEach((g) => g.setVisible(!off));

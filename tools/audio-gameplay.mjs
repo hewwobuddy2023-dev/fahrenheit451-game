@@ -36,7 +36,7 @@ const ch1 = { 'c01.p1': true, 'c01.p2': true, 'c01.p3': true, 'c01.lit': true, '
 // 1. The burn: footsteps, the pour loop follows E, ignition = click, then rush, then the fire bed
 await enter('burn', 760, { 'e.burn': true });
 const e0 = await engine();
-check('audio unlocked by a real key press; the burn uses the fire ambience', e0.state === 'running' && e0.profile === 'fire', JSON.stringify(e0));
+check('audio unlocked by a real key press; before the fire the burn is a quiet night (no crackle yet)', e0.state === 'running' && e0.profile === 'night', JSON.stringify(e0));
 await page.keyboard.down('d'); await page.waitForTimeout(900); await page.keyboard.up('d');
 check('walking plays footsteps', (await cues()).includes('step'));
 await A(() => window.__qa.go(1060)); await page.waitForTimeout(300);
@@ -55,6 +55,7 @@ await A(() => { window.__cues = []; window.__qa.go(980); }); await page.waitForT
 await page.keyboard.press('e'); await page.waitForTimeout(1500);
 const lit = await cues();
 check('lighting plays the igniter click, then the fire rush, then the ignition', lit.indexOf('click') >= 0 && lit.indexOf('rush') > lit.indexOf('click') && lit.includes('ignite'), lit.join(','));
+check('once lit, the burn switches to the fire ambience (crackle)', (await engine()).profile === 'fire', (await engine()).profile);
 
 // 2. Firehouse: industrial ambience; the Hound's servo fires when Montag walks past the kennel
 await enter('station1', 1450, { ...ch1, 'e.station1': true });
@@ -65,6 +66,7 @@ check('no hose loop left over from the burn', (await engine()).spray < 0.02);
 
 // 3. Clarisse: the mix ducks for "Are you happy?" and comes back afterwards
 await enter('corner', 1990, { ...ch1, 'c02.meet': true, 'c02.n1': 'look' });
+check('Clarisse walk uses the night ambience (wind), not the firehouse hum', (await engine()).profile === 'night', (await engine()).profile);
 await A(() => window.__qa.go(2025));
 let duckedAtQuestion = false, sawQuestion = false;
 for (let i = 0; i < 120; i++) {

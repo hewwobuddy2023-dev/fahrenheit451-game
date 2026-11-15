@@ -67,6 +67,7 @@ export class RoomScene extends Phaser.Scene {
   private laneStrips = new Map<string, Phaser.GameObjects.Rectangle>();
   private promptMode = inputMode();
   private hintBtn?: Phaser.GameObjects.Text;
+  private bars?: Phaser.GameObjects.Rectangle[];
   private rim?: Phaser.GameObjects.Image;
   private barked = new Set<Bark>();
   private playMs = 0;
@@ -101,7 +102,7 @@ export class RoomScene extends Phaser.Scene {
     this.vx = 0; this.facing = 1; this.near = undefined; this.holdMs = 0;
     this.camTarget = null; this.overlay = undefined; this.caughtAt = 0;
     this.activeTime = 0;
-    this.npcs = []; this.glows = new Map(); this.laneStrips = new Map(); this.rigs = new Map(); this.barked = new Set(); this.playMs = 0; this.idleMs = 0; this.hintFor = ''; this.nudged = ''; this.caughtScene = false; this.beams = new Map(); this.eyes = new Map();
+    this.npcs = []; this.glows = new Map(); this.laneStrips = new Map(); this.rigs = new Map(); this.barked = new Set(); this.bars = undefined; this.playMs = 0; this.idleMs = 0; this.hintFor = ''; this.nudged = ''; this.caughtScene = false; this.beams = new Map(); this.eyes = new Map();
     // Scene restarts destroy its objects, but retain class fields. Never reuse a
     // destroyed emitter when a later chapter starts its next hold interaction.
     this.spray = undefined;
@@ -570,7 +571,8 @@ export class RoomScene extends Phaser.Scene {
       if (this.barked.has(b) || Math.abs(this.player.x - b.x) > (b.range ?? 70) || (b.when && !b.when(this.session.flags))) continue;
       this.barked.add(b);
       const who = this.npcs.find((n) => n.def.name === b.who && n.spr.visible)?.spr ?? this.player;
-      const t = text(this, who.x, who.y - 214, b.text, { fontSize: '15px', fontStyle: 'italic', color: C.cream, backgroundColor: 'rgba(13,10,9,0.78)', padding: { x: 10, y: 6 }, align: 'center', wordWrap: { width: 300 } })
+      const cx = this.cameras.main.scrollX, bx = Phaser.Math.Clamp(who.x, cx + 170, cx + W - 170); // never clipped at a screen edge
+      const t = text(this, bx, who.y - 214, b.text, { fontSize: '15px', fontStyle: 'italic', color: C.cream, backgroundColor: 'rgba(13,10,9,0.78)', padding: { x: 10, y: 6 }, align: 'center', wordWrap: { width: 300 } })
         .setOrigin(0.5, 1).setDepth(1004).setAlpha(0);
       this.tweens.add({ targets: t, alpha: 1, y: t.y - 6, duration: 220, hold: 2600 + b.text.length * 35, yoyo: true, onComplete: () => t.destroy() });
       if (b.cue) sound.cue(b.cue as never);
@@ -829,6 +831,20 @@ export class RoomScene extends Phaser.Scene {
     if (name === 'knob') return sound.cue('knob');
     if (name === 'rush') return sound.cue('rush');
     if (name === 'hush') return sound.setDuck(true);
+    if (name === 'closeIn') {
+      // letterbox bars frame a held story moment (camera zoom would also scale the UI, which shares the camera)
+      this.bars?.forEach((b) => b.destroy());
+      this.bars = [0, 1].map((i) => this.add.rectangle(0, i ? H : -48, W, 48, 0x000000, 1).setOrigin(0).setScrollFactor(0).setDepth(990));
+      this.bars.forEach((b, i) => this.tweens.add({ targets: b, y: i ? H - 48 : 0, duration: settings.reducedMotion ? 0 : 900, ease: 'Sine.easeInOut' }));
+      return;
+    }
+    if (name === 'closeOut') {
+      const bars = this.bars; this.bars = undefined;
+      bars?.forEach((b, i) => this.tweens.add({ targets: b, y: i ? H : -48, duration: settings.reducedMotion ? 0 : 700, ease: 'Sine.easeInOut', onComplete: () => b.destroy() }));
+      return;
+    }
+    if (name === 'houndStir') sound.cue('servo');
+    if (name === 'wallsOn') sound.setTelevision(true);
     if (name === 'unhush') return sound.setDuck(false);
     const k = this.kit.fx[name];
     if (k) return k();
@@ -914,6 +930,7 @@ export class RoomScene extends Phaser.Scene {
     this.hud.setObjective(this.room.objective(f), now.length);
     this.kit.update?.(f);
     this.set.update(f);
+    if (this.room.id === 'burn') sound.setProfile(f['c01.lit'] ? 'fire' : 'night');
     if (this.room.id === 'home1') sound.setTelevision(!!f['h1.day'] && !(f['c03.w1'] && f['c03.w2'] && f['c03.w3'])); // all walls down: the house goes quiet
     if (this.room.id === 'home4') sound.setTelevision(!f['c09.off']);
     if (this.room.dark) this.dark?.set(this.room.dark(f), 0);

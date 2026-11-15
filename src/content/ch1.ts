@@ -23,8 +23,7 @@ export const SCRIPTS1: Record<string, Script> = {
     { text: 'Take it. "My pleasure."', set: { 'c01.tone': 'eager', 'c01.igniter': true }, reply: [{ who: 'BEATTY', text: "That's the spirit." }] },
     { text: '"Your fire, Captain."', set: { 'c01.tone': 'deferent', 'c01.igniter': true }, reply: [{ who: 'BEATTY', text: 'No, no. You did the work. Go on.' }] },
   ] },
-  b_have: { lines: [{ who: 'BEATTY', text: 'Well? The books are waiting.' }] },
-  b_after: { lines: [
+  b_after: { top: true, lines: [
     { who: N, text: 'It was a pleasure to burn.' },
     { who: N, text: 'The fire climbs out of the books and walks into the house. The heat presses a grin onto your face.' },
     { who: 'STONEMAN', text: 'Pretty one tonight.' },
@@ -34,7 +33,7 @@ export const SCRIPTS1: Record<string, Script> = {
   // ---- firehouse, end of shift ----
   s1_time: { lines: [{ who: 'CEILING VOICE', text: 'One-oh-two A.M. One-oh-three A.M.' }] },
   s1_helmet: { set: { 's1.helmet': true }, lines: [{ who: N, text: 'You hang up the helmet and polish the 451 until it holds the lamplight.' }] },
-  s1_hound: { lines: [
+  s1_hound: { top: true, lines: [
     { who: N, text: 'The Hound lies folded in its kennel, humming. Its eyes are dark, and then they are not.' },
     { who: N, text: 'A needle slides a quarter inch out of its muzzle, tests the air, and slides back.' },
     { who: 'BEATTY', text: "Doesn't like anybody, Montag. It's not built to." },
@@ -72,10 +71,8 @@ export const SCRIPTS1: Record<string, Script> = {
     { who: 'CLARISSE', text: 'Everything. Good night, Mr. Montag.' },
     { who: N, text: 'She starts up the path. Then she stops, and turns back, as if she has just remembered something.' },
   ] },
-  c_happy: { set: { 'c02.asked': true }, top: true, lines: [
-    { who: 'CLARISSE', text: 'Are you happy?' },
-    { who: 'MONTAG', text: 'Am I what?' },
-  ] },
+  c_happy: { set: { 'c02.asked': true }, top: true, lines: [{ who: 'CLARISSE', text: 'Are you happy?' }] },
+  c_reply: { top: true, lines: [{ who: 'MONTAG', text: 'Am I what?' }] },
   c_after: { lines: [{ who: N, text: 'But she is gone, and the door is closing softly on the light.' }, { who: 'MONTAG', text: 'Happy. Of all the nonsense.' }] },
 
   // ---- home: the night (restrained, not playable) ----
@@ -141,10 +138,8 @@ export const SCRIPTS1: Record<string, Script> = {
     { who: 'MONTAG', text: 'Does it have a happy ending?' },
     { who: 'MILDRED', text: "I haven't read that far." },
   ] },
-  m_leave: { lines: [
-    { who: N, text: 'You hand the script back. She has already turned the walls up again.' },
-    { who: N, text: 'At the door you stop, one hand on the latch, and do not know what you are waiting for.' },
-  ] },
+  m_leave1: { top: true, lines: [{ who: N, text: 'Behind you the walls come back on, one by one. She has turned them all the way up.' }] },
+  m_leave2: { top: true, lines: [{ who: N, text: 'At the door you stop, one hand on the latch, and do not know what you are waiting for.' }] },
 };
 
 export const ROOMS1: Record<string, RoomDef> = {
@@ -170,9 +165,11 @@ export const ROOMS1: Record<string, RoomDef> = {
       // one deliberate pour: the stream sweeps across all three piles (no pressure gauge, no repeats)
       { id: 'douse', x: 1060, label: 'Soak the books', py: 330, required: true,
         hold: { flag: 'c01.p3', ms: 2200, fx: 'hose', sweep: [880, 1240], also: { 'c01.p1': true, 'c01.p2': true } } },
+      // finished actions disappear instead of keeping a prompt that no longer describes anything to do
       { id: 'igniter', x: 560, label: 'Take the igniter from Beatty', required: true, requires: ['c01.p1', 'c01.p2', 'c01.p3'], lockedScript: 'b_locked',
-        script: 'b_ignite', doneFlag: 'c01.igniter', doneScript: 'b_have' },
-      { id: 'light', x: 980, label: 'Light the kerosene', required: true, requires: ['c01.igniter'], when: (f) => !f['c01.lit'],
+        when: (f) => !f['c01.igniter'], script: 'b_ignite' },
+      // appears only once Montag holds the igniter, so the walk to the books never shows a dead prompt
+      { id: 'light', x: 980, label: 'Light the kerosene', required: true, when: (f) => !!f['c01.igniter'] && !f['c01.lit'],
         steps: [{ fx: 'click' }, { wait: 450 }, { fx: 'rush' }, { set: { 'c01.lit': true } }, { fx: 'ignite' }, { cam: 1060, ms: 1800 },
           { say: 'b_after' }, { title: 'FAHRENHEIT 451' }, { wait: 600 }, { goto: 'station1' }] },
     ],
@@ -197,7 +194,7 @@ export const ROOMS1: Record<string, RoomDef> = {
       { id: 'rack', x: 620, label: 'Hang up your helmet', script: 's1_helmet', doneFlag: 's1.helmet', doneScript: 's1_helmet' },
       { id: 'cards', x: 1110, label: 'Listen to the card game', script: 's1_cards' },
       { id: 'beatty', x: 1290, label: 'Talk to Beatty', script: 's1_beatty' },
-      { id: 'hound', x: 1770, label: 'Watch the Hound', script: 's1_hound', steps: [{ fx: 'houndStir' }] },
+      { id: 'hound', x: 1770, label: 'Watch the Hound', steps: [{ cam: 1770, ms: 700 }, { fx: 'houndStir' }, { say: 's1_hound' }, { follow: true }] },
       { id: 'out', x: 2250, label: 'Leave for home', required: true, exit: { room: 'corner' } },
     ],
   },
@@ -225,7 +222,7 @@ export const ROOMS1: Record<string, RoomDef> = {
       { id: 'dew', x: 1490, label: 'Look at the grass', py: 330, when: (f) => !!f['c02.meet'] && !f['c02.n2'] && !f['c02.asked'], script: 'c_dew', steps: [{ fx: 'dew' }] },
       { id: 'signs', x: 1830, label: 'Look toward the highway', py: 260, when: (f) => !!f['c02.meet'] && !f['c02.n3'] && !f['c02.asked'], script: 'c_signs', steps: [{ fx: 'billboard' }] },
       { id: 'house', x: 2020, label: '', auto: true, when: (f) => !!f['c02.meet'] && !f['c02.asked'],
-        steps: [{ npc: 'clarisse', x: 2090, ms: 600 }, { say: 'c_house' }, { fx: 'hush' }, { cam: 2050, ms: 900 }, { say: 'c_happy' }, { wait: 900 }, { fx: 'unhush' },
+        steps: [{ npc: 'clarisse', x: 2090, ms: 600 }, { say: 'c_house' }, { fx: 'hush' }, { cam: 2050, ms: 900 }, { fx: 'closeIn' }, { wait: 700 }, { say: 'c_happy' }, { wait: 1600 }, { say: 'c_reply' }, { fx: 'closeOut' }, { fx: 'unhush' },
           { npc: 'clarisse', x: 2160, ms: 700 }, { npc: 'clarisse', show: false }, { set: { 'c02.gone': true } },
           { if: (f) => !f['c02.n1'], then: [{ set: { 'c02.n1': 'walk' } }] },
           { if: (f) => !f['c02.n2'], then: [{ set: { 'c02.n2': 'walk' } }] },
@@ -269,9 +266,10 @@ export const ROOMS1: Record<string, RoomDef> = {
       { id: 't3', x: 1860, label: 'Talk to Mildred', required: true, when: (f) => !!f['c03.t2'] && !f['c03.t3'] && down(f) >= 3, script: 'm_t3' },
       { id: 'x3', x: 1860, label: 'Talk to Mildred', when: (f) => !!f['c03.t2'] && !f['c03.t3'] && down(f) < 3, script: 'm_x3' },
       { id: 'tdone', x: 1860, label: 'Mildred', when: (f) => !!f['c03.t3'], script: 'm_done' },
-      { id: 'script', x: 1740, label: "Read Mildred's script", required: true, when: (f) => !!f['c03.t3'], script: 'm_script', doneFlag: 'c03.script', doneScript: 'm_done' },
+      { id: 'script', x: 1740, label: "Read Mildred's script", required: true, when: (f) => !!f['c03.t3'] && !f['c03.script'], script: 'm_script' },
       { id: 'door', x: 140, label: 'Leave for work', required: true, when: (f) => !!f['h1.day'],
-        requires: ['c03.w1', 'c03.w2', 'c03.w3', 'c03.t3', 'c03.script'], lockedScript: 'm_done', script: 'm_leave', exit: { room: 'station2', x: 2200 } },
+        requires: ['c03.w1', 'c03.w2', 'c03.w3', 'c03.t3', 'c03.script'], lockedScript: 'm_done', exit: { room: 'station2', x: 2200 },
+        steps: [{ fx: 'wallsOn' }, { cam: 1980, ms: 1400 }, { say: 'm_leave1' }, { follow: true }, { wait: 500 }, { say: 'm_leave2' }] },
     ],
   },
 };

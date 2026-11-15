@@ -68,7 +68,7 @@ export function darkness(s: Phaser.Scene) {
   const halo = s.add.image(0, 0, 'glow').setScale(2.2).setTint(0xffb060).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD).setDepth(881);
   return {
     set(on: boolean, ms = 600) {
-      s.tweens.add({ targets: veil, fillAlpha: on ? 0.82 : 0, duration: ms });
+      s.tweens.add({ targets: veil, fillAlpha: on ? 0.7 : 0, duration: ms });
       s.tweens.add({ targets: halo, alpha: on ? 0.55 : 0, duration: ms });
     },
     follow(x: number, y: number) { halo.setPosition(x + 14, y - 120); },
