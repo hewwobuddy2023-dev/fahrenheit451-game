@@ -100,8 +100,11 @@ export const SCRIPTS2: Record<string, Script> = {
   // ---- 05 Beatty's Argument: keep the pillow book hidden ----
   p_1: { suspicion: { label: "BEATTY'S SUSPICION", caught: [
     { who: 'BEATTY', text: 'You know, Montag, I think I will have a look at that pillow.' },
-    { who: N, text: 'You laugh, too loudly, and roll onto it. He watches you for a long moment, then waves his pipe. Not today.' },
-    { who: N, text: 'He settles back and starts again from the beginning, slower. He is watching now.' },
+    // Beatty gets up, crosses to the bed and draws the book out from under the pillow
+    { steps: [{ set: { 'h2.sat': false } }, { npc: 'beatty', x: 618, ms: 1100 }, { npc: 'beatty', face: 1 }, { pose: 'beatty', p: 'reach' }, { fx: 'pillowPull' }, { wait: 450 }] },
+    { who: 'BEATTY', text: 'What is this?' },
+    // held beat, then black; the scene comes back at the first decision with everyone where they started
+    { steps: [{ wait: 1500 }, { fade: 'out', ms: 1200 }, { fx: 'pillowReset' }, { set: { 'h2.sat': true } }, { wait: 250 }, { fade: 'in', ms: 700 }] },
   ] }, lines: [
     { who: 'BEATTY', text: 'Thought I would see how the sick man is. You were going to call in, weren\'t you?' },
     { who: N, text: 'He takes the best chair, lights his pipe, and takes his time.' },
@@ -111,7 +114,7 @@ export const SCRIPTS2: Record<string, Script> = {
   ], choices: [
     { text: 'Let her.', again: true, suspicion: 1, reply: [{ who: N, text: "Her hand slides toward the book. Beatty's eyes follow her hand." }] },
     { text: '"Not now, Millie. I\'m comfortable."', next: 'p_2' },
-    { text: 'Push her hand away.', again: true, suspicion: 1, reply: [{ who: 'BEATTY', text: 'Jumpy today, Montag?' }] },
+    { text: 'Push her hand away.', again: true, suspicion: 2, reply: [{ who: 'BEATTY', text: 'Jumpy today, Montag?' }] },
   ] },
   p_2: { lines: [
     { who: 'BEATTY', text: 'Speed it all up. Click, flash, done. School gets shorter, the hard subjects drop away. Nobody ordered that, Montag. People wanted it.' },
@@ -119,9 +122,9 @@ export const SCRIPTS2: Record<string, Script> = {
     { who: N, text: 'Mildred is tugging at the pillow again.' },
     { who: 'BEATTY', text: "You like baseball, don't you?" },
   ], choices: [
-    { text: 'Pin the pillow with your elbow. "Fine game."', next: 'p_3' },
-    { text: '"Millie, stop it!"', again: true, suspicion: 1, reply: [{ who: 'BEATTY', text: 'Something under there bothering you?' }] },
+    { text: '"Millie, stop it!"', again: true, suspicion: 2, reply: [{ who: 'BEATTY', text: 'Something under there bothering you?' }] },
     { text: 'Say nothing.', again: true, suspicion: 1, reply: [{ who: 'BEATTY', text: 'Montag? Baseball?' }] },
+    { text: 'Pin the pillow with your elbow. "Fine game."', next: 'p_3' },
   ] },
   p_3: { lines: [
     { who: 'BEATTY', text: 'So the houses were fireproofed and the firemen got a new job. Keeping the peace. Taking away the thing that makes people feel small.' },
@@ -132,7 +135,7 @@ export const SCRIPTS2: Record<string, Script> = {
   ], choices: [
     { text: '"Sit down, Millie. We\'re talking."', next: 'p_4' },
     { text: '"It\'s nothing. Just a book."', again: true, suspicion: 1, reply: [{ who: N, text: "Too loud. Beatty's head turns." }] },
-    { text: 'Grab it and hide it.', again: true, suspicion: 1, reply: [{ who: N, text: "Your hand moves. Beatty's eyes move with it." }] },
+    { text: 'Grab it and hide it.', again: true, suspicion: 2, reply: [{ who: N, text: "Your hand moves. Beatty's eyes move with it." }] },
   ] },
   p_4: { set: { 'c05.done': true }, lines: [
     { who: N, text: 'She sits, empty-handed. Beatty goes on as if nothing happened.' },
@@ -193,16 +196,18 @@ export const ROOMS2: Record<string, RoomDef> = {
   attic: {
     id: 'attic', chapter: 2, label: '', width: 1800, spawnX: 220, kit: 'attic',
     npcs: [
-      { id: 'woman', fig: 'woman', name: 'THE WOMAN', x: 430, face: -1 },
+      { id: 'woman', fig: 'woman', name: 'THE WOMAN', x: 430, face: -1, scale: 1.2 }, // drawn stooped and small; this brings her up to Montag's height
       { id: 'beatty', fig: 'beatty', name: 'BEATTY', x: 1380, face: -1, watch: { period: 4200, on: 1800 }, when: (f) => !f['c04.book'] },
       { id: 'stoneman', fig: 'fireman', name: 'STONEMAN', x: 1580, face: -1, back: true },
     ],
     objective: (f) => !f['a.fell'] ? 'Climb the stairs to the attic' : !f['c04.book'] ? 'Hide the book under your coat, while Beatty is not watching' : 'Go back downstairs',
     enter: [{ key: 'e.attic', steps: [{ say: 'a_open' }] }],
     hotspots: [
-      { id: 'stairs', x: 960, label: '', auto: true, when: (f) => !f['a.fell'], steps: [{ fx: 'books' }, { say: 'a_books' }] },
+      { id: 'stairs', x: 700, label: '', auto: true, when: (f) => !f['a.fell'], steps: [{ fx: 'climb' }, { fx: 'books' }, { say: 'a_books' }] },
       { id: 'hide', x: 1140, label: 'Hide the book', py: 290, required: true, when: (f) => !!f['a.fell'] && !f['c04.book'],
-        watcher: 'beatty', watchedScript: 'a_watched', script: 'a_hide', hold: { flag: 'c04.book', ms: 650, fx: 'pull' } },
+        watcher: 'beatty', watchedScript: 'a_watched', script: 'a_hide', hold: { flag: 'c04.book', ms: 650, fx: 'pull', carry: { x: 1160, y: 300 } },
+        // the held book is tucked under the coat, then the line plays
+        steps: [{ pose: 'montag', p: 'hold' }, { fx: 'tuckBook' }, { pose: 'montag' }] },
       { id: 'woman', x: 520, label: '', auto: true, when: (f) => !!f['c04.book'] && !f['c04.plea'], script: 'a_woman',
         steps: [{ fade: 'out', ms: 800 }, { fx: 'glowOrange' }, { say: 'a_match' }, { wait: 700 }, { goto: 'home2', x: 900 }] },
     ],
@@ -211,9 +216,10 @@ export const ROOMS2: Record<string, RoomDef> = {
   home2: {
     id: 'home2', chapter: 2, label: '', width: 2600, spawnX: 900, kit: 'home',
     dark: (f) => !f['h2.day'],
+    props: [{ tex: 'k:chair', x: 905, y: 478, depth: 4.4, tint: 0xd8c8d0 }], // the bedside chair Beatty takes
     npcs: [
-      { id: 'mildred', fig: 'mildred', name: 'MILDRED', x: 1180, face: -1, when: (f) => !!f['h2.day'] },
-      { id: 'beatty', fig: 'beatty', name: 'BEATTY', x: 150, face: 1, when: (f) => !!f['h2.beatty'] && !f['c05.done'] },
+      { id: 'mildred', fig: 'mildred', name: 'MILDRED', x: 790, face: -1, when: (f) => !!f['h2.day'] },
+      { id: 'beatty', fig: 'beatty', name: 'BEATTY', x: 150, face: 1, when: (f) => !!f['h2.beatty'] && !f['c05.done'], pose: (f) => f['h2.sat'] && !f['c05.done'] ? 'seatedLook' : undefined },
     ],
     objective: (f) => {
       if (!f['c05.done']) return '';
@@ -222,9 +228,9 @@ export const ROOMS2: Record<string, RoomDef> = {
       return '';
     },
     enter: [{ key: 'e.home2', steps: [
-      { fx: 'dark' }, { say: 'h2_night' }, { fade: 'out', ms: 900 }, { set: { 'h2.day': true } }, { fx: 'light' }, { fade: 'in', ms: 600 },
-      { title: 'THE NEXT DAY' }, { say: 'h2_sick' }, { set: { 'h2.beatty': true } }, { npc: 'beatty', x: 1010, ms: 2400 },
-      { say: 'p_1' }, { npc: 'beatty', x: 150, ms: 2400 },
+      { fx: 'dark' }, { walk: 836 }, { fx: 'toBed' }, { say: 'h2_night' }, { fade: 'out', ms: 900 }, { set: { 'h2.day': true } }, { fx: 'light' }, { fade: 'in', ms: 600 },
+      { title: 'THE NEXT DAY' }, { say: 'h2_sick' }, { set: { 'h2.beatty': true } }, { npc: 'beatty', x: 905, ms: 2400 }, { npc: 'beatty', face: -1 }, { set: { 'h2.sat': true } },
+      { say: 'p_1' }, { npc: 'beatty', x: 150, ms: 2400 }, { fx: 'bedUp' },
     ] }],
     hotspots: [
       { id: 'chair', x: 1830, label: 'Take the chair', required: true, when: (f) => !!f['c05.done'] && !f['c06.chair'], script: 'h2_chair' },

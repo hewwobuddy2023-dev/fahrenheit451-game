@@ -45,6 +45,12 @@ for(const [room,id,flag] of [['subway','read','c08.verse'],['camp','granger','c1
   await s.until(()=>r.isWatching(w),'watching');await s.touch('touchstart',888,474);await s.advance(500);await s.touch('touchend',888,474);assert.ok(!r.session.flags['c04.book']);assert.equal(r.holdMs,0);
   await s.until(()=>!r.isWatching(w),'turn away');await campaign(s).visit('hide');assert.equal(r.session.flags['c04.book'],true);
   console.log('PASS watched concealment resets attempt; held safe window commits book after its story beat');
+  // each catch is counted: from the second one Beatty looks longer, so the safe window shrinks (but stays well above the 650 ms hold)
+  const away=()=>{let n=0;for(let t=0;t<w.watch.period;t+=10)if(!r.isWatching(w,t))n+=10;return n;};
+  r.catches.clear();const w0=away();r.catches.set('beatty',1);assert.equal(away(),w0,'one catch costs the window nothing yet');
+  r.catches.set('beatty',2);const w2=away();assert.ok(w2<w0,'a second catch shortens the window');
+  r.catches.set('beatty',9);assert.ok(away()>=1000,'the window never closes completely');
+  console.log('PASS second catch shortens the look-away window, capped');
  }finally{s.close();}
 }
 {

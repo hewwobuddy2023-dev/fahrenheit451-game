@@ -74,7 +74,7 @@ const dot = (c: Ctx, x: number, y: number, r: number) => { c.beginPath(); c.arc(
 const rel = (hx: number, hy: number, p: number[]) => p.map((v, i) => v + (i % 2 ? hy : hx));
 
 /** A pose resolved to numbers; `t` blends from the resting stance (0) to the held pose (1) for the in-between frames. */
-interface St { fa: number; ba: number; bend: number; head: number; lean: number; drop: number; ff: number[]; fb: number[]; prop: false | 'page' | 'nozzle'; full: boolean }
+interface St { fa: number; ba: number; bend: number; head: number; lean: number; drop: number; ff: number[]; fb: number[]; prop: false | 'page' | 'nozzle'; lie: boolean }
 function resolve(p: Pose | undefined, t = 1): St | undefined {
   if (!p) return undefined;
   const drop = p.kneel ? KNEEL : p.sit ? SIT : 0;
@@ -83,7 +83,7 @@ function resolve(p: Pose | undefined, t = 1): St | undefined {
     fa: lerp(0.07, p.fa ?? 0.07, t), ba: lerp(0.07, p.ba ?? 0.07, t), bend: lerp(0.28, p.bend ?? 0.28, t),
     head: lerp(0, p.head ?? 0, t), lean: lerp(0, p.lean ?? 0, t), drop: drop * t,
     ff: [lerp(3, ff[0], t), lerp(-3, ff[1], t)], fb: [lerp(-3, fb[0], t), lerp(-3, fb[1], t)],
-    prop: t === 1 && p.prop ? (p.prop === true ? 'page' : p.prop) : false, full: t === 1,
+    prop: t === 1 && p.prop ? (p.prop === true ? 'page' : p.prop) : false, lie: !!p.lie,
   };
 }
 
@@ -286,11 +286,13 @@ function figure(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim'
 }
 
 function frame(c: Ctx, x: number, y: number, o: Fig, walk: number | null, breath: number, st?: St) {
+  if (st?.lie) o = { ...o, hat: 'none', hair: o.hair ?? 'short', stripe: false, badge: undefined }; // in bed: no helmet
   c.save();
   c.translate(x, y);
   c.scale(o.tall ?? 1, o.tall ?? 1);
   c.save(); c.translate(2, -1); c.fillStyle = o.rim; figure(c, o, walk, breath, 'rim', st); c.restore();
   figure(c, o, walk, breath, 'base', st);
+  if (st?.lie) { c.fillStyle = '#8c8a96'; poly(c, [-17, -96, -9, -101, 7, -101, 14, -94, 16, 1, -18, 1]); c.fillStyle = 'rgba(255,255,255,0.2)'; c.fillRect(-17, -97, 3, 97); c.strokeStyle = 'rgba(40,38,50,0.35)'; c.lineWidth = 1; c.beginPath(); c.moveTo(-6, -98); c.lineTo(-4, -4); c.moveTo(6, -97); c.lineTo(8, -4); c.stroke(); } // blanket over the legs
   c.restore();
 }
 

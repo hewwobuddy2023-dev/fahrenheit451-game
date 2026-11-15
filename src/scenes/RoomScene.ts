@@ -92,6 +92,10 @@ export class RoomScene extends Phaser.Scene {
   private activeTime = 0;
   private stillWatch?: { until: number; x: number; ms: number; moving?: boolean };
   private promptWait?: { until: number; hit: boolean };
+  private tome?: Phaser.GameObjects.Image;        // the book that travels from the heap into Montag's hands
+  private carrying = false;
+  private pillowBook?: Phaser.GameObjects.Image;  // the book Beatty draws from under the pillow
+  private catches = new Map<string, number>();    // how often each watcher caught Montag mid-hold (this visit only)
 
   constructor() { super('room'); }
 
@@ -111,6 +115,7 @@ export class RoomScene extends Phaser.Scene {
     this.spray = undefined;
     this.wake = undefined;
     this.stillWatch = undefined; this.promptWait = undefined;
+    this.tome = undefined; this.carrying = false; this.pillowBook = undefined; this.catches = new Map();
   }
 
   create() {
@@ -142,9 +147,14 @@ export class RoomScene extends Phaser.Scene {
     for (const n of this.room.npcs ?? []) {
       const y = n.back ? 452 : WALK_Y;
       const spr = this.add.sprite(n.x, y + 6, 'fig:' + n.fig, 0).setOrigin(0.5, 1).setDepth(n.back ? 4.5 : 5 - 0.01).setFlipX(n.face === -1);
-      if (n.back) spr.setScale(0.9);
+      const size = n.scale ?? (n.back ? 0.9 : 1);
+      if (size !== 1) spr.setScale(size);
       spr.play({ key: 'fig:' + n.fig + ':idle', startFrame: Math.floor(Math.random() * 4) });
-      this.npcs.push({ def: n, spr, sh: shadowFor(this, n.x, y, n.back ? 0.9 : 1), rim: this.rimFor(spr), y });
+      this.npcs.push({ def: n, spr, sh: shadowFor(this, n.x, y, size), rim: this.rimFor(spr), y });
+    }
+    for (const pr of this.room.props ?? []) {
+      const im = this.add.image(pr.x, pr.y, pr.tex).setOrigin(0.5, 1).setDepth(pr.depth ?? 4.4);
+      if (pr.tint) im.setTint(pr.tint);
     }
 
     const kb = this.input.keyboard!;
@@ -179,9 +189,19 @@ export class RoomScene extends Phaser.Scene {
       this.beams.set(hz.id, img.setBlendMode(Phaser.BlendModes.ADD).setDepth(5.5));
     }
     for (const n of this.npcs) if (n.def.watch) {
-      const g = this.add.graphics().fillStyle(C.creamN, 1).fillEllipse(0, 0, 18, 10).fillStyle(C.panel, 1).fillCircle(0, 0, 3.5);
-      const t = text(this, 14, 0, 'WATCHING', { fontFamily: FONT.display, fontSize: '11px', color: C.cream }).setOrigin(0, 0.5).setLetterSpacing(2);
-      this.eyes.set(n.def.id, this.add.container(n.def.x - 30, n.y - FIG_H - 8, [g, t]).setDepth(8).setVisible(false));
+      const bg = this.add.graphics(), eye = this.add.graphics();
+      const label = text(this, 0, 0, '', { fontFamily: FONT.display, fontSize: '15px', fontStyle: '600' }).setOrigin(0, 0.5).setLetterSpacing(3);
+      const box = this.add.container(n.def.x, n.y - FIG_H - 34, [bg, eye, label]).setDepth(8).setVisible(false);
+      box.setData('paint', (on: boolean) => {
+        label.setText(on ? `${n.def.name} IS WATCHING` : 'LOOKING AWAY').setColor(on ? C.ember : C.creamDim);
+        const w = label.width + 66, x0 = -w / 2;
+        bg.clear().fillStyle(0x0d0a09, 0.92).fillRoundedRect(x0, -17, w, 34, 5).lineStyle(on ? 2 : 1, on ? C.emberN : C.creamN, on ? 0.95 : 0.3).strokeRoundedRect(x0, -17, w, 34, 5);
+        eye.clear();
+        if (on) eye.fillStyle(C.creamN, 1).fillEllipse(x0 + 28, 0, 34, 18).fillStyle(C.emberN, 1).fillCircle(x0 + 28, 0, 7).fillStyle(0x0d0a09, 1).fillCircle(x0 + 28, 0, 3.2);
+        else eye.lineStyle(2, C.creamN, 0.6).beginPath().arc(x0 + 28, -3, 12, 0.35, Math.PI - 0.35).strokePath();
+        label.setX(x0 + 52);
+      });
+      this.eyes.set(n.def.id, box);
     }
     this.promptBg = this.add.graphics();
     this.promptText = text(this, 0, 0, '', { fontFamily: FONT.display, fontSize: '14px' }).setOrigin(0, 0.5).setLetterSpacing(2);
@@ -194,6 +214,7 @@ export class RoomScene extends Phaser.Scene {
     this.dialogue = new Dialogue(this);
     this.dialogue.onPause = () => this.onAction('pause');
     this.dialogue.onSpeaker = (who) => this.frameSpeaker(who);
+    this.dialogue.onSteps = async (steps) => { await this.runSteps(steps); if (!this.isExit()) this.mode = 'dialogue'; };
     this.dialogue.subtitles = () => !!this.bars;
     this.hud = new Hud(this, `CHAPTER ${this.room.chapter}  ·  ${CHAPTERS[this.room.chapter - 1].toUpperCase()}`, {
       demo: this.session.demo,
@@ -282,7 +303,7 @@ export class RoomScene extends Phaser.Scene {
     if (dir) this.facing = dir;
     if (playing && Math.abs(this.vx) > 35 && this.room.id !== 'river') sound.cue('step');
     const swimming = this.room.id === 'river' && !f['c13.shore'];
-    if (!this.scriptedWalk) this.animate(p, this.vx, this.facing, swimming ? 'fig:montagFloat' : this.near?.hold && (this.keys.act.some(k => k.isDown) || this.hud.touchAct) ? 'fig:montagWork' : this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag');
+    if (!this.scriptedWalk && p.getData('pose') !== 'lying' && !this.carrying) this.animate(p, this.vx, this.facing, swimming ? 'fig:montagFloat' : this.near?.hold && (this.keys.act.some(k => k.isDown) || this.hud.touchAct) ? 'fig:montagWork' : this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag');
     const diveHeld = playing && (this.keys.down.some((k) => k.isDown) || this.hud.touchDown) && (this.room.hazards ?? []).some((h) => h.dive);
     const dive = swimming && playing ? diveStep(this.breath, diveHeld, dt) : { ...this.breath, diving: false };
     this.breath = dive; const diving = dive.diving; sound.setMuffle(diving);
@@ -291,7 +312,7 @@ export class RoomScene extends Phaser.Scene {
     this.hud.showDive(this.room.id === 'river' && !f['c13.shore']);
     if (!this.scriptedPose) p.setAlpha(diving ? 0.35 : 1).setY(WALK_Y + 6 + (diving ? 14 : swimming ? Math.sin(time * 0.002) * 2 : 0));
     this.shadow.setX(p.x).setVisible(!swimming && !this.scriptedPose);
-    this.rim?.setPosition(p.x, p.y - 78).setVisible(!swimming && p.alpha > 0.5);
+    this.rim?.setPosition(p.x, p.y - 78).setVisible(!swimming && p.alpha > 0.5 && !p.getData('norim'));
     this.wake?.setX(p.x).setVisible(swimming).setAlpha(diving ? 0.18 : 0.6).setScale(1 + Math.sin(time * 0.003) * 0.08, 1);
     p.setTint(lightTint(p.x, this.roomLights, this.room.chapter >= 5 ? 0xdde8e2 : 0xe8ded2));
     this.dark?.follow(p.x - this.cameras.main.scrollX, p.y);
@@ -387,18 +408,20 @@ export class RoomScene extends Phaser.Scene {
     const h = this.near;
     this.meter.clear();
     this.pressureLabel.setVisible(false);
-    if (!h?.hold || this.locked(h) || this.session.flags[h.hold.flag]) { this.spray?.stop(); return; }
+    if (!h?.hold || this.locked(h) || this.session.flags[h.hold.flag]) { this.spray?.stop(); this.carryOff(); return; }
     const held = this.keys.act.some((k) => k.isDown) || this.hud.touchAct;
     if (h.watcher) {
       const watcher = this.npcs.find(n => n.def.id === h.watcher);
       if (watcher && this.isWatching(watcher.def)) {
         if (held && this.holdMs > 0) {
           // caught mid-act: a visible, audible beat before the attempt resets
-          this.flashNote(`${watcher.def.name} LOOKS UP. WAIT UNTIL THEY LOOK AWAY.`); sound.cue('caught');
+          const n = (this.catches.get(watcher.def.id) ?? 0) + 1; this.catches.set(watcher.def.id, n);
+          this.flashNote(n >= 2 ? `${watcher.def.name} WATCHES CLOSER NOW. YOUR WINDOW IS SHORTER.` : `${watcher.def.name} LOOKS UP. WAIT UNTIL THEY LOOK AWAY.`); sound.cue('caught');
+          this.bubble(watcher.spr, 'Montag?');
           if (!settings.reducedMotion) this.cameras.main.flash(220, 120, 30, 20);
           this.tweens.add({ targets: watcher.spr, scaleY: watcher.spr.scaleY * 1.05, yoyo: true, duration: 140 });
         }
-        this.holdMs = 0; this.spray?.stop();
+        this.holdMs = 0; this.spray?.stop(); this.carryOff();
         this.pressureLabel.setText('WATCHING — WAIT').setPosition(h.x - 60, (h.py ?? 300) + 24).setVisible(true);
         return;
       }
@@ -411,6 +434,7 @@ export class RoomScene extends Phaser.Scene {
       this.sputter = held && !settings.assistedHose && !inBand(this.hose);
     } else if (held) this.holdMs += dtMs;
     const k = Math.min(1, this.holdMs / h.hold.ms);
+    if (h.hold.carry) this.carryBook(h, k);
     const bx = h.x - 50, by = (h.py ?? 300) + (h.hold.pressure ? 60 : 24);
     this.meter.fillStyle(C.panel, 0.85).fillRect(bx - 2, by - 2, 104, 12).fillStyle(C.amberN, 1).fillRect(bx, by, 100 * k, 8);
     if (h.hold.pressure) {
@@ -435,7 +459,8 @@ export class RoomScene extends Phaser.Scene {
       this.spray?.stop();
       if (h.watcher && h.script) {
         this.mode = 'cutscene'; this.vx = 0; this.hud.showTouch(false);
-        void this.say(h.script).then(() => { if (!this.isExit()) this.endCutscene(); });
+        if (h.hold.carry) this.carryBook(h, 1);
+        void (async () => { if (h.steps) await this.runSteps(h.steps); await this.say(h.script!); })().then(() => { if (!this.isExit()) this.endCutscene(); });
       } else this.session.set({ ...(h.hold.also ?? {}), [h.hold.flag]: true });
       this.holdMs = 0;
       sound.cue('interact');
@@ -445,20 +470,44 @@ export class RoomScene extends Phaser.Scene {
     }
   }
 
-  /** T2: watchers look at Montag on a fixed, readable rhythm (eye icon + "WATCHING"). */
+  /** The book leaves the heap and arrives in Montag's hands as the hold fills (he stands in the `hold` pose meanwhile). */
+  private carryBook(h: Hotspot, k: number) {
+    const c = h.hold!.carry!, p = this.player;
+    if (k <= 0) return this.carryOff();
+    this.carrying = true;
+    this.facing = Math.sign(h.x - p.x) || this.facing;
+    if (p.getData('pose') !== 'hold') this.setPose(p, 'hold');
+    p.setFlipX(this.facing < 0);
+    const t = Phaser.Math.Easing.Sine.Out(Math.min(1, k)), hand = { x: p.x + this.facing * 38, y: p.y - 125 };
+    this.tome ??= this.add.image(c.x, c.y, 'tome').setDepth(5.3);
+    this.tome.setVisible(true).setAlpha(1).setScale(1).setPosition(Phaser.Math.Linear(c.x, hand.x, t), Phaser.Math.Linear(c.y, hand.y, t) - Math.sin(Math.PI * t) * 26).setAngle((1 - t) * 24 * this.facing);
+  }
+
+  private carryOff() {
+    if (!this.carrying) return;
+    this.carrying = false;
+    this.tome?.setVisible(false);
+    if (this.player.getData('pose') === 'hold') this.setPose(this.player);
+  }
+
+  /** T2: watchers look at Montag on a fixed, readable rhythm (a labelled eye above the watcher, red while he looks). */
   private updateWatchers(time: number) {
     for (const n of this.npcs) {
       const w = n.def.watch;
       if (!w) continue;
       const on = this.isWatching(n.def, time) && n.spr.visible;
-      this.eyes.get(n.def.id)?.setVisible(on).setX(n.spr.x - 30);
+      const box = this.eyes.get(n.def.id)!;
+      box.setVisible(n.spr.visible).setX(n.spr.x);
+      if (box.getData('on') !== on) { box.setData('on', on); (box.getData('paint') as (on: boolean) => void)(on); }
+      n.rim.setTint(on ? 0xff6a3a : 0xd8c8b0).setAlpha(on ? 0.55 : 0.2); // he glows hot while he looks
       n.spr.setFlipX(on ? this.player.x < n.spr.x : this.player.x > n.spr.x);
     }
   }
 
   private isWatching(n: Npc, time = this.activeTime) {
     const w = n.watch!;
-    return ((time + (w.phase ?? 0) * w.period) % w.period) < w.on;
+    const on = w.on + Math.min(1000, Math.max(0, (this.catches.get(n.id) ?? 0) - 1) * 600); // caught twice: he looks longer, so the window to act shrinks
+    return ((time + (w.phase ?? 0) * w.period) % w.period) < on;
   }
 
   /**
@@ -580,16 +629,20 @@ export class RoomScene extends Phaser.Scene {
     for (const b of this.room.barks ?? []) {
       if (this.barked.has(b) || Math.abs(this.player.x - b.x) > (b.range ?? 70) || (b.when && !b.when(this.session.flags))) continue;
       this.barked.add(b);
-      const who = this.npcs.find((n) => n.def.name === b.who && n.spr.visible)?.spr ?? this.player;
-      const cx = this.cameras.main.scrollX, bx = Phaser.Math.Clamp(who.x, cx + 170, cx + W - 170); // never clipped at a screen edge
-      const t = text(this, bx, who.y - 214, b.text, { fontSize: '15px', fontStyle: 'italic', color: C.cream, backgroundColor: 'rgba(13,10,9,0.78)', padding: { x: 10, y: 6 }, align: 'center', wordWrap: { width: 300 } })
-        .setOrigin(0.5, 1).setDepth(1004).setAlpha(0);
-      this.barkTexts.push(t);
-      this.tweens.add({ targets: t, alpha: 1, y: t.y - 6, duration: 220, hold: 2600 + b.text.length * 35, yoyo: true, onComplete: () => { t.destroy(); this.barkTexts = this.barkTexts.filter((x) => x !== t); } });
+      this.bubble(this.npcs.find((n) => n.def.name === b.who && n.spr.visible)?.spr ?? this.player, b.text);
       if (b.cue) sound.cue(b.cue as never);
       if (b.fx) void this.fx(b.fx);
       this.react(b.who);
     }
+  }
+
+  /** A short in-world line above a speaker, without stopping play. */
+  private bubble(who: Phaser.GameObjects.Sprite, line: string) {
+    const cx = this.cameras.main.scrollX, bx = Phaser.Math.Clamp(who.x, cx + 170, cx + W - 170); // never clipped at a screen edge
+    const t = text(this, bx, who.y - 214, line, { fontSize: '15px', fontStyle: 'italic', color: C.cream, backgroundColor: 'rgba(13,10,9,0.78)', padding: { x: 10, y: 6 }, align: 'center', wordWrap: { width: 300 } })
+      .setOrigin(0.5, 1).setDepth(1004).setAlpha(0);
+    this.barkTexts.push(t);
+    this.tweens.add({ targets: t, alpha: 1, y: t.y - 6, duration: 220, hold: 2600 + line.length * 35, yoyo: true, onComplete: () => { t.destroy(); this.barkTexts = this.barkTexts.filter((x) => x !== t); } });
   }
 
   /** After a long idle stretch, offer the gentlest hint once per objective. */
@@ -608,6 +661,7 @@ export class RoomScene extends Phaser.Scene {
   private setPose(spr: Phaser.GameObjects.Sprite, p?: string) {
     const want = p ?? this.npcs.find((v) => v.spr === spr)?.def.pose?.(this.session.flags);
     const i = want ? POSE_NAMES.indexOf(want) : -1;
+    if (i >= 0 && spr === this.player && !spr.texture.has(String(16 + i))) spr.setTexture('fig:montag');
     const key = spr.texture.key, was = spr.getData('pose');
     if (i < 0 || !spr.texture.has(String(16 + i))) {
       if (was) { spr.setData('pose', undefined); spr.play(`${key}:unpose:${was}`).chain(key + ':idle'); } // eases out through the in-between frames
@@ -919,6 +973,61 @@ export class RoomScene extends Phaser.Scene {
         await this.tween({ targets: this.player, y: WALK_Y + 6, duration: 900, ease: 'Quad.easeIn' });
         this.scriptedPose = false;
         this.tweens.add({ targets: this.player, scaleY: 0.95, yoyo: true, duration: 110 });
+        return;
+      }
+      case 'climb': {
+        // up the drawn staircase: in from the floor to the foot, diagonally along the treads (smaller as he recedes), into the dark doorway at the top
+        const p = this.player, foot = { x: 718, y: 392 }, top = { x: 1000, y: 170 }, treads = 10;
+        this.scriptedPose = true; this.scriptedWalk = true; p.setData('norim', true);
+        this.facing = 1; p.play('fig:montag:walk').setFlipX(false);
+        await this.tween({ targets: p, x: foot.x, y: foot.y, scale: 0.9, duration: 650 });
+        const run = { t: 0 }; let last = -1;
+        await this.tween({ targets: run, t: 1, duration: settings.reducedMotion ? 1400 : 2900, onUpdate: () => {
+          const t = run.t, i = Math.min(treads - 1, Math.floor(t * treads));
+          if (i !== last) { last = i; sound.cue('step'); }
+          p.setPosition(foot.x + (top.x - foot.x) * t, foot.y + (top.y - foot.y) * t - Math.abs(Math.sin(t * treads * Math.PI)) * 4).setScale(0.9 - 0.32 * t).setAlpha(t > 0.74 ? (1 - t) / 0.26 : 1);
+        } });
+        cam.fadeOut(450, 0, 0, 0); await sleep(this, 520);
+        p.setAlpha(1).setScale(1).setPosition(1100, WALK_Y + 6).play('fig:montag:idle');
+        cam.scrollX = Phaser.Math.Clamp(1100 + 70 - W / 2, 0, this.room.width - W);
+        this.scriptedPose = false; this.scriptedWalk = false; p.setData('norim', false);
+        cam.fadeIn(600, 0, 0, 0); await sleep(this, 640);
+        return;
+      }
+      case 'toBed': { // sick: Montag lies down on the left bed, helmet off (the lying frame is bare-headed)
+        const p = this.player;
+        this.scriptedPose = true; p.setData('norim', true).setDepth(4.7).setFlipX(false); // behind the people standing at the bed
+        await this.tween({ targets: p, angle: -40, y: 446, duration: 380, ease: 'Sine.easeIn' });
+        this.setPose(p, 'lying');
+        await this.tween({ targets: p, angle: -90, y: 382, duration: 420, ease: 'Sine.easeOut' });
+        return;
+      }
+      case 'bedUp': {
+        const p = this.player;
+        await this.tween({ targets: p, angle: -40, y: 446, duration: 420, ease: 'Sine.easeIn' });
+        this.setPose(p);
+        await this.tween({ targets: p, angle: 0, y: WALK_Y + 6, duration: 380, ease: 'Sine.easeOut' });
+        p.setDepth(5).setData('norim', false); this.scriptedPose = false;
+        return;
+      }
+      case 'tuckBook': { // the book goes inside the coat
+        const t = this.tome, p = this.player;
+        if (!t) return;
+        await this.tween({ targets: t, x: p.x + this.facing * 8, y: p.y - 108, scale: 0.5, alpha: 0, duration: 380, ease: 'Sine.easeIn' });
+        t.setVisible(false); sound.cue('page');
+        return;
+      }
+      case 'pillowPull': { // Beatty reaches over the bed and draws the book out from under the pillow
+        const b = this.npcs.find((n) => n.def.id === 'beatty')!.spr;
+        sound.cue('page');
+        this.pillowBook ??= this.add.image(676, 396, 'tome').setDepth(5.3).setAngle(-8);
+        await this.tween({ targets: this.pillowBook, x: b.x + 62, y: b.y - 132, angle: -14, duration: 600, ease: 'Sine.easeOut' });
+        return;
+      }
+      case 'pillowReset': { // black screen: the book goes back under the pillow and Beatty back to his chair
+        const b = this.npcs.find((n) => n.def.id === 'beatty')!.spr;
+        this.pillowBook?.destroy(); this.pillowBook = undefined;
+        b.setX(905).setFlipX(true);
         return;
       }
       case 'jets': if (!settings.reducedMotion) { cam.shake(500, 0.004); cam.flash(200, 40, 40, 60); } return sleep(this, 600);

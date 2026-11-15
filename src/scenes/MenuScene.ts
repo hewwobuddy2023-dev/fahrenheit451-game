@@ -40,7 +40,7 @@ export class MenuScene extends Phaser.Scene {
       lifespan: 11000, frequency: 160, scale: { min: 0.4, max: 1.1 }, alpha: { start: 0.65, end: 0 },
       tint: [C.emberN, C.amberN, 0x8a7f72],
     });
-    this.add.graphics().fillStyle(0x000000, 0.45).fillRect(0, 0, W * 0.55, H); // calm area behind the title
+    this.add.graphics().fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.5, 0, 0.5, 0).fillRect(0, 0, W * 0.75, H); // calm area behind the title, fading out so there is no visible edge
 
     const brandStart = this.children.length;
     const t1 = text(this, 78, 150, 'FAHRENHEIT', { fontFamily: FONT.display, fontSize: '74px', fontStyle: '700' }).setOrigin(0, 0.5).setLetterSpacing(8);

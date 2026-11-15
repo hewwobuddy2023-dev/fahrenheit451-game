@@ -4,7 +4,7 @@ import { laneState } from '../../src/gameplay/lanes.ts';
 /** Teleports only between static hotspots. Events, holds, choices, retries and chases use real game logic/input. */
 export function campaign(s, { ending = 'preservation' } = {}) {
   let wrongPicks = 0, missedHound = 0, stillResets = 0;
-  const tried = new WeakSet();
+  const tried = new Set(); // keyed by the first option: a replayed beat gets a new array each time
   const heard = new Set();
   async function settle({ missHound = false, moveStill = false } = {}) {
     for (let i = 0; i < 5000; i++) {
@@ -25,8 +25,8 @@ export function campaign(s, { ending = 'preservation' } = {}) {
           const choices = r.dialogue.choices;
           let index = choices.findIndex(c => c.set?.['c15.ending'] === ending);
           if (index < 0) index = choices.findIndex(c => !c.again);
-          if (!tried.has(choices) && choices.some(c => c.again)) {
-            tried.add(choices); index = choices.findIndex(c => c.again); wrongPicks++;
+          if (!tried.has(choices[0].text) && choices.some(c => c.again)) {
+            tried.add(choices[0].text); index = choices.findIndex(c => c.again); wrongPicks++;
           }
           await s.render();
           const bg = r.dialogue.choiceRows[index].list[0];
