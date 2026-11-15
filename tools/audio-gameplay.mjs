@@ -49,7 +49,7 @@ check('the pour stops when E is released', stopped.spray < 0.02, `spray ${stoppe
 await page.keyboard.down('e'); await page.waitForTimeout(2600); await page.keyboard.up('e'); await page.waitForTimeout(300);
 check('one pour soaks all three piles', await A(() => ['c01.p1','c01.p2','c01.p3'].every((k) => window.__qa.scene.session.flags[k])), JSON.stringify(await A(() => ({ near: window.__qa.scene.near?.id, hold: window.__qa.scene.holdMs, mode: window.__qa.mode() }))));
 await advanceToPlay();
-await A(() => { window.__cues = []; window.__qa.go(980); }); await page.waitForTimeout(300);
+await A(() => { window.__cues = []; window.__qa.go(1060); }); await page.waitForTimeout(300);
 await page.keyboard.press('e'); // Beatty's nod and the tone choice, then Montag's own igniter
 for (let i = 0; i < 60 && !(await A(() => window.__qa.scene.session.flags['c01.lit'])); i++) { await A(() => { const q = window.__qa; if (q.mode() === 'dialogue') { if (q.options().length) q.choose(0); else q.adv(); } }); await page.waitForTimeout(150); }
 await page.waitForTimeout(1200);

@@ -13,10 +13,10 @@ const ch2 = { ...ch1, 'c02.meet': true, 'c02.n1': 'look', 'c02.n2': 'look', 'c02
 const day = { ...ch2, 'e.home1': true, 'h1.day': true };
 // name, room, x, flags, hotspot x to use (or null), line to stop on (regex), extra wait ms
 const shots = [
-  ['01-beatty-nod', 'burn', 960, soaked, 980, /All yours/, 300],
-  ['02-igniter-held', 'burn', 960, soaked, 980, /thumb your igniter/, 300],
-  ['03-pleasure-to-burn', 'burn', 960, soaked, 980, /pleasure to burn/, 900],
-  ['04-pages-rise', 'burn', 960, soaked, 980, /startled birds/, 300],
+  ['01-beatty-nod', 'burn', 960, soaked, 1060, /All yours/, 300],
+  ['02-igniter-held', 'burn', 960, soaked, 1060, /thumb your igniter/, 300],
+  ['03-pleasure-to-burn', 'burn', 960, soaked, 1060, /pleasure to burn/, 900],
+  ['04-pages-rise', 'burn', 960, soaked, 1060, /startled birds/, 300],
   ['05-firehouse-cards', 'station1', 1000, { ...ch1, 'e.station1': true }, null, null, 5000],
   ['06-hound-ambient', 'station1', 1560, { ...ch1, 'e.station1': true }, 1630, /neither asleep/, 400],
   ['07-moon-pointing', 'corner', 1060, met, 1120, /man in the moon/, 400],

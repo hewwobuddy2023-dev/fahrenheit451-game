@@ -171,8 +171,8 @@ export const ROOMS1: Record<string, RoomDef> = {
       // one deliberate pour: the stream sweeps across all three piles (no pressure gauge, no repeats)
       { id: 'douse', x: 1060, label: 'Soak the books', py: 330, required: true,
         hold: { flag: 'c01.p3', ms: 2200, fx: 'hose', sweep: [880, 1240], also: { 'c01.p1': true, 'c01.p2': true } } },
-      // Montag lights his own fire; the tone choice happens on Beatty's nod
-      { id: 'light', x: 980, label: 'Light the kerosene', required: true, when: (f) => !!f['c01.p3'] && !f['c01.lit'], script: 'b_light',
+      // Montag lights his own fire where the pour left him (at 980 it was out of reach after soaking: the playthrough walked past it)
+      { id: 'light', x: 1060, label: 'Light the kerosene', required: true, when: (f) => !!f['c01.p3'] && !f['c01.lit'], script: 'b_light',
         steps: [{ pose: 'montag', p: 'reach' }, { fx: 'click' }, { wait: 450 }, { fx: 'rush' }, { set: { 'c01.lit': true } }, { fx: 'ignite' }, { fx: 'pages' },
           { cam: 1060, ms: 1400 }, { pose: 'montag' }, { fx: 'closeIn' }, { wait: 700 },
           { say: 'b_after' }, { title: 'FAHRENHEIT 451' }, { wait: 600 }, { goto: 'station1' }] },

@@ -158,6 +158,7 @@ export class Dialogue {
   private setSub(on: boolean) {
     this.boxParts.forEach((p) => (p as Phaser.GameObjects.Image).setVisible(!on));
     this.sub.setVisible(on).setText(''); this.subName.setVisible(on);
+    if (on) this.body.setText(''); // the hidden panel must not keep the previous line
     // the tap target stays the full original box even when the drawn panel is shorter (easier on touch screens)
     if (on) { this.hit.setPosition(0, 0).setSize(W, H); this.hint.setPosition(W - 26, SUB_Y); }
     else { this.hit.setPosition(BOX.x, BOX.y).setSize(BOX.w, BOX.h); this.hint.setPosition(BOX.x + BOX.w - 44, BOTTOM - 21); }

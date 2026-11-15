@@ -33,7 +33,7 @@ for(let i=0;i<5;i++){
  }finally{s.close();}
 }
 {
- const s=await simulate({save:{v:1,room:'burn',x:980,flags:{'e.burn':true,'c01.p1':true,'c01.p2':true,'c01.p3':true}}});try{
+ const s=await simulate({save:{v:1,room:'burn',x:1060,flags:{'e.burn':true,'c01.p1':true,'c01.p2':true,'c01.p3':true}}});try{
   await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','event boundary');await campaign(s).settle();
   const r=s.scene();await s.advance(50);await s.tap(888,474);const line=r.dialogue.current;
   for(let i=0;i<5;i++)await s.key('Enter',true,true);assert.equal(r.dialogue.current,line);await s.key('Enter',false);
