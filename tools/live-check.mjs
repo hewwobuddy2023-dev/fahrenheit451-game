@@ -44,10 +44,11 @@ const x1 = await page.evaluate(() => window.__qa.scene.player.x);
 check('keyboard movement (D)', x1 > r0.x + 60, `${Math.round(r0.x)} -> ${Math.round(x1)}`);
 const touchUi = await page.evaluate(() => !!window.__qa.scene.hud.touchUi?.visible);
 check('desktop shows no touch buttons', !touchUi);
-await page.evaluate(() => window.__qa.go(900)); await page.waitForTimeout(300);
+// x 1060 is a pile in the classroom build and the single pour point in the Chapter 1 redesign
+await page.evaluate(() => window.__qa.go(1060)); await page.waitForTimeout(300);
 await page.keyboard.down('e'); await page.waitForTimeout(3500); await page.keyboard.up('e');
-const p1 = await page.evaluate(() => window.__qa.scene.session.flags['c01.p1']);
-check('hold E soaks the first book pile', p1 === true);
+const soaked = await page.evaluate(() => ['c01.p1', 'c01.p2', 'c01.p3'].some((k) => window.__qa.scene.session.flags[k]));
+check('hold E soaks the books', soaked);
 await page.screenshot({ path: `${out}/2-burn.jpg`, quality: 80 });
 
 // 3. Continue after a reload restores the checkpoint
@@ -56,7 +57,7 @@ await page.reload(); await page.waitForFunction(() => window.__game?.scene.isAct
 await canvasTap(430, 282);
 await page.waitForFunction(() => window.__game.scene.isActive('room'), null, { timeout: 20000 });
 const cont = await page.evaluate(() => ({ room: window.__qa.scene.room.id, p1: window.__qa.scene.session.flags['c01.p1'] }));
-check('Continue restores the saved checkpoint', !!saved && cont.room === 'burn' && cont.p1 === true, JSON.stringify(cont));
+check('Continue restores the saved checkpoint', !!saved && cont.room === 'burn' && cont.p1 === true, JSON.stringify(cont)); // the pour sets p1 too
 
 // 4. Every chapter opens on the live build (save-seeded Continue, as a returning student would)
 const starts = [['burn', 640, 1], ['station2', 2200, 2], ['home3', 900, 3], ['lawn', 640, 4], ['river', 200, 5]];

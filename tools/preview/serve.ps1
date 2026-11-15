@@ -17,7 +17,7 @@ try { $listener.Start() } catch {
 }
 Write-Host "Fahrenheit 451 Chapter 1 preview running at $prefix" -ForegroundColor Green
 Write-Host 'Keep this window open while you play. Close it (or press Ctrl+C) to stop the preview.'
-Start-Process $prefix
+if (-not $env:F451_NO_BROWSER) { Start-Process $prefix } # tests set this to avoid opening a tab
 
 try {
   while ($listener.IsListening) {

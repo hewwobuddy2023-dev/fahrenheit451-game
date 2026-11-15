@@ -42,3 +42,7 @@ review-build/
 # extracted private book text
 *SEARCHABLE*.txt
 BOOK_SOURCE/
+
+# gameplay recordings are delivered in the preview package, not committed
+docs/qa/ch1-playthrough*/*.webm
+docs/qa/ch1-playthrough/
