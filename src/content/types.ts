@@ -46,7 +46,7 @@ export type Step =
   | { set: Flags }
   | { title: string; sub?: string }                        // in-world title over the scene
   | { still: number; label: string }                       // player must not move for ms
-  | { prompt: string; ms: number; miss: string }           // press ACT within ms; retry until met
+  | { prompt: string; ms: number; miss: string; strike?: string } // press ACT within ms; retry until met. Every 2nd miss plays `strike` (a needle hit, fade, retry) and the window shrinks by 200 ms (floor 1300)
   | { goto: string; x?: number }                           // room transition (checkpoints)
   | { ending: true }                                       // to the end scene
   | { if: Cond; then: Step[]; else?: Step[] };
@@ -102,6 +102,7 @@ export interface Hazard {
   look: 'beam' | 'headlights' | 'searchlight' | 'doorlight';
   dive?: boolean;            // holding DOWN keeps Montag hidden (river)
   reset: number;             // x Montag returns to when caught
+  fail?: Step[];             // a short scene between the light snapping on and the fade (played for the first two catches in a visit)
   when?: Cond;
 }
 
@@ -117,7 +118,7 @@ export interface RoomDef {
   npcs?: Npc[];
   lights?: Light[];
   hazards?: Hazard[];
-  timer?: { ms: number; reset: number; label: string; when?: Cond };
+  timer?: { ms: number; reset: number; label: string; when?: Cond; fail?: Step[] };
   limp?: boolean;            // slower movement (after the Hound's needle)
   dark?: Cond;               // night-time darkness overlay
   objective: (f: Flags) => string;

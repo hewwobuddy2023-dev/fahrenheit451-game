@@ -90,7 +90,7 @@ test('every script, room and step reference exists; lines fit the dialogue box',
     const check = (s: Step) => {
       if ('say' in s) assert.ok(SCRIPTS[s.say], `${room.id}: missing script ${s.say}`);
       if ('goto' in s) assert.ok(ROOMS[s.goto], `${room.id}: missing room ${s.goto}`);
-      if ('prompt' in s) assert.ok(SCRIPTS[s.miss], `${room.id}: missing ${s.miss}`);
+      if ('prompt' in s) { assert.ok(SCRIPTS[s.miss], `${room.id}: missing ${s.miss}`); if (s.strike) assert.ok(SCRIPTS[s.strike], `${room.id}: missing ${s.strike}`); }
     };
     for (const h of room.hotspots) {
       for (const key of [h.script, h.doneScript, h.lockedScript, h.watchedScript]) if (key) assert.ok(SCRIPTS[key], `${room.id}/${h.id}: missing ${key}`);
@@ -99,6 +99,8 @@ test('every script, room and step reference exists; lines fit the dialogue box',
       walkSteps(h.steps, check);
     }
     for (const e of room.enter ?? []) walkSteps(e.steps, check);
+    // a failure scene that names a missing script would only warn at runtime
+    for (const steps of [...(room.hazards ?? []).map((h) => h.fail), room.timer?.fail]) walkSteps(steps, check);
   }
 });
 

@@ -15,12 +15,13 @@ for (const id of ['boulevard', 'run']) {
     const sorted = [...hazards].sort((a, b) => a.from - b.from);
     for (let i = 1; i < sorted.length; i++) assert.ok(sorted[i].from - MARGIN - (sorted[i - 1].to + MARGIN) >= 40, `island before ${sorted[i].id}`);
   });
-  test(`${id}: being caught returns you to the safe spot just before that lane`, () => {
+  test(`${id}: being caught returns you to a safe spot before that lane (the boulevard: the near kerb, before every lane)`, () => {
     for (const h of hazards) {
       assert.ok(h.reset < h.from - MARGIN, `${h.id} reset is outside the lane`);
       for (const o of hazards) assert.ok(!inLane(o, h.reset), `${h.id} reset ${h.reset} lies inside ${o.id}`);
       const behind = hazards.filter((o) => o.to < h.from).map((o) => o.to);
-      if (behind.length) assert.ok(h.reset > Math.max(...behind), `${h.id} resets past earlier lanes`);
+      if (id === 'run' && behind.length) assert.ok(h.reset > Math.max(...behind), `${h.id} resets past earlier lanes`);
+      if (id === 'boulevard') assert.ok(h.reset < Math.min(...hazards.map((o) => o.from)) - MARGIN, `${h.id} sends you back to the kerb`);
     }
   });
 }
@@ -44,4 +45,16 @@ test('a player who enters a lane the moment its warning starts always clears it'
       assert.ok(!(laneState(h, time).lit && inLane(h, x)), `${h.id} caught at x=${x.toFixed(0)}`);
     }
   }
+});
+
+test('boulevard: the cars are a real threat. A straight sprint across without waiting is caught almost every time', () => {
+  const lanes = (ROOMS.boulevard.hazards ?? []).filter((x) => x.pulse);
+  const sprint = LIMP * 1.25 * 0.01; // px per 10 ms
+  let caught = 0, runs = 0;
+  for (let t0 = 0; t0 < 3300; t0 += 50, runs++) {
+    let hit = false;
+    for (let x = lanes[0].from - 60, t = t0; x < lanes.at(-1)!.to + 40 && !hit; x += sprint, t += 10) hit = lanes.some((l) => laneState(l, t).lit && inLane(l, x));
+    if (hit) caught++;
+  }
+  console.log("straight-sprint caught", caught, "of", runs); assert.ok(caught / runs > 0.8, `walking straight through is caught ${caught}/${runs} times`);
 });

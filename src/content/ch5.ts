@@ -11,6 +11,10 @@ export const SCRIPTS5: Record<string, Script> = {
     { who: N, text: 'The current takes you. Behind you, helicopters sweep the water with white light.' },
     { who: N, text: 'Hold [DOWN] as a light reaches you. Release in the dark to breathe. You cannot stay under forever.' },
   ] },
+  rv_found: { lines: [
+    { who: N, text: 'The white light locks onto you. A voice across the water: "There! In the river!"' },
+    { who: N, text: 'You let go and the current drags you down, back the way you came.' },
+  ] },
   rv_shore: { set: { 'c13.shore': true }, lines: [
     { who: N, text: 'Your heel touches stones. The river has carried you to the bank, far out of the city.' },
     { who: N, text: 'The land rushes at you: hay, pine, cold earth, a thousand smells at once. Stars, more than you have seen in years.' },
@@ -131,8 +135,8 @@ export const ROOMS5: Record<string, RoomDef> = {
   river: {
     id: 'river', chapter: 5, label: '', width: 2400, spawnX: 200, kit: 'forest:river',
     hazards: [
-      { id: 'sl1', from: 480, to: 980, width: 150, period: 5200, look: 'searchlight', dive: true, reset: 300, when: (f) => !f['c13.shore'] },
-      { id: 'sl2', from: 1040, to: 1420, width: 150, period: 4400, phase: 0.4, look: 'searchlight', dive: true, reset: 1000, when: (f) => !f['c13.shore'] },
+      { id: 'sl1', from: 480, to: 980, width: 150, period: 5200, look: 'searchlight', dive: true, reset: 300, fail: [{ say: 'rv_found' }], when: (f) => !f['c13.shore'] },
+      { id: 'sl2', from: 1040, to: 1420, width: 150, period: 4400, phase: 0.4, look: 'searchlight', dive: true, reset: 1000, fail: [{ say: 'rv_found' }], when: (f) => !f['c13.shore'] },
     ],
     objective: (f) => !f['c13.shore'] ? 'Reach shore. Short dives under lights; release DOWN in the dark to breathe' : !f['c13.track'] ? 'Find your way in the dark' : 'Follow the track',
     enter: [{ key: 'e.river', steps: [{ title: 'CHAPTER FIVE', sub: 'The Fire That Warms' }, { say: 'rv_open' }] }],
