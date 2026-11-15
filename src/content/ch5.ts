@@ -9,7 +9,6 @@ const looked = (f: Flags) => ['c02.n1', 'c02.n2', 'c02.n3'].filter((k) => f[k] =
 export const SCRIPTS5: Record<string, Script> = {
   rv_open: { lines: [
     { who: N, text: 'The current takes you. Behind you, helicopters sweep the water with white light.' },
-    { who: N, text: 'Hold [DOWN] as a light reaches you. Release in the dark to breathe. You cannot stay under forever.' },
   ] },
   rv_shore: { set: { 'c13.shore': true }, lines: [
     { who: N, text: 'Your heel touches stones. The river has carried you to the bank, far out of the city.' },
@@ -21,7 +20,7 @@ export const SCRIPTS5: Record<string, Script> = {
     { who: N, text: 'Your foot strikes something that rings: a rail. An old railroad track, rusting beside the river.' },
     { who: N, text: 'For no reason you can name, you are sure Clarisse once walked here.' },
   ] },
-  rv_locked: { lines: [{ who: N, text: 'Follow the river to the shore first.' }] },
+  rv_locked: { lines: [{ who: N, text: 'Nothing under your feet but mud. Keep looking for the track.' }] },
 
   cp_see: { lines: [
     { who: N, text: 'Firelight ahead. A small fire, and hands held out to it.' },
@@ -134,7 +133,14 @@ export const ROOMS5: Record<string, RoomDef> = {
       { id: 'sl1', from: 480, to: 980, width: 150, period: 5200, look: 'searchlight', dive: true, reset: 300, when: (f) => !f['c13.shore'] },
       { id: 'sl2', from: 1040, to: 1420, width: 150, period: 4400, phase: 0.4, look: 'searchlight', dive: true, reset: 1000, when: (f) => !f['c13.shore'] },
     ],
-    objective: (f) => !f['c13.shore'] ? 'Reach shore. Short dives under lights; release DOWN in the dark to breathe' : !f['c13.track'] ? 'Find your way in the dark' : 'Follow the track',
+    quietUi: true,
+    objective: (f) => !f['c13.shore'] ? 'Reach the far shore' : !f['c13.track'] ? 'Find the railroad track' : 'Follow the track',
+    barks: [{ x: 420, range: 60, who: 'MONTAG', text: 'Lights! Hold DOWN to sink under them.', when: (f) => !f['c13.shore'] }],
+    hints: (f) => {
+      if (!f['c13.shore']) return ['The current has you. Keep swimming toward the far bank.', 'The bank is ahead to the right. Lights sweep the water between you and it.', 'When a light reaches you, hold [DOWN] to sink under it. Let go in the dark to breathe.'];
+      if (!f['c13.track']) return ['You made it to the bank. Look around.', 'The rail track runs along the bank, further right.', 'Walk right along the bank until you find the track.'];
+      return ['The track leads toward the camp.', 'Keep walking right along the rail.', 'Walk to the end of the track and press [E] to follow it.'];
+    },
     enter: [{ key: 'e.river', steps: [{ title: 'CHAPTER FIVE', sub: 'The Fire That Warms' }, { say: 'rv_open' }] }],
     hotspots: [
       { id: 'shore', x: 1560, label: '', auto: true, when: (f) => !f['c13.shore'], script: 'rv_shore', steps: [{ flash: 0x101820, ms: 300 }] },
@@ -151,7 +157,13 @@ export const ROOMS5: Record<string, RoomDef> = {
       { id: 'b2', fig: 'bookman', name: 'MR. SIMMONS', x: 1180, face: -1, back: true },
       { id: 'b3', fig: 'bookman', name: 'REVEREND', x: 960, face: 1, back: true },
     ],
-    objective: (f) => !f['cp.met'] ? 'Go toward the fire' : !f['c14.met'] ? 'Talk to Granger' : !f['c15.ending'] ? 'Granger is waiting for your answer' : '',
+    quietUi: true,
+    objective: (f) => !f['cp.met'] ? 'Go toward the fire' : !f['c14.met'] ? 'Talk to Granger' : !f['c15.ending'] ? 'Answer Granger' : '',
+    hints: (f) => {
+      if (!f['cp.met']) return ['Someone is waiting ahead, near a fire.', 'The fire is ahead to the right.', 'Walk right toward the firelight and stop there.'];
+      if (!f['c14.met']) return ['These people want to know what you know.', 'Granger is in the middle of the camp, by the fire.', 'Walk to Granger and press [E]. He will ask what you can offer.'];
+      return ['Granger is still waiting for your answer.', 'Granger is by the fire in the middle of the camp.', 'Walk to Granger and press [E] to answer.'];
+    },
     enter: [{ key: 'e.camp', steps: [{ say: 'cp_see' }] }],
     hotspots: [
       { id: 'fire', x: 760, label: '', auto: true, when: (f) => !f['cp.met'], script: 'cp_meet', steps: [{ fx: 'tvOn' }, { say: 'cp_tv' }, { fx: 'tvOff' }] },

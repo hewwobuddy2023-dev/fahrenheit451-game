@@ -24,7 +24,7 @@ export const SCRIPTS4: Record<string, Script> = {
     { who: 'BEATTY', text: '(from the doorway) All of it, Montag.' },
   ] },
   h5_out: { lines: [{ who: N, text: 'The walls hiss and go dark one by one. The house begins to shudder.' }] },
-  h5_out_locked: { lines: [{ who: 'BEATTY', text: '(from the doorway) Not finished, Montag.' }] },
+  h5_out_locked: { lines: [{ who: 'BEATTY', text: '(from the doorway) The beds and every parlor wall first, Montag.' }] },
 
   lw_cb_ask: { lines: [{ who: 'BEATTY', text: 'You asked me once why I read them. Now you know. To be ready for a night like this.' }] },
   lw_cb_book: { lines: [{ who: 'BEATTY', text: "Your wife turned in the alarm. After that business with her friends and the book, she didn't wait long." }] },
@@ -51,7 +51,7 @@ export const SCRIPTS4: Record<string, Script> = {
     { who: N, text: 'Later you will understand it: Beatty wanted this. He stood there, joking, needling, until you did it.' },
   ] },
   lw_books: { set: { 'ch4.books': true }, lines: [{ who: N, text: 'By the back fence, four books Mildred missed. You take them.' }] },
-  lw_run_locked: { lines: [{ who: N, text: 'The books by the back fence. Take them.' }] },
+  lw_run_locked: { lines: [{ who: N, text: "You won't leave without them. The books are by the back fence." }] },
 
   // ---- 11 The Boulevard ----
   bv_open: { lines: [
@@ -72,7 +72,8 @@ export const SCRIPTS4: Record<string, Script> = {
       { who: N, text: 'You leave the books, find a phone booth, and call it in. Far off, the sirens start.' }] },
     { text: 'Walk on.', set: { 'c11.choice': 'walk' }, reply: [{ who: N, text: 'You keep the books, and keep walking.' }] },
   ] },
-  bv_locked: { lines: [{ who: N, text: 'Not yet.' }] },
+  bv_locked: { lines: [{ who: N, text: "Cross the boulevard first. Black's house is on the far side." }] },
+  bv_on_locked: { lines: [{ who: N, text: "Not yet. Decide what to do at Black's house first." }] },
 
   // ---- 12 Faber's sprinklers / the count of ten ----
   fb2_open: { lines: [
@@ -100,7 +101,7 @@ export const SCRIPTS4: Record<string, Script> = {
     { who: 'FABER', text: "I'm taking the five o'clock bus to St. Louis. A printer there. If we both live, write to me." },
     { who: 'FABER', text: 'Go. The river first, then the old railroad tracks. Go!' },
   ] },
-  fb2_locked: { lines: [{ who: 'FABER', text: 'Wait! Not yet. Tell me what to do first.' }] },
+  fb2_locked: { lines: [{ who: 'FABER', text: 'Wait! Tell me how to hide your trail first.' }] },
   rn_open: { lines: [
     { who: N, text: 'In every lit window, the parlor walls show the same thing: the Hound, running.' },
     { who: 'SEASHELL RADIO', text: 'Everyone in the Elm Terrace area: on the count of ten, open your front door and look out. He cannot hide if everyone looks.' },
@@ -119,7 +120,9 @@ export const ROOMS4: Record<string, RoomDef> = {
       { id: 'mildred', fig: 'mildred', name: 'MILDRED', x: 960, face: -1, when: (f) => !f['lw.gone'] },
       { id: 'black', fig: 'fireman', name: 'BLACK', x: 300, face: 1, back: true },
     ],
+    quietUi: true,
     objective: () => 'Go into your house',
+    hints: () => ['Your house is right here on the lawn.', 'The front door is just to your right.', 'Walk right to the door and press [E] to go in with the flame thrower.'],
     enter: [{ key: 'e.lawn', steps: [
       { title: 'CHAPTER FOUR', sub: 'Burning Bright' }, { say: 'lw_1' }, { npc: 'mildred', x: 160, ms: 2600 },
       { set: { 'lw.gone': true } }, { say: 'lw_2' },
@@ -129,9 +132,15 @@ export const ROOMS4: Record<string, RoomDef> = {
 
   home5: {
     id: 'home5', chapter: 4, label: '', width: 2600, spawnX: 1500, kit: 'home',
+    quietUi: true,
     objective: (f) => {
-      const w = ['c10.w1', 'c10.w2', 'c10.w3'].filter((k) => f[k]).length;
-      return w < 3 || !f['c10.beds'] ? `Burn it all: the beds ${f['c10.beds'] ? 1 : 0}/1, the parlor walls ${w}/3` : 'Go back outside';
+      const walls = ['c10.w1', 'c10.w2', 'c10.w3'].some((k) => !f[k]);
+      return walls || !f['c10.beds'] ? 'Burn the house' : 'Go back outside';
+    },
+    hints: (f) => {
+      if (!f['c10.beds']) return ['The house has to burn, room by room. Start with the beds.', 'The beds are toward the left side of the room.', 'Walk left to the beds and hold [E] until they catch fire.'];
+      if (!f['c10.w1'] || !f['c10.w2'] || !f['c10.w3']) return ['The beds are burning. The parlor walls are next.', 'The walls are on the right, one after another.', 'Stand at the nearest wall that is not burning yet and hold [E] until it catches.'];
+      return ['The house is burning. Get out.', 'The front door is at the far left.', 'Walk all the way left and press [E] to go back outside.'];
     },
     enter: [{ key: 'e.home5', steps: [{ say: 'h5_open' }] }],
     hotspots: [
@@ -151,7 +160,11 @@ export const ROOMS4: Record<string, RoomDef> = {
       { id: 'black', fig: 'fireman', name: 'BLACK', x: 560, face: 1, back: true },
       { id: 'stoneman', fig: 'fireman', name: 'STONEMAN', x: 640, face: 1, back: true },
     ],
-    objective: (f) => !f['ch4.books'] ? 'Take the books by the back fence' : 'Run. The alley, to the left',
+    quietUi: true,
+    objective: (f) => !f['ch4.books'] ? 'Take the books by the back fence' : 'Run down the alley',
+    hints: (f) => !f['ch4.books']
+      ? ['The last books are out here, by the back fence.', 'They are past the garden fence, to the right.', 'Press [E] at the fence to hop it, then press [E] at the books.']
+      : ['You have the books. Get clear of the street.', 'The alley is at the far left of the street.', 'Walk all the way left and press [E] to run down the alley.'],
     enter: [{ key: 'e.lawn2', steps: [
       { if: (f) => f['c09.book'] === 'outburst', then: [{ say: 'lw_cb_book' }] },
       { say: 'lw_arrest' }, { if: (f) => f['st.reply'] === 'ask', then: [{ say: 'lw_cb_ask' }] }, { wait: 300 },
@@ -174,20 +187,31 @@ export const ROOMS4: Record<string, RoomDef> = {
       id: 'lane' + i, from: x, to: x + 90, width: 110, period: 3600, pulse: 1000, phase: -i * 0.165,
       look: 'headlights' as const, reset: x - 48, when: (f: Record<string, boolean | string>) => !f['c11.crossed'],
     })),
-    objective: (f) => !f['c11.crossed'] ? 'Cross the boulevard. Wait in the gaps between the passing cars' : !f['c11.choice'] ? "Fireman Black's house" : 'Keep going to Faber',
+    quietUi: true,
+    objective: (f) => !f['c11.crossed'] ? 'Cross the boulevard' : !f['c11.choice'] ? "Go to Black's house" : "Go on to Faber's",
+    barks: [{ x: 520, range: 90, who: 'MONTAG', text: 'Wait for each car to pass before you step out.', when: (f) => !f['c11.crossed'] }],
+    hints: (f) => {
+      if (!f['c11.crossed']) return ['Cars pass in waves, one lane at a time.', 'Wait on the island until the lane in front of you is clear.', 'Step out only when the lane ahead is dark, then wait on the next island.'];
+      if (!f['c11.choice']) return ['You are across. Black lives in one of these houses.', "Black's house is ahead on the right.", "Walk right to Black's house and press [E] to decide what to do."];
+      return ['Keep moving. Faber is waiting.', "The road to Faber's street is at the far right.", 'Walk all the way right and press [E] at the end of the road.'];
+    },
     enter: [{ key: 'e.boulevard', steps: [{ say: 'bv_open' }] }],
     hotspots: [
       { id: 'kids', x: 965, label: '', auto: true, when: (f) => !f['c11.kids'], steps: [{ flash: 0xfff0d0, ms: 300 }, { fx: 'fall' }, { say: 'bv_kids' }] },
       { id: 'curb', x: 1640, label: '', auto: true, when: (f) => !f['c11.crossed'], script: 'bv_cross' },
       { id: 'black', x: 1900, label: "Black's house", required: true, when: (f) => !f['c11.choice'], requires: ['c11.crossed'], lockedScript: 'bv_locked', script: 'bv_black' },
-      { id: 'on', x: 2140, label: "On to Faber's", required: true, requires: ['c11.choice'], lockedScript: 'bv_locked', exit: { room: 'faber2', x: 220 } },
+      { id: 'on', x: 2140, label: "On to Faber's", required: true, requires: ['c11.choice'], lockedScript: 'bv_on_locked', exit: { room: 'faber2', x: 220 } },
     ],
   },
 
   faber2: {
     id: 'faber2', chapter: 4, label: '', width: 1500, spawnX: 220, kit: 'faber', limp: true,
     npcs: [{ id: 'faber', fig: 'faber', name: 'FABER', x: 640, face: -1 }],
-    objective: (f) => !f['c12.mask'] ? 'Tell Faber how to hide your trail' : 'Out the back door, to the river',
+    quietUi: true,
+    objective: (f) => !f['c12.mask'] ? 'Ask Faber how to hide your trail' : 'Leave by the back door',
+    hints: (f) => !f['c12.mask']
+      ? ['Faber has a plan. Ask him how to cover your trail.', 'Faber is in the middle of the room.', 'Walk to Faber and press [E]. Cover your trail: burn what you touched, wash the walks, take his old clothes.']
+      : ['The plan is set. Get moving before the Hound finds your scent.', 'The back door is at the right side of the room.', 'Walk right to the back door and press [E]. Then run for the river.'],
     enter: [{ key: 'e.faber2', steps: [{ fx: 'tvOn' }, { say: 'fb2_open' }] }],
     hotspots: [
       { id: 'faber', x: 640, label: 'Talk to Faber', required: true, when: (f) => !f['c12.mask'], script: 'm1' },
@@ -209,7 +233,10 @@ export const ROOMS4: Record<string, RoomDef> = {
         look: 'searchlight' as const, reset: x - 48, when: (f: Record<string, boolean | string>) => !f['c12.river'],
       })),
     ],
-    objective: (f) => !f['c12.river'] ? 'Reach the river before the count reaches ten. Avoid the lit doorways and searchlights' : '',
+    quietUi: true,
+    objective: (f) => !f['c12.river'] ? 'Reach the river before the count ends' : '',
+    barks: [{ x: 430, range: 80, who: 'MONTAG', text: 'Lit doorway ahead. Wait for it to pass.', when: (f) => !f['c12.river'] }],
+    hints: () => ['Keep moving. The count is running.', 'Stay in the dark gaps between the lit doorways and the searchlights.', 'Watch each light sweep. Run through a gap, and wait in the dark until a light passes.'],
     enter: [{ key: 'e.run', steps: [{ say: 'rn_open' }] }],
     hotspots: [
       { id: 'river', x: 2480, label: '', auto: true, when: (f) => !f['c12.river'], script: 'rn_river', steps: [{ fade: 'out', ms: 1100 }, { goto: 'river', x: 200 }] },
