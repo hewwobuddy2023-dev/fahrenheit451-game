@@ -23,7 +23,7 @@ async function hose(page: Page, info: TestInfo) {
   try {
     for(let n=0;n<12 && !(await state(page)).flags['c01.p2'];n++) {
       await held(true);
-      await expect.poll(()=>page.evaluate(()=>{const r=(window as any).__game.scene.getScene('room');return !!r.session.flags['c01.p2'] || r.hose.pressure>=.7;}),{timeout:30000}).toBe(true);
+      await expect.poll(()=>page.evaluate(()=>{const r=(window as any).__game.scene.getScene('room');return !!r.session.flags['c01.p2'] || r.hose.pressure>=.7;}),{timeout:30000,intervals:[50]}).toBe(true);
       await held(false);
       if(!(await state(page)).flags['c01.p2']) await expect.poll(()=>page.evaluate(()=>(window as any).__game.scene.getScene('room').hose.pressure),{timeout:15000}).toBeLessThan(.36);
     }
@@ -183,7 +183,7 @@ test('native pause freezes searchlight phase; DOM focus loss waits for explicit 
   await page.goto('/?debug&lowres'); await scene(page, 'menu');
   await tap(page, 430, 282, info); await scene(page, 'room'); await settle(page, info);
   await page.keyboard.down('KeyS');
-  try {await expect.poll(()=>page.evaluate(()=>(window as any).__game.scene.getScene('room').breath.exhausted),{timeout:30000}).toBe(true);}finally{await page.keyboard.up('KeyS');}
+  try {await expect.poll(()=>page.evaluate(()=>(window as any).__game.scene.getScene('room').breath.exhausted),{timeout:30000,intervals:[50]}).toBe(true);}finally{await page.keyboard.up('KeyS');}
   await expect.poll(()=>page.evaluate(()=>(window as any).__game.scene.getScene('room').breath.air),{timeout:20000}).toBeGreaterThan(.99);
   await page.keyboard.press('Escape');
   const phase = await page.evaluate(() => (window as any).__game.scene.getScene('room').beams.get('sl1').x);
@@ -245,10 +245,10 @@ test('missing or stalled decorative backdrop never gates the title indefinitely'
 
 test('concealment: a watched hold cannot earn the book; safe window and story beat can', async ({page}, info) => {
   await seed(page,'attic',1140,{'e.attic':true,'a.fell':true});await page.goto('/?debug&lowres');await scene(page,'menu');await tap(page,430,282,info);await scene(page,'room');await settle(page,info);
-  await expect.poll(()=>page.evaluate(()=>{const r=(window as any).__game.scene.getScene('room');return r.activeTime%4200<800;}),{timeout:30000}).toBe(true);
+  await expect.poll(()=>page.evaluate(()=>{const r=(window as any).__game.scene.getScene('room');return r.activeTime%4200<800;}),{timeout:30000,intervals:[50]}).toBe(true);
   await page.keyboard.down('KeyE');await page.waitForTimeout(250);await page.keyboard.up('KeyE');
   expect((await state(page)).flags['c04.book']).toBeUndefined();
-  await expect.poll(()=>page.evaluate(()=>{const r=(window as any).__game.scene.getScene('room');return r.activeTime%4200>1900&&r.activeTime%4200<2400;}),{timeout:45000}).toBe(true);
+  await expect.poll(()=>page.evaluate(()=>{const r=(window as any).__game.scene.getScene('room');return r.activeTime%4200>1900&&r.activeTime%4200<2400;}),{timeout:45000,intervals:[50]}).toBe(true);
   await page.keyboard.down('KeyE');
   try {await expect.poll(async ()=>(await state(page)).dialogue,{timeout:20000}).toBe(true);}finally{await page.keyboard.up('KeyE');}
   await settle(page,info);expect((await state(page)).flags['c04.book']).toBe(true);
