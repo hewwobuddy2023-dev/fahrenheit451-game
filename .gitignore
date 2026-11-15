@@ -15,7 +15,6 @@ test-results/
 .DS_Store
 Thumbs.db
 .vscode/settings.json
-AGENTS.md
 *.local
 npm-debug.log*
 # source book and other private reference material
