@@ -4,7 +4,8 @@ import type { Flags } from '../state.ts';
 
 export type Cond = (f: Flags) => boolean;
 
-export interface Line { who: string; text: string }
+/** pose: a held gesture (art/figures.ts POSES) for this line; by: who performs it (npc id or 'montag'; default the speaker, or Montag for narration). */
+export interface Line { who: string; text: string; pose?: string; by?: string }
 
 export interface Choice {
   text: string;
@@ -24,6 +25,8 @@ export interface Script {
   set?: Flags;
   /** Cinematic framing: show this script's panel near the top so the speakers below stay in view. */
   top?: boolean;
+  /** Set pieces: while the letterbox bars are closed, lines play as subtitles inside the bottom bar (nothing in frame is covered). */
+  sub?: boolean;
   /** A watched conversation: at 3 suspicion the `caught` lines play and the player restarts its first choice. */
   suspicion?: { label: string; caught: Line[] };
 }
@@ -33,6 +36,7 @@ export type Step =
   | { say: string }                                        // play a script
   | { walk: number; ms?: number }                          // move Montag to x
   | { npc: string; x?: number; face?: 1 | -1; show?: boolean; ms?: number }
+  | { pose: string; p?: string }                           // npc id or 'montag' holds a gesture; no p = back to rest
   | { cam: number; ms?: number }                           // pan camera so x is centred
   | { follow: true }                                       // camera back on Montag
   | { wait: number }
@@ -82,6 +86,8 @@ export interface Npc {
   back?: boolean;            // stands deeper in the room (behind the walk line)
   follow?: Cond;             // walks alongside Montag while true
   distracted?: Cond;         // faces away from Montag (towards the screens) even while answering
+  pose?: (f: Flags) => string | undefined; // resting pose (e.g. seated) instead of standing idle
+  gesture?: { p: string; every: number };  // small repeated action (dealing cards) while idle
 }
 
 export interface Hazard {

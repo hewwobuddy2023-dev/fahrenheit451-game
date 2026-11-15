@@ -198,8 +198,8 @@ const station: Kit = (s, room) => {
   const bulb = s.add.image(2065, F - 204, 'glow').setScale(0.55).setTint(C.redN).setAlpha(0).setBlendMode(ADD).setDepth(3);
   s.add.image(2290, 470, 'k:truck').setOrigin(0.5, 1).setDepth(4.5);
   paint(s, 'k:station:beam', 60, H, (c) => { c.fillStyle = '#060404'; c.fillRect(14, 0, 32, H); c.fillRect(4, 0, 52, 16); c.fillStyle = 'rgba(242,165,74,0.15)'; c.fillRect(45, 16, 1, H); });
+  // one foreground beam only: a second one at 1900 swept across the kerosene tanks and the kennel (ch1 v2 render review)
   occluder(s, 'k:station:beam', 900, 1.32);
-  occluder(s, 'k:station:beam', 1900, 1.32);
   dust(s, RW);
   let alarm: Phaser.Tweens.Tween | undefined;
   return {
@@ -351,12 +351,25 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
         for (let x = 0; x < RW; x += 330) {
           if (variant === 'burn' && x > 800 && x < 1500) continue;
           if (variant === 'lawn' && x > 700 && x < 1500) continue;
+          if (variant === 'corner') {
+            // Clarisse's street: no two neighbours alike; most windows glow parlor-blue, one family still keeps a warm lamp
+            const k = Math.round(x / 330), cols = ['#1a1517', '#1f1b1f', '#161315', '#211a16'];
+            facade(c, x + 20 + (k * 23) % 40, 200 + (k * 37) % 70, 160 + (k * 53) % 50, F - 10,
+              { col: cols[k % 4], r, tvs: k % 3 !== 1, lit: k % 5 === 2 ? 'rgba(242,190,120,0.55)' : undefined, old: k % 4 === 3 });
+            continue;
+          }
           facade(c, x + 30, 240, 170 + r() * 30, F - 10, { col: '#1a1517', r, tvs: true });
         }
         if (variant === 'burn') facade(c, 860, 600, 300, F - 10, { col: '#2a201b', lit: 'rgba(242,165,74,0.75)', old: true, r });
         if (variant === 'lawn') { facade(c, 760, 380, 200, F - 10, { col: '#221c1d', r }); facade(c, 1200, 260, 180, F - 10, { col: '#141012', r }); }
         if (variant === 'corner') { facade(c, RW - 340, 300, 190, F - 10, { col: '#2a2420', lit: 'rgba(255,214,150,0.85)', r: () => 0.9 }); radial(c, RW - 190, F - 100, 220, 'rgba(255,200,120,A)', 0.25); }
         if (variant === 'corner') { c.fillStyle = '#0a0808'; c.fillRect(30, F - 120, 120, 120); radial(c, 90, F - 40, 90, 'rgba(240,225,190,A)', 0.4); c.fillStyle = '#d9cba8'; c.font = '600 12px Oswald'; c.fillText('S U B W A Y', 50, F - 100); }
+      }
+      if (variant === 'corner' || variant === 'burn') {
+        // a strip of lawn in front of the houses: the books die on it, and Clarisse's dew lies on it
+        c.fillStyle = '#0f150e'; c.fillRect(0, F - 10, RW, 10);
+        const g = rng(77);
+        for (let i = 0; i < RW / 2.5; i++) { c.fillStyle = g() < 0.5 ? '#1f2c1b' : '#0b100a'; c.fillRect(g() * RW, F - 12 - g() * 6, 1.5, 6 + g() * 7); }
       }
       c.fillStyle = vgrad(c, F - 14, F, [[0, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0.6)']]); c.fillRect(0, F - 14, RW, 14);
       speckle(c, RW, F, 9000, 21);
@@ -396,6 +409,23 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
       s.add.particles(0, 0, 'book', { x: { min: 940, max: 1380 }, y: 150, speedY: { min: 80, max: 140 }, speedX: { min: -30, max: 30 }, rotate: { min: 0, max: 360 }, lifespan: 2200, frequency: 700, gravityY: 120 }).setDepth(3.5);
       // soaked: darker, wet-looking books and a fuel sheen spreading on the lawn (before the fire)
       update = (f) => piles.forEach((p, i) => { if (f[`c01.p${i + 1}`]) { p.setTint(0x9a8460); if (!f['c01.lit'] && sheen[i].alpha === 0) s.tweens.add({ targets: sheen[i], alpha: 0.32, duration: 700 }); } if (f['c01.lit']) sheen[i].setAlpha(0); });
+      // the novel's image of the opening burn: books rise like flapping birds, catch, and fall dying on the lawn
+      paint(s, 'k:page', 18, 12, (c) => {
+        c.fillStyle = '#f2e8d0'; poly(c, [1, 2, 9, 5, 17, 2, 16, 10, 9, 12, 2, 10]);
+        c.strokeStyle = 'rgba(60,50,40,0.55)'; c.lineWidth = 1; c.beginPath(); c.moveTo(9, 5); c.lineTo(9, 12); c.stroke();
+      });
+      fx.pages = () => first('pages', () => {
+        const calm = settings.reducedMotion;
+        s.add.particles(0, 0, 'k:page', {
+          x: { min: 860, max: 1260 }, y: { min: 420, max: 455 },
+          speedY: { min: -240, max: -150 }, speedX: { min: -55, max: 65 }, gravityY: 100,
+          lifespan: { min: 2800, max: 3800 }, frequency: calm ? 420 : 105, duration: 2600, maxParticles: calm ? 6 : 24,
+          rotate: { min: -30, max: 30 },
+          // wing beat: the page folds and opens; reduced motion keeps it still
+          scaleX: calm ? 1 : { onUpdate: (_p: unknown, _k: string, t: number) => 0.2 + Math.abs(Math.sin(t * 28)) * 0.9 },
+          color: [0xfff2dc, 0xffc070, 0xff6a28, 0x2a140c], alpha: { start: 1, end: 0.2 },
+        }).setDepth(5.6);
+      });
       fx.ignite = () => first('ignite', () => {
         piles.forEach((p) => fireAt(s, p.x, 472, 2));
         // the fire climbs window by window (single flames, staggered) instead of rows that read as one flat band
@@ -463,7 +493,8 @@ const home: Kit = (s, room) => {
   s.add.image(740, 452, 'k:bed').setOrigin(0.5, 1).setDepth(4.6);
   s.add.image(1060, 452, 'k:bed').setOrigin(0.5, 1).setDepth(4.6);
   paint(s, 'k:chair', 90, 110, (c) => { c.fillStyle = '#3a2e36'; c.fillRect(10, 0, 70, 70); c.fillRect(0, 50, 90, 30); c.fillStyle = '#121216'; c.fillRect(8, 80, 6, 30); c.fillRect(76, 80, 6, 30); });
-  s.add.image(1830, 452, 'k:chair').setOrigin(0.5, 1).setDepth(4.4);
+  // home1: the chair sits where Mildred's seated pose meets its cushion (she sits center stage)
+  s.add.image(1830, room.id === 'home1' ? 478 : 452, 'k:chair').setOrigin(0.5, 1).setDepth(4.4);
   paint(s, 'k:doorframe', 70, H, (c) => { c.fillStyle = '#0a0a0c'; c.fillRect(18, 0, 34, H); c.fillRect(0, 0, 70, 30); c.fillStyle = 'rgba(160,200,215,0.12)'; c.fillRect(51, 30, 1, H); });
   occluder(s, 'k:doorframe', 560, 1.3); occluder(s, 'k:doorframe', 1210, 1.3); occluder(s, 'k:doorframe', 1500, 1.3);
   const vChair = s.add.image(400, 480, 'k:chair').setOrigin(0.5, 1).setDepth(5.5).setScale(0.8).setVisible(false);
@@ -474,6 +505,15 @@ const home: Kit = (s, room) => {
     floor: { key: 'hometile', top: '#2e2d33', bottom: '#0a0a0c', line: 'rgba(255,255,255,0.05)', spacing: 90, kind: 'tile' },
     lights: [{ x: 300, y: 200, color: 0xd8d0c0, r: 300 }, { x: 900, y: 200, color: 0x9ab0c8, r: 260 }, ...PARLOR.map((x) => ({ x, y: 220, color: 0x9ad0ff, r: 300 }))],
     fx: { tvOff: () => tvs.forEach((t) => t.setVisible(false)), tvOn: () => tvs.forEach((t) => t.setVisible(true)),
+      // Chapter 1 ends as the novel's scene does: the front door opens on rain
+      rainDoor: () => {
+        const night = s.add.rectangle(115, 150, 110, F - 150, 0x18232e, 1).setOrigin(0.5, 0).setDepth(1.6).setAlpha(0);
+        s.tweens.add({ targets: night, alpha: 1, duration: 500 });
+        s.add.particles(0, 0, 'dot', { x: { min: 62, max: 168 }, y: 150, speedY: { min: 520, max: 640 }, speedX: -30, lifespan: 420,
+          frequency: settings.reducedMotion ? 140 : 14, scaleY: 3.5, scaleX: 0.35, alpha: 0.5, tint: 0xa8c0d0 }).setDepth(1.7);
+        const spill = s.add.image(115, F, 'glow').setScale(2.2, 0.5).setTint(0x7a9ab0).setAlpha(0).setBlendMode(ADD).setDepth(1.65);
+        s.tweens.add({ targets: spill, alpha: 0.35, duration: 600 });
+      },
       // Mildred turns the walls back up: each screen flickers to full brightness in turn
       wallsOn: () => tvs.forEach((t, i) => s.time.delayedCall(i * 260, () => { t.setTint(0xffffff); s.tweens.add({ targets: t, alpha: { from: 0.2, to: 1 }, duration: 120, repeat: 2, yoyo: true, onComplete: () => t.setAlpha(1) }); tvGlow[i].setVisible(true); })) },
     update: (f) => {

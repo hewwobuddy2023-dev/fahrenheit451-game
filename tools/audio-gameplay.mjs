@@ -48,11 +48,11 @@ check('the kerosene pour sounds while E is held (full stream, no sputter)', pour
 check('the pour stops when E is released', stopped.spray < 0.02, `spray ${stopped.spray}`);
 await page.keyboard.down('e'); await page.waitForTimeout(2600); await page.keyboard.up('e'); await page.waitForTimeout(300);
 check('one pour soaks all three piles', await A(() => ['c01.p1','c01.p2','c01.p3'].every((k) => window.__qa.scene.session.flags[k])), JSON.stringify(await A(() => ({ near: window.__qa.scene.near?.id, hold: window.__qa.scene.holdMs, mode: window.__qa.mode() }))));
-await A(() => window.__qa.go(560)); await page.waitForTimeout(300); await page.keyboard.press('e'); await page.waitForTimeout(300);
-for (let i = 0; i < 40 && !(await A(() => window.__qa.scene.session.flags['c01.igniter'])); i++) { await A(() => { const q = window.__qa; if (q.options().length) q.choose(0); else q.adv(); }); await page.waitForTimeout(150); }
 await advanceToPlay();
 await A(() => { window.__cues = []; window.__qa.go(980); }); await page.waitForTimeout(300);
-await page.keyboard.press('e'); await page.waitForTimeout(1500);
+await page.keyboard.press('e'); // Beatty's nod and the tone choice, then Montag's own igniter
+for (let i = 0; i < 60 && !(await A(() => window.__qa.scene.session.flags['c01.lit'])); i++) { await A(() => { const q = window.__qa; if (q.mode() === 'dialogue') { if (q.options().length) q.choose(0); else q.adv(); } }); await page.waitForTimeout(150); }
+await page.waitForTimeout(1200);
 const lit = await cues();
 check('lighting plays the igniter click, then the fire rush, then the ignition', lit.indexOf('click') >= 0 && lit.indexOf('rush') > lit.indexOf('click') && lit.includes('ignite'), lit.join(','));
 check('once lit, the burn switches to the fire ambience (crackle)', (await engine()).profile === 'fire', (await engine()).profile);

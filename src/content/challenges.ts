@@ -14,7 +14,7 @@ export const CHAPTERS = [
 export const CHALLENGES: ChallengeInfo[] = [
   { id: 1, title: 'The Burn', part: 1, connection: 'The novel opens with Montag burning a house of books, and enjoying it.' },
   { id: 2, title: "Clarisse's Question", part: 1, connection: 'Clarisse notices the world and asks Montag whether he is happy.' },
-  { id: 3, title: 'Parlor Walls', part: 1, connection: 'Mildred lives inside the TV walls and cannot hear her husband.' },
+  { id: 3, title: 'Parlor Walls', part: 1, connection: 'Mildred lives inside the TV walls; she hears her husband but will not listen.' },
   { id: 4, title: "The Woman's House", part: 1, connection: 'An old woman stays with her books; Montag takes one.' },
   { id: 5, title: "Beatty's Argument", part: 1, connection: 'Beatty explains how people chose to stop reading.' },
   { id: 6, title: 'The Hidden Books', part: 1, connection: 'Montag shows Mildred the books he has hidden for a year.' },
@@ -32,7 +32,7 @@ export const CHALLENGES: ChallengeInfo[] = [
 export const RULES: ChallengeRule[] = [
   { id: 1, required: ['c01.p1', 'c01.p2', 'c01.p3', 'c01.lit'] },
   { id: 2, required: ['c02.n1', 'c02.n2', 'c02.n3', 'c02.asked'] },
-  { id: 3, required: ['c03.w1', 'c03.w2', 'c03.w3', 'c03.t3', 'c03.script'] },
+  { id: 3, required: ['c03.t3', 'c03.script'] }, // the walls are optional (Option A, approved Nov 14): talking and the script's last page complete it
   { id: 4, required: ['c04.book', 'c04.plea'] },
   { id: 5, required: ['c05.done'] },
   { id: 6, required: ['c06.chair', 'c06.vent', 'c06.millie', 'c06.still'] },

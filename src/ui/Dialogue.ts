@@ -2,11 +2,15 @@ import Phaser from 'phaser';
 import { SequencePuzzle } from './SequencePuzzle.ts';
 import { sound } from '../audio.ts';
 import { controls, isTouch, onInputMode } from '../input.ts';
-import { C, FONT, W, text } from '../view.ts';
+import { C, FONT, H, W, text } from '../view.ts';
 import type { Choice, Line, Script } from '../content/types.ts';
 import type { Flags } from '../state.ts';
 
 const BOX = { x: 80, y: 384, w: W - 160, h: 140 };
+const BOTTOM = BOX.y + BOX.h; // the panel grows upward from here, only as tall as its text
+const MIN_H = 70;             // one line of text plus the advance hint
+const TOP = 72;               // framed scripts: panel top sits just under the journal chip
+const SUB_Y = H - 24;         // subtitles: centred in the 48 px letterbox bar
 const STEP = 3;   // characters revealed per tick
 const ARM_MS = 400; // choices ignore confirm presses this long after appearing
 const TICK = 55;  // ms per tick (~55 chars/s, ~18 text redraws/s)
@@ -22,6 +26,8 @@ export class Dialogue {
   puzzle?: SequencePuzzle;
   onPause?: () => void;
   onSpeaker?: (who: string) => void;
+  /** True while the scene's letterbox bars are closed (set pieces can then use subtitles). */
+  subtitles?: () => boolean;
   private scene: Phaser.Scene;
   private armedAt = 0;
   private panel: Phaser.GameObjects.Graphics;
@@ -30,6 +36,12 @@ export class Dialogue {
   private nameBg: Phaser.GameObjects.Rectangle;
   private body: Phaser.GameObjects.Text;
   private more: Phaser.GameObjects.Triangle;
+  private hit: Phaser.GameObjects.Zone;
+  private hint: Phaser.GameObjects.Text;
+  private boxParts: Phaser.GameObjects.GameObject[];
+  private sub: Phaser.GameObjects.Text;
+  private subName: Phaser.GameObjects.Text;
+  private out!: Phaser.GameObjects.Text;
   private choiceRows: Phaser.GameObjects.Container[] = [];
   private queue: Line[] = [];
   private full = '';
@@ -53,7 +65,7 @@ export class Dialogue {
     this.scene = scene;
     const g = this.panel = scene.add.graphics();
     this.paintPanel(BOX.y);
-    const hit = scene.add.zone(BOX.x, BOX.y, BOX.w, BOX.h).setOrigin(0).setScrollFactor(0).setInteractive();
+    const hit = this.hit = scene.add.zone(BOX.x, BOX.y, BOX.w, BOX.h).setOrigin(0).setScrollFactor(0).setInteractive();
     hit.on('pointerdown', () => { if (!this.choices) this.advance(); });
     this.nameBg = scene.add.rectangle(BOX.x, BOX.y - 26, 10, 26, C.panel, 0.93).setOrigin(0);
     this.name = text(scene, BOX.x + 16, BOX.y - 13, '', { fontFamily: FONT.display, fontSize: '15px', fontStyle: '600', color: C.ember })
@@ -61,13 +73,17 @@ export class Dialogue {
     this.body = text(scene, BOX.x + 28, BOX.y + 20, '', { fontSize: '19px', lineSpacing: 7, wordWrap: { width: BOX.w - 70 } });
     this.more = scene.add.triangle(BOX.x + BOX.w - 26, BOX.y + BOX.h - 20, 0, 0, 12, 0, 6, 8, C.amberN);
     scene.tweens.add({ targets: this.more, y: '+=4', yoyo: true, repeat: -1, duration: 500 });
-    const hint = text(scene, BOX.x + BOX.w - 44, BOX.y + BOX.h - 21, '', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
+    const hint = this.hint = text(scene, BOX.x + BOX.w - 44, BOX.y + BOX.h - 21, '', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
       .setOrigin(1, 0.5).setLetterSpacing(2);
     const label = () => hint.setText(isTouch() ? 'TAP' : 'E / ENTER');
     label();
     scene.events.once('shutdown', onInputMode(label));
-    this.root = scene.add.container(0, 0, [g, hit, this.nameBg, this.name, this.body, this.more, hint])
+    this.sub = text(scene, 0, SUB_Y, '', { fontSize: '19px' }).setOrigin(0, 0.5);
+    this.subName = text(scene, 0, SUB_Y, '', { fontFamily: FONT.display, fontSize: '14px', fontStyle: '600', color: C.ember }).setOrigin(0, 0.5).setLetterSpacing(3);
+    this.boxParts = [g, this.nameBg, this.name, this.body, this.more];
+    this.root = scene.add.container(0, 0, [g, hit, this.nameBg, this.name, this.body, this.more, hint, this.sub, this.subName])
       .setScrollFactor(0, 0, true).setDepth(1200).setVisible(false);
+    this.out = this.body;
   }
 
   play(script: Script, flags: Flags, lookup: (k: string) => Script, done: (acc: Flags) => void) {
@@ -138,20 +154,46 @@ export class Dialogue {
     this.close();
   }
 
+  /** Subtitle mode hides the panel and types into the letterbox bar; tapping anywhere advances. */
+  private setSub(on: boolean) {
+    this.boxParts.forEach((p) => (p as Phaser.GameObjects.Image).setVisible(!on));
+    this.sub.setVisible(on).setText(''); this.subName.setVisible(on);
+    // the tap target stays the full original box even when the drawn panel is shorter (easier on touch screens)
+    if (on) { this.hit.setPosition(0, 0).setSize(W, H); this.hint.setPosition(W - 26, SUB_Y); }
+    else { this.hit.setPosition(BOX.x, BOX.y).setSize(BOX.w, BOX.h); this.hint.setPosition(BOX.x + BOX.w - 44, BOTTOM - 21); }
+  }
+
   private show(line: Line) {
     sound.cue('page');
-    this.root.setY(this.script?.top ? 96 - BOX.y : 0);
-    this.paintPanel(BOX.y);
-    this.name.setY(BOX.y - 13);
-    this.nameBg.setY(BOX.y - 26);
     const narr = !line.who;
-    this.name.setText(line.who);
-    this.nameBg.setVisible(!narr).setSize(this.name.width + 32, 26);
-    this.body.setColor(narr ? C.creamDim : C.cream).setFontStyle(narr ? 'italic' : 'normal');
-    if (!narr) this.scene.events.emit('speaker', line.who);
     this.full = controls(line.text);
+    const sub = !!this.script?.sub && !!this.subtitles?.();
+    this.setSub(sub);
+    const target = sub ? this.sub : this.body;
+    target.setColor(narr ? C.creamDim : C.cream).setFontStyle(narr ? 'italic' : 'normal');
+    // measure the whole line once so the frame never resizes while it types
+    target.setText(this.full);
+    const fw = target.width, th = target.height;
+    target.setText('');
+    if (sub) {
+      this.root.setY(0);
+      this.subName.setText(narr ? '' : line.who);
+      const nw = narr ? 0 : this.subName.width + 14, x0 = Math.max(24, W / 2 - (nw + fw) / 2);
+      this.subName.setX(x0); this.sub.setX(x0 + nw);
+    } else {
+      const h = Math.max(MIN_H, th + 46), y = BOTTOM - h;
+      this.paintPanel(y);
+      this.body.setY(y + 18);
+      this.name.setY(y - 13);
+      this.nameBg.setY(y - 26);
+      this.root.setY(this.script?.top ? TOP - y : 0);
+      this.name.setText(line.who);
+      this.nameBg.setVisible(!narr).setSize(this.name.width + 32, 26);
+    }
+    this.out = target;
+    if (!narr) this.scene.events.emit('speaker', line.who);
+    this.scene.events.emit('line', line);
     this.shown = 0;
-    this.body.setText('');
     this.more.setVisible(false);
     this.onSpeaker?.(line.who);
     this.typing?.remove();
@@ -159,8 +201,8 @@ export class Dialogue {
       delay: TICK, repeat: Math.ceil(this.full.length / STEP) - 1,
       callback: () => {
         this.shown = Math.min(this.full.length, this.shown + STEP);
-        this.body.setText(this.full.slice(0, this.shown));
-        if (this.shown >= this.full.length) this.more.setVisible(true);
+        this.out.setText(this.full.slice(0, this.shown));
+        if (this.shown >= this.full.length) this.more.setVisible(this.out === this.body);
       },
     });
   }
@@ -168,13 +210,15 @@ export class Dialogue {
   private finishLine() {
     this.typing?.remove();
     this.shown = this.full.length;
-    this.body.setText(this.full);
-    this.more.setVisible(true);
+    this.out.setText(this.full);
+    this.more.setVisible(this.out === this.body);
   }
 
   /** `keep` is the row to keep highlighted after a wrong answer; the cursor never jumps to another option. */
   private showChoices(choices: Choice[], keep = 0) {
     this.firstChoices ??= choices;
+    this.setSub(false);
+    this.root.setY(0); // choices always sit at the bottom, where touch players expect them
     this.paintMeter();
     this.choices = choices;
     this.sel = keep;
@@ -205,7 +249,7 @@ export class Dialogue {
   }
 
   private paintPanel(y: number) {
-    const h = BOX.y + BOX.h - y;
+    const h = BOTTOM - y;
     this.panel.clear().fillStyle(C.panel, 0.96).fillRect(BOX.x, y, BOX.w, h)
       .lineStyle(1, C.emberN, 0.55).strokeRect(BOX.x + 0.5, y + 0.5, BOX.w - 1, h - 1)
       .fillStyle(C.emberN, 0.9).fillRect(BOX.x, y, 3, h);
@@ -274,6 +318,7 @@ export class Dialogue {
     this.open = false;
     this.typing?.remove();
     this.root.setVisible(false);
+    this.scene.events.emit('line', null);
     const d = this.done;
     this.done = undefined;
     d?.(this.acc);

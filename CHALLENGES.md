@@ -8,7 +8,7 @@ Mechanic types: **T1** inspect/choose · **T2** act while watched · **T3** hold
 |---|---|---|---|---|---|
 | 01 | 1 | Opening burn (P1) | T3 regulate FLOW pressure at three book piles (release to vent), then light the fire (tone choice) | `c01.p1 p2 p3 lit` | No fail state |
 | 02 | 1 | First walk with Clarisse (P1) | Walk-and-talk; three stop-or-walk-on choices; she asks if he is happy | `c02.n1 n2 n3 asked` | All choices progress |
-| 03 | 1 | Mildred and the parlor play (P1) | Inspect the three walls, try three times to talk through them, read the script's last page | `c03.w1 w2 w3 t3 script` | Overdose shown earlier as a short non-interactive beat |
+| 03 | 1 | Mildred and the parlor play (P1) | Talk to Mildred three times (she hears every word and deflects); optionally turn the three walls off, which changes her reactions; say goodbye, ask about the happy ending, read the script's last page | `c03.t3 script` (walls `c03.w1–w3` optional) | Overdose shown earlier as a short non-interactive beat |
 | 04 | 2 | The old woman's house (P1) | T2 hold to conceal the falling book while Beatty looks away; plead or stay silent | `c04.book plea` | Blocked, not failed, while watched; her choice is fixed |
 | 05 | 2 | Beatty's bedside visit (P1) | Three beats keeping the pillow book hidden while answering Beatty | `c05.done` | Wrong answer = retry the beat |
 | 06 | 2 | The ventilator grill (P1) | Move the chair, T3 pull books from the vent, talk Mildred down, stay still while something sniffs at the door | `c06.chair vent millie still` | Moving restarts only the wait |

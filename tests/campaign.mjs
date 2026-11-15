@@ -9,13 +9,13 @@ const chapters=[];
 function expect(room,done){assert.equal(s.scene().room.id,room);assert.equal(s.w.__qa.done().length,done);console.log(`PASS campaign ${room}: ${done}/15`);}
 try{
   await s.advance(700);await s.tap(430,346);await s.until(()=>s.scene().sys.settings.key==='room','start');await d.settle();
-  // Chapter 1 redesign: one kerosene pour, take the igniter, light it (no pressure gauge, no repeated piles)
-  for(const id of ['douse','igniter','light'])await d.visit(id);
+  // Chapter 1 v2: one kerosene pour, then Montag lights his own igniter on Beatty's nod
+  for(const id of ['douse','light'])await d.visit(id);
   expect('station1',1);await d.visit('out');
   for(const id of ['meet','moon','dew','signs','house','home'])await d.visit(id);
-  // parlor: talking first is interrupted by the walls (no progress), then each quieter wall lets a subject through
-  await d.visit('x1');assert.equal(s.scene().session.flags['c03.t1'],undefined,'loud walls block the first conversation');
-  for(const id of ['w1','t1','w2','t2','w3','t3','script','door'])await d.visit(id);
+  // parlor (Option A): she hears him with the walls loud; one wall turned off mid-talk; two walls never touched
+  await d.visit('t1');assert.ok(s.scene().session.flags['c03.t1'],'loud walls do not block the conversation');
+  for(const id of ['w1','t2','t3','script','door'])await d.visit(id);
   expect('station2',3);chapters.push(s.save());
   for(const id of ['hound','cards','dispatch','stairs'])await d.visit(id);
   // Beatty can block the attempt, then looks away. The blocked dialogue must not set the book flag.

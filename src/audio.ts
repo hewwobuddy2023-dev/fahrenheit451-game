@@ -13,6 +13,7 @@ const PROFILES: Record<string, Profile> = {
   river: { noise: 0.24, cutoff: 900, hum: 92, tone: 0.008, crackle: 0, pad: 0.03, swell: 0.7 },
   camp: { noise: 0.12, cutoff: 2200, hum: 146, tone: 0.018, crackle: 0.55, pad: 0.015, swell: 0.2 },
   night: { noise: 0.1, cutoff: 650, hum: 46, tone: 0.012, crackle: 0, pad: 0.02, swell: 0.5 },
+  rain: { noise: 0.28, cutoff: 3400, hum: 40, tone: 0.006, crackle: 0, pad: 0.02, swell: 0.35 },
   ending: { noise: 0.05, cutoff: 480, hum: 130, tone: 0.025, crackle: 0.2, pad: 0.04, swell: 0.3 },
 };
 

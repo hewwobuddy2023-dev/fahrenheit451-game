@@ -8,10 +8,10 @@ import { controls, inputMode, isTouch } from '../input.ts';
 import { sound } from '../audio.ts';
 import { settings, setSetting } from '../settings.ts';
 import { freeTextures } from '../art/core.ts';
-import { FIG_H } from '../art/figures.ts';
+import { FIG_H, POSE_NAMES } from '../art/figures.ts';
 import { KITS, resetKitOnce, type KitParts } from '../art/kits.ts';
 import { CHALLENGES, CHAPTERS, ROOMS, RULES, SCRIPTS } from '../content.ts';
-import type { Bark, Hotspot, Light, Npc, RoomDef, Script, Step } from '../content/types.ts';
+import type { Bark, Hotspot, Light, Line, Npc, RoomDef, Script, Step } from '../content/types.ts';
 import { completedIds, type Flags, type Session } from '../state.ts';
 import { Dialogue } from '../ui/Dialogue.ts';
 import { Hud } from '../ui/Hud.ts';
@@ -69,6 +69,7 @@ export class RoomScene extends Phaser.Scene {
   private hintBtn?: Phaser.GameObjects.Text;
   private bars?: Phaser.GameObjects.Rectangle[];
   private rim?: Phaser.GameObjects.Image;
+  private linePosed?: Phaser.GameObjects.Sprite;
   private barked = new Set<Bark>();
   private playMs = 0;
   private idleMs = 0;
@@ -102,6 +103,7 @@ export class RoomScene extends Phaser.Scene {
     this.vx = 0; this.facing = 1; this.near = undefined; this.holdMs = 0;
     this.camTarget = null; this.overlay = undefined; this.caughtAt = 0;
     this.activeTime = 0;
+    this.linePosed = undefined;
     this.npcs = []; this.glows = new Map(); this.laneStrips = new Map(); this.rigs = new Map(); this.barked = new Set(); this.bars = undefined; this.playMs = 0; this.idleMs = 0; this.hintFor = ''; this.nudged = ''; this.caughtScene = false; this.beams = new Map(); this.eyes = new Map();
     // Scene restarts destroy its objects, but retain class fields. Never reuse a
     // destroyed emitter when a later chapter starts its next hold interaction.
@@ -191,6 +193,7 @@ export class RoomScene extends Phaser.Scene {
     this.dialogue = new Dialogue(this);
     this.dialogue.onPause = () => this.onAction('pause');
     this.dialogue.onSpeaker = (who) => this.frameSpeaker(who);
+    this.dialogue.subtitles = () => !!this.bars;
     this.hud = new Hud(this, `CHAPTER ${this.room.chapter}  ·  ${CHAPTERS[this.room.chapter - 1].toUpperCase()}`, {
       demo: this.session.demo,
       onJournal: () => this.onAction('journal'), onPause: () => this.onAction('pause'), onAct: () => this.onAction('act'),
@@ -208,8 +211,11 @@ export class RoomScene extends Phaser.Scene {
     cam.fadeIn(600, 0, 0, 0);
     this.timerStart = this.activeTime;
     const onSpeaker = (who: string) => this.react(who);
+    const onLine = (line: Line | null) => this.onLine(line);
     this.events.on('speaker', onSpeaker);
-    this.events.once('shutdown', () => this.events.off('speaker', onSpeaker));
+    this.events.on('line', onLine);
+    this.events.once('shutdown', () => { this.events.off('speaker', onSpeaker); this.events.off('line', onLine); });
+    this.startGestures();
     if (params.has('debug')) Object.assign(window, { __qa: this.qa() });
     void this.runEnter();
   }
@@ -231,6 +237,8 @@ export class RoomScene extends Phaser.Scene {
     this.controlHint.setVisible(this.mode === 'play' && this.controlHint.text !== ''); // an empty hint would show as a stray box
     if (this.mode === 'play') { this.playMs += dtMs; this.updateBarks(); this.updateIdle(dtMs); }
     if (this.room.quietUi) this.hintBtn?.setVisible(this.mode === 'play');
+    // the objective steps aside while a conversation or cutscene owns the screen (rendered comparison: it stacked with the panel)
+    if (this.room.quietUi) this.hud.setFocus(this.mode === 'dialogue' || this.mode === 'cutscene' || this.mode === 'exit');
     this.activeTime += dtMs;
     const time = this.activeTime;
     // Phaser already supplies a smoothed/capped delta. A second 50 ms cap
@@ -591,6 +599,47 @@ export class RoomScene extends Phaser.Scene {
     this.idleMs = 0;
   }
 
+  private spriteFor(id: string) { return id === 'montag' ? this.player : this.npcs.find((n) => n.def.id === id)?.spr; }
+
+  /** Hold a gesture frame (16+), or with no pose return to the character's resting pose (seated, or breathing idle). */
+  private setPose(spr: Phaser.GameObjects.Sprite, p?: string) {
+    const want = p ?? this.npcs.find((v) => v.spr === spr)?.def.pose?.(this.session.flags);
+    const i = want ? POSE_NAMES.indexOf(want) : -1;
+    if (i < 0 || !spr.texture.has(String(16 + i))) {
+      if (spr.getData('pose')) { spr.setData('pose', undefined); spr.play(spr.texture.key + ':idle'); }
+      return;
+    }
+    spr.anims.stop();
+    spr.setFrame(16 + i).setData('pose', want);
+  }
+
+  /** A line's gesture lasts for that line only; the next line (or the end of the talk) returns the actor to rest. */
+  private onLine(line: Line | null) {
+    if (this.linePosed) { this.setPose(this.linePosed); this.linePosed = undefined; }
+    if (!line?.pose) return;
+    const spr = line.by ? this.spriteFor(line.by)
+      : line.who && line.who !== 'MONTAG' ? this.npcs.find((n) => n.def.name === line.who && n.spr.visible)?.spr : this.player;
+    if (!spr) return;
+    this.setPose(spr, line.pose);
+    this.linePosed = spr;
+  }
+
+  /** Background life: small repeated actions (dealing cards) and Beatty's pipe smoke, only while the player is free. */
+  private startGestures() {
+    for (const n of this.npcs) {
+      const g = n.def.gesture;
+      if (g) this.time.addEvent({ delay: g.every, loop: true, startAt: Math.random() * g.every, callback: () => {
+        if (this.mode !== 'play' || !n.spr.visible || n.spr.getData('pose')) return;
+        this.setPose(n.spr, g.p);
+        this.time.delayedCall(600, () => { if (n.spr.getData('pose') === g.p) this.setPose(n.spr); });
+      } });
+      if (this.room.quietUi && n.def.fig === 'beatty') {
+        const puff = this.add.particles(0, 0, 'smoke', { lifespan: 2600, speedY: { min: -26, max: -14 }, speedX: { min: -4, max: 8 }, scale: { start: 0.12, end: 0.5 }, alpha: { start: 0.35, end: 0 }, tint: 0xb8aa98, emitting: false }).setDepth(5.2);
+        this.time.addEvent({ delay: 4200, loop: true, callback: () => { if (n.spr.visible) puff.emitParticleAt(n.spr.x + (n.spr.flipX ? -26 : 26), n.spr.y - 190, 2); } });
+      }
+    }
+  }
+
   /** A speaking character turns toward Montag and shifts weight, so conversations are not statues. */
   private react(who: string) {
     const spr = who === 'MONTAG' ? this.player : this.npcs.find((n) => n.def.name === who && n.spr.visible)?.spr;
@@ -770,9 +819,12 @@ export class RoomScene extends Phaser.Scene {
         n.spr.play(key + ':walk').setFlipX(s.x < n.spr.x);
         await this.tween({ targets: n.spr, x: s.x, duration: s.ms ?? 900 });
         n.spr.play(key + ':idle');
+        n.spr.setData('pose', undefined);
+        this.setPose(n.spr);
       }
       return;
     }
+    if ('pose' in s) { const spr = this.spriteFor(s.pose); if (spr) this.setPose(spr, s.p); return; }
     if ('cam' in s) { this.camTarget = s.cam; return sleep(this, s.ms ?? 900); }
     if ('follow' in s) { this.camTarget = null; return; }
     if ('wait' in s) return sleep(this, s.wait);
@@ -847,6 +899,8 @@ export class RoomScene extends Phaser.Scene {
     }
     if (name === 'houndStir') sound.cue('servo');
     if (name === 'wallsOn') sound.setTelevision(true);
+    if (name === 'rainDoor') sound.setProfile('rain');
+    if (name === 'leave') { this.scriptedPose = true; return this.tween({ targets: this.player, alpha: 0, duration: 700 }); } // update() would reset alpha otherwise
     if (name === 'unhush') return sound.setDuck(false);
     const k = this.kit.fx[name];
     if (k) return k();
@@ -937,6 +991,7 @@ export class RoomScene extends Phaser.Scene {
     if (this.room.id === 'home4') sound.setTelevision(!f['c09.off']);
     if (this.room.dark) this.dark?.set(this.room.dark(f), 0);
     for (const n of this.npcs) if (n.def.when) n.spr.setVisible(n.def.when(f));
+    for (const n of this.npcs) if (n.def.pose && n.spr !== this.linePosed) this.setPose(n.spr);
     for (const n of this.npcs) if (n.def.distracted) n.spr.setFlipX(n.def.distracted(f) ? false : this.player.x < n.spr.x);
     for (const h of this.room.hotspots) {
       const g = this.glows.get(h.id);

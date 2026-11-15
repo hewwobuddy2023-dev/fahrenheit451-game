@@ -9,6 +9,12 @@ export const FEET = FIG_H - 6;
 export const IDLE = [0, 1, 2, 3];
 export const WALK = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
+import { POSES, POSE_NAMES, type Pose } from './poses.ts';
+export { POSE_NAMES };
+/** Only the Chapter 1 cast carries pose frames (texture memory on school laptops). */
+const POSED = new Set(['fig:montag', 'fig:beatty', 'fig:fireman', 'fig:clarisse', 'fig:mildred']);
+const SIT = 36; // hips drop this far when seated
+
 export interface Fig {
   work?: boolean;
   coat: string;
@@ -36,15 +42,34 @@ function limb(c: Ctx, x1: number, y1: number, x2: number, y2: number, w1: number
   c.beginPath(); c.arc(x2, y2, w2, 0, Math.PI * 2); c.fill();
 }
 
-function body(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim' | 'base') {
+/** Torso transform shared by the body and its details: stoop, seated drop, and lean about the hips. */
+function upper(c: Ctx, o: Fig, pose?: Pose) {
+  const stoop = o.stoop ?? 0;
+  c.translate(stoop * 9, stoop * 4);
+  c.rotate(stoop * 0.18);
+  if (pose?.sit) c.translate(0, SIT);
+  if (pose?.lean) { c.translate(0, -80); c.rotate(pose.lean); c.translate(0, 80); }
+}
+
+/** Head nod / look-up about the neck. */
+function headTilt(c: Ctx, top: number, pose?: Pose) {
+  if (!pose?.head) return;
+  c.translate(1, top); c.rotate(pose.head); c.translate(-1, -top);
+}
+
+function body(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim' | 'base', pose?: Pose) {
   const p = walk ?? 0;
   const moving = walk !== null;
   const bulk = o.bulk ?? 1;
-  const stoop = o.stoop ?? 0;
   const chest = breath * 1.2;
   const lenLeg = 39;
   // legs (back leg first)
-  for (const q of [p + Math.PI, p]) {
+  if (pose?.sit) for (const dx of [-3, 3]) {
+    limb(c, dx, -80 + SIT, dx + 34, -76 + SIT, 7, 6); // thigh along the seat
+    limb(c, dx + 34, -76 + SIT, dx + 34, -6, 6, 4.5);  // shin straight down
+    poly(c, [dx + 28, -11, dx + 48, -9, dx + 49, -4, dx + 28, -4]);
+  }
+  else for (const q of [p + Math.PI, p]) {
     const th = moving ? Math.sin(q) * 0.45 : q === p ? 0.06 : -0.06;
     const sh = th - (moving ? Math.max(0, Math.cos(q)) * 0.6 : 0);
     const kx = Math.sin(th) * lenLeg, ky = -80 + Math.cos(th) * lenLeg;
@@ -54,8 +79,7 @@ function body(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim' |
     poly(c, [fx - 6, fy - 5, fx + 14, fy - 3, fx + 15, fy + 2, fx - 6, fy + 2]); // shoe
   }
   c.save();
-  c.translate(stoop * 9, stoop * 4);
-  c.rotate(stoop * 0.18);
+  upper(c, o, pose);
   c.translate(0, moving ? -Math.abs(Math.cos(p)) * 1.5 : 0);
   const sway = moving ? Math.sin(p * 2) * 1.2 : 0;
   const tail = moving ? -Math.abs(Math.sin(p)) * 4 - 2 : -1;
@@ -64,11 +88,11 @@ function body(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim' |
   const arm = (q: number) => o.work ? -1.0 + breath * 0.03 : (moving ? -Math.sin(q) * 0.42 : 0.07 + breath * 0.02);
   const drawArm = (a: number, ox: number) => {
     const ex = ox + Math.sin(a) * 31, ey = top + 6 + Math.cos(a) * 31;
-    const b = a + 0.28;
+    const b = a + (pose?.bend ?? 0.28);
     limb(c, ox, top + 6, ex, ey, 6.5 * bulk, 5);
     limb(c, ex, ey, ex + Math.sin(b) * 29, ey + Math.cos(b) * 29, 5, 4);
   };
-  drawArm(arm(p + Math.PI), -3);
+  drawArm(pose ? pose.ba ?? 0.07 : arm(p + Math.PI), -3);
   if (o.dress) {
     c.fillStyle = pass === 'base' ? o.dress : c.fillStyle;
     poly(c, [sl + 3, top + 2, sr - 2, top, 16 * bulk, -98, 24 * bulk + sway, -60, -22 * bulk + tail, -60, -15 * bulk, -98]);
@@ -77,9 +101,14 @@ function body(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim' |
     const hem = -(o.coatLen ?? 52);
     poly(c, [sl, top + 2, -11, top - 6, 9, top - 8, sr, top, 18 * bulk, hem - 2 + sway, 1, hem + 3, -21 * bulk + tail, hem + sway]);
   }
-  drawArm(arm(p), 3);
+  drawArm(pose ? pose.fa ?? 0.07 : arm(p), 3);
+  if (pose?.prop && pass === 'base') {
+    const a = pose.fa ?? 0, b = a + (pose.bend ?? 0.28), hx2 = 3 + Math.sin(a) * 31 + Math.sin(b) * 26, hy2 = top + 6 + Math.cos(a) * 31 + Math.cos(b) * 26;
+    c.fillStyle = '#d9cba8'; poly(c, [hx2 - 3, hy2 - 9, hx2 + 12, hy2 - 11, hx2 + 13, hy2 + 1, hx2 - 2, hy2 + 3]); c.fillStyle = o.coat;
+  }
   // head, neck and profile
   const hx = 4, hy = top - 18;
+  headTilt(c, top, pose);
   limb(c, 1, top, hx - 1, hy + 9, 5, 5);
   c.beginPath(); c.ellipse(hx, hy, 10.5, 12.5, 0, 0, Math.PI * 2); c.fill();
   poly(c, [hx + 9, hy - 3, hx + 14, hy + 3, hx + 9, hy + 5]); // nose
@@ -106,11 +135,9 @@ function body(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim' |
   c.restore();
 }
 
-function details(c: Ctx, o: Fig, walk: number | null, breath: number) {
-  const stoop = o.stoop ?? 0;
+function details(c: Ctx, o: Fig, walk: number | null, breath: number, pose?: Pose) {
   c.save();
-  c.translate(stoop * 9, stoop * 4);
-  c.rotate(stoop * 0.18);
+  upper(c, o, pose);
   const top = -146 - breath * 1.2, hx = 4, hy = top - 18;
   // Quiet fabric planes and seams keep dark coats readable between light sources.
   c.fillStyle = o.dress ? 'rgba(235,220,200,0.13)' : 'rgba(195,174,148,0.15)';
@@ -121,8 +148,9 @@ function details(c: Ctx, o: Fig, walk: number | null, breath: number) {
   for (let y = top + 30; y < -79; y += 18) c.fillRect(3, y, 2, 2);
   // Collar edge and a short cheek highlight preserve the profile without a portrait workflow.
   c.fillStyle = 'rgba(200,180,149,0.25)'; poly(c, [-9, top + 1, 0, top + 13, 8, top - 2, 4, top + 7]);
-  if (!o.skin) { c.fillStyle = 'rgba(192,164,132,0.3)'; c.fillRect(hx + 7, hy + 1, 3, 6); }
   if (o.stripe) { c.fillStyle = 'rgba(214,150,70,0.55)'; c.fillRect(-19, -68, 38, 3); c.fillRect(-15, top + 40, 30, 2); }
+  headTilt(c, top, pose);
+  if (!o.skin) { c.fillStyle = 'rgba(192,164,132,0.3)'; c.fillRect(hx + 7, hy + 1, 3, 6); }
   if (o.badge) { c.fillStyle = o.badge; c.fillRect(hx + 7, hy - 25, 6, 12); }
   if (o.pipe) { c.fillStyle = '#ff8a3a'; c.fillRect(hx + 19, hy, 3, 2); }
   if (o.shell) { c.fillStyle = '#9fe0ff'; c.fillRect(hx - 2, hy, 3, 3); }
@@ -131,26 +159,29 @@ function details(c: Ctx, o: Fig, walk: number | null, breath: number) {
   void walk;
 }
 
-function frame(c: Ctx, x: number, y: number, o: Fig, walk: number | null, breath: number) {
+function frame(c: Ctx, x: number, y: number, o: Fig, walk: number | null, breath: number, pose?: Pose) {
   const s = o.tall ?? 1;
   const bob = 0; // feet stay on the walk plane; torso supplies the walking rise below
   c.save();
   c.translate(x, y + bob);
   c.scale(s, s);
-  c.save(); c.translate(2, -1); c.fillStyle = o.rim; body(c, o, walk, breath, 'rim'); c.restore();
-  c.fillStyle = o.coat; body(c, o, walk, breath, 'base');
-  details(c, o, walk, breath);
+  c.save(); c.translate(2, -1); c.fillStyle = o.rim; body(c, o, walk, breath, 'rim', pose); c.restore();
+  c.fillStyle = o.coat; body(c, o, walk, breath, 'base', pose);
+  details(c, o, walk, breath, pose);
   c.restore();
 }
 
-/** Paint a 16-frame sheet: 0–3 idle breathing, 4–15 walk. */
+/** Paint a 16-frame sheet: 0–3 idle breathing, 4–15 walk; the Chapter 1 cast adds one frame per pose (16+). */
 export function figureSheet(scene: Phaser.Scene, key: string, o: Fig) {
   if (scene.textures.exists(key)) return;
-  const t = paint(scene, key, FIG_W * 16, FIG_H, (c) => {
+  const poses = POSED.has(key) ? POSE_NAMES : [];
+  const n = 16 + poses.length;
+  const t = paint(scene, key, FIG_W * n, FIG_H, (c) => {
     [0, 0.5, 1, 0.5].forEach((b, i) => frame(c, i * FIG_W + 40, FEET, o, null, b));
     for (let i = 0; i < 12; i++) frame(c, (i + 4) * FIG_W + 40, FEET, o, (i / 12) * Math.PI * 2, 0.5);
+    poses.forEach((k, i) => frame(c, (16 + i) * FIG_W + 40, FEET, o, null, 0.5, POSES[k]));
   });
-  for (let i = 0; i < 16; i++) t.add(i, 0, i * FIG_W, 0, FIG_W, FIG_H);
+  for (let i = 0; i < n; i++) t.add(i, 0, i * FIG_W, 0, FIG_W, FIG_H);
   const a = scene.anims;
   if (!a.exists(key + ':idle')) a.create({ key: key + ':idle', frames: IDLE.map((f) => ({ key, frame: f })), frameRate: 2.4, repeat: -1 });
   if (!a.exists(key + ':walk')) a.create({ key: key + ':walk', frames: WALK.map((f) => ({ key, frame: f })), frameRate: 14, repeat: -1 });

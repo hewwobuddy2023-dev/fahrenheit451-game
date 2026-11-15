@@ -103,6 +103,16 @@ export class Hud {
     this.journal.setText(`JOURNAL  ${done}/15  [J]`);
   }
 
+  /** Quiet rooms: the objective steps aside while a conversation or cutscene owns the screen. */
+  private focused = false;
+  setFocus(on: boolean) {
+    if (on === this.focused) return;
+    this.focused = on;
+    const parts = [this.panel, this.chapter, this.objective];
+    this.scene.tweens.killTweensOf(parts);
+    this.scene.tweens.add({ targets: parts, alpha: on ? 0 : 1, duration: on ? 160 : 320 });
+  }
+
   /** Hide touch buttons while dialogue or menus own the screen, so they never overlap text. */
   showTouch(on: boolean) {
     this.wantTouch = on;
