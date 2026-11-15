@@ -4,7 +4,8 @@
 import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 
-const [base = 'http://localhost:5173', out = 'docs/qa/ch1-after', w = '1366', h = '768'] = process.argv.slice(2);
+const [base = 'http://localhost:5173', out = 'docs/qa/ch1-after', w = '1366', h = '768', input = 'keyboard'] = process.argv.slice(2);
+const touch = input === 'touch';
 await mkdir(out, { recursive: true });
 const ch1 = { 'c01.p1': true, 'c01.p2': true, 'c01.p3': true, 'c01.lit': true, 'c01.tone': 'eager' };
 const ch2 = { ...ch1, 'c02.meet': true, 'c02.n1': 'look', 'c02.n2': 'look', 'c02.n3': 'look', 'c02.asked': true, 'c02.gone': true };
@@ -21,7 +22,7 @@ const shots = [
 ];
 
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: Number(w), height: Number(h) } });
+const page = await browser.newPage({ viewport: { width: Number(w), height: Number(h) }, hasTouch: touch, isMobile: touch });
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 const qa = (fn, arg) => page.evaluate(fn, arg);
@@ -34,10 +35,10 @@ const settle = async () => {
 };
 for (const [name, room, x, flags, action] of shots) {
   await page.goto(`${base}/?debug`);
-  await qa(([room, x, flags]) => {
+  await qa(([room, x, flags, inputMode]) => {
     localStorage.setItem('f451.save', JSON.stringify({ v: 1, room, x, flags }));
-    localStorage.setItem('f451.options', JSON.stringify({ muted: true, inputMode: 'keyboard' }));
-  }, [room, x, flags]);
+    localStorage.setItem('f451.options', JSON.stringify({ muted: true, inputMode }));
+  }, [room, x, flags, input]);
   await page.reload();
   await page.waitForFunction(() => window.__game?.scene.isActive('menu'), null, { timeout: 20000 });
   await page.waitForTimeout(500);

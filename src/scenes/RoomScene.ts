@@ -595,7 +595,9 @@ export class RoomScene extends Phaser.Scene {
   private react(who: string) {
     const spr = who === 'MONTAG' ? this.player : this.npcs.find((n) => n.def.name === who && n.spr.visible)?.spr;
     if (!spr || this.tweens.isTweening(spr)) return;
-    if (spr !== this.player) spr.setFlipX(this.player.x < spr.x);
+    const npc = this.npcs.find((n) => n.spr === spr);
+    if (npc?.def.distracted?.(this.session.flags)) spr.setFlipX(false); // answers without looking away from the walls
+    else if (spr !== this.player) spr.setFlipX(this.player.x < spr.x);
     if (!settings.reducedMotion) this.tweens.add({ targets: spr, scaleY: spr.scaleY * 1.025, y: spr.y - 2, duration: 170, yoyo: true, ease: 'Sine.easeOut' });
   }
 
@@ -935,6 +937,7 @@ export class RoomScene extends Phaser.Scene {
     if (this.room.id === 'home4') sound.setTelevision(!f['c09.off']);
     if (this.room.dark) this.dark?.set(this.room.dark(f), 0);
     for (const n of this.npcs) if (n.def.when) n.spr.setVisible(n.def.when(f));
+    for (const n of this.npcs) if (n.def.distracted) n.spr.setFlipX(n.def.distracted(f) ? false : this.player.x < n.spr.x);
     for (const h of this.room.hotspots) {
       const g = this.glows.get(h.id);
       if (!g) continue;

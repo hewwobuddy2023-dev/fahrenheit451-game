@@ -398,9 +398,10 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
       update = (f) => piles.forEach((p, i) => { if (f[`c01.p${i + 1}`]) { p.setTint(0x9a8460); if (!f['c01.lit'] && sheen[i].alpha === 0) s.tweens.add({ targets: sheen[i], alpha: 0.32, duration: 700 }); } if (f['c01.lit']) sheen[i].setAlpha(0); });
       fx.ignite = () => first('ignite', () => {
         piles.forEach((p) => fireAt(s, p.x, 472, 2));
-        [960, 1100, 1240].forEach((x, i) => s.time.delayedCall(500 + i * 300, () => fireAt(s, x, F - 120, 3, false, 2.5)));
+        // the fire climbs window by window (single flames, staggered) instead of rows that read as one flat band
+        [930, 1050, 1170, 1290, 1390].forEach((x, i) => s.time.delayedCall(500 + i * 220, () => fireAt(s, x, F - 112 - (i % 2) * 8, 1, false, 2.5)));
         // upper storey catches, smoke columns climb, and the whole street takes the fire's colour
-        [1000, 1180, 1340].forEach((x, i) => s.time.delayedCall(1400 + i * 350, () => fireAt(s, x, F - 220, 2, false, 2.4)));
+        [990, 1110, 1230, 1350].forEach((x, i) => s.time.delayedCall(1500 + i * 300, () => fireAt(s, x, F - 205 - (i % 2) * 10, 1, false, 2.4)));
         s.time.delayedCall(900, () => s.add.particles(0, 0, 'smoke', { x: { min: 900, max: 1420 }, y: F - 260, speedY: { min: -60, max: -25 }, speedX: { min: -8, max: 18 }, lifespan: 7000, frequency: 110, scale: { start: 0.8, end: 3.2 }, alpha: { start: 0.42, end: 0 }, tint: 0x2a2220 }).setDepth(2.2));
         const wash = s.add.image(1150, F - 160, 'glow').setScale(12, 6).setTint(0xff6a2a).setAlpha(0).setBlendMode(ADD).setDepth(2.6);
         s.tweens.add({ targets: wash, alpha: 0.32, duration: 1600, onComplete: () => { if (!settings.reducedMotion) s.tweens.add({ targets: wash, alpha: 0.22, yoyo: true, repeat: -1, duration: 160 }); } });

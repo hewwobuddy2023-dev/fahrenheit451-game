@@ -236,17 +236,22 @@ export const ROOMS1: Record<string, RoomDef> = {
     id: 'home1', chapter: 1, label: '', width: 2600, spawnX: 200, kit: 'home', quietUi: true,
     coda: 'Happy. The word follows you all the way to the firehouse.',
     dark: (f) => !f['h1.day'],
-    npcs: [{ id: 'mildred', fig: 'mildred', name: 'MILDRED', x: 1890, face: -1, when: (f) => !!f['h1.day'] }],
+    // while any wall is still loud she keeps facing the screens, even when she answers him
+    npcs: [{ id: 'mildred', fig: 'mildred', name: 'MILDRED', x: 1890, face: 1, when: (f) => !!f['h1.day'], distracted: (f) => down(f) < 3 }],
     objective: (f) => {
       if (!f['h1.day']) return '';
-      if (!f['c03.t3']) return down(f) < 3 ? 'Try to reach Mildred through the walls' : 'Talk to Mildred. The room is quiet now.';
+      if (!f['c03.t3']) {
+        if (down(f) === 3) return f['c03.t2'] ? 'Keep talking to her while the room is quiet.' : 'Talk to Mildred. The room is quiet now.';
+        // progress is told in the scene's terms, never as a count
+        return f['c03.t2'] ? 'Almost. One wall still talks over you.' : f['c03.t1'] ? 'She half heard you. Quiet another wall.' : 'Try to reach Mildred through the walls';
+      }
       if (!f['c03.script']) return 'Look at the script in her hands';
       return 'Leave for work';
     },
     hints: (f) => !f['c03.t3']
       ? ['The walls are louder than you are.', 'Each wall has a dial. Turn a wall down, then try talking to Mildred again.', 'Press [E] at a parlor wall to turn it down. The quieter the room, the further you get with her.']
       : !f['c03.script']
-        ? ['She is holding something.', "Press [E] at Mildred's script, beside her chair.", "Stand by Mildred's chair and press [E] on the script."]
+        ? ['She is holding something.', 'Go to Mildred on the sofa and press [E] to read what she is holding.', 'Stand next to Mildred and press [E].']
         : ['It is time to go to work.', 'The front door is at the far left.', 'Walk all the way left and press [E] at the door.'],
     enter: [{ key: 'e.home1', steps: [
       { walk: 330, ms: 900 }, { cam: 400, ms: 900 }, { wait: 500 }, { follow: true },
@@ -265,8 +270,9 @@ export const ROOMS1: Record<string, RoomDef> = {
       { id: 'x2', x: 1860, label: 'Talk to Mildred', when: (f) => !!f['c03.t1'] && !f['c03.t2'] && down(f) < 2, script: 'm_x2' },
       { id: 't3', x: 1860, label: 'Talk to Mildred', required: true, when: (f) => !!f['c03.t2'] && !f['c03.t3'] && down(f) >= 3, script: 'm_t3' },
       { id: 'x3', x: 1860, label: 'Talk to Mildred', when: (f) => !!f['c03.t2'] && !f['c03.t3'] && down(f) < 3, script: 'm_x3' },
-      { id: 'tdone', x: 1860, label: 'Mildred', when: (f) => !!f['c03.t3'], script: 'm_done' },
-      { id: 'script', x: 1740, label: "Read Mildred's script", required: true, when: (f) => !!f['c03.t3'] && !f['c03.script'], script: 'm_script' },
+      { id: 'tdone', x: 1860, label: 'Mildred', when: (f) => !!f['c03.script'], script: 'm_done' },
+      // the script is in her hands, so it is read where she sits
+      { id: 'script', x: 1860, label: "Read Mildred's script", required: true, when: (f) => !!f['c03.t3'] && !f['c03.script'], script: 'm_script' },
       { id: 'door', x: 140, label: 'Leave for work', required: true, when: (f) => !!f['h1.day'],
         requires: ['c03.w1', 'c03.w2', 'c03.w3', 'c03.t3', 'c03.script'], lockedScript: 'm_done', exit: { room: 'station2', x: 2200 },
         steps: [{ fx: 'wallsOn' }, { cam: 1980, ms: 1400 }, { say: 'm_leave1' }, { follow: true }, { wait: 500 }, { say: 'm_leave2' }] },

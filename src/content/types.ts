@@ -81,6 +81,7 @@ export interface Npc {
   watch?: { period: number; on: number; phase?: number }; // T2 watcher rhythm (ms)
   back?: boolean;            // stands deeper in the room (behind the walk line)
   follow?: Cond;             // walks alongside Montag while true
+  distracted?: Cond;         // faces away from Montag (towards the screens) even while answering
 }
 
 export interface Hazard {
