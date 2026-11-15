@@ -158,8 +158,8 @@ export const ROOMS5: Record<string, RoomDef> = {
     npcs: [
       { id: 'granger', fig: 'granger', name: 'GRANGER', x: 1090, face: -1 },
       { id: 'simmons', fig: 'bookman', name: 'BOOK PERSON', x: 900, face: 1 },
-      { id: 'b2', fig: 'bookman', name: 'MR. SIMMONS', x: 1180, face: -1, back: true },
-      { id: 'b3', fig: 'bookman', name: 'REVEREND', x: 960, face: 1, back: true },
+      { id: 'b2', fig: 'bookman2', name: 'MR. SIMMONS', x: 1180, face: -1, back: true },
+      { id: 'b3', fig: 'bookman3', name: 'REVEREND', x: 960, face: 1, back: true },
     ],
     quietUi: true,
     objective: (f) => !f['cp.met'] ? 'Go toward the fire' : !f['c14.met'] ? 'Talk to Granger' : !f['c15.ending'] ? 'Answer Granger' : '',
