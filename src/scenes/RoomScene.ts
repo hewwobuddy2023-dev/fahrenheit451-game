@@ -608,12 +608,13 @@ export class RoomScene extends Phaser.Scene {
   private setPose(spr: Phaser.GameObjects.Sprite, p?: string) {
     const want = p ?? this.npcs.find((v) => v.spr === spr)?.def.pose?.(this.session.flags);
     const i = want ? POSE_NAMES.indexOf(want) : -1;
+    const key = spr.texture.key, was = spr.getData('pose');
     if (i < 0 || !spr.texture.has(String(16 + i))) {
-      if (spr.getData('pose')) { spr.setData('pose', undefined); spr.play(spr.texture.key + ':idle'); }
+      if (was) { spr.setData('pose', undefined); spr.play(`${key}:unpose:${was}`).chain(key + ':idle'); } // eases out through the in-between frames
       return;
     }
-    spr.anims.stop();
-    spr.setFrame(16 + i).setData('pose', want);
+    if (was === want) return;
+    spr.setData('pose', want).play(`${key}:pose:${want}`); // eases in through two in-between frames and holds the pose frame
   }
 
   /** A line's gesture lasts for that line only; the next line (or the end of the talk) returns the actor to rest. */
