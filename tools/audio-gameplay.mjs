@@ -58,7 +58,7 @@ check('lighting plays the igniter click, then the fire rush, then the ignition',
 check('once lit, the burn switches to the fire ambience (crackle)', (await engine()).profile === 'fire', (await engine()).profile);
 
 // 2. Firehouse: industrial ambience; the Hound's servo fires when Montag walks past the kennel
-await enter('station1', 1450, { ...ch1, 'e.station1': true });
+await enter('station1', 1250, { ...ch1, 'e.station1': true });
 check('the firehouse uses the industrial ambience', (await engine()).profile === 'industrial');
 await page.keyboard.down('d'); await page.waitForTimeout(1500); await page.keyboard.up('d');
 check('walking past the kennel wakes the Hound (servo cue from the bark)', (await cues()).includes('servo'), (await cues()).filter((c) => c !== 'step').join(','));
