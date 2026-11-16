@@ -1,0 +1,62 @@
+// Per-frame walk/camera measurements. Usage: node tools/feel-measure.mjs [fps]
+import { simulate } from '../tests/support/simulation.mjs';
+
+const fps = Number(process.argv[2] || 60);
+const s = await simulate({ width: 1366, height: 768, dpr: 1, touchDevice: false, frameMs: 1000 / fps });
+await s.advance(700);
+await s.tap(430, 346);
+await s.until(() => s.scene().sys.settings.key === 'room', 'room');
+await s.until(() => s.scene().dialogue?.open, 'dialogue');
+const r = s.scene();
+for (let i = 0; i < 20 && r.mode === 'dialogue'; i++) await s.tap(480, 450);
+await s.until(() => r.mode === 'play', 'play');
+await s.advance(1500);
+const dtF = 1000 / fps;
+const rec = [];
+const step = async () => { await s.advance(dtF); rec.push({ x: r.player.x, cam: r.cameras.main.scrollX, vx: r.vx }); };
+const run = async (ms, n = Math.round(ms / dtF)) => { for (let i = 0; i < n; i++) await step(); };
+const out = {};
+// start: time to 95% of walk speed, then stop: distance + time, camera glide after player stops
+await s.key('KeyD', true); const t0 = rec.length;
+await run(1500);
+const topV = Math.max(...rec.slice(t0).map(f => f.vx));
+const i95 = rec.slice(t0).findIndex(f => f.vx >= topV * 0.95);
+out.walkSpeed = +topV.toFixed(1);
+out.timeTo95 = +(i95 * dtF / 1000).toFixed(2);
+const offsetCruise = rec.at(-1).x - rec.at(-1).cam;
+await s.key('KeyD', false); const t1 = rec.length; const xStop0 = rec.at(-1).x, camStop0 = rec.at(-1).cam;
+await run(2500);
+const post = rec.slice(t1);
+const iStop = post.findIndex(f => Math.abs(f.vx) < 1);
+out.stopTime = +(iStop * dtF / 1000).toFixed(2);
+out.stopDist = +(post[iStop].x - xStop0).toFixed(1);
+const xFinal = post.at(-1).x, camFinal = post.at(-1).cam;
+const iCamSettled = post.findLastIndex((f, i) => i > 0 && Math.abs(f.cam - post[i - 1].cam) > 0.3);
+out.camGlideAfterPlayerStopped = +(camFinal - post[iStop].cam).toFixed(1);
+out.camSettleTime = +((iCamSettled + 1) * dtF / 1000).toFixed(2);
+out.camTotalAfterRelease = +(camFinal - camStop0).toFixed(1);
+out.screenOffsetCruise = +offsetCruise.toFixed(1);
+out.screenOffsetRest = +(xFinal - camFinal).toFixed(1);
+// turnaround: walk right 1.5s, press left; camera lurch over the next 1.5 s
+await s.key('KeyD', true); await run(1200); await s.key('KeyD', false); await run(1800);
+await s.key('KeyA', true); const t2 = rec.length; await run(300);
+const t2cam = rec[t2 - 1].cam, t2x = rec[t2 - 1].x;
+let maxStep = 0, maxCamV = 0;
+for (let i = t2; i < rec.length; i++) maxCamV = Math.max(maxCamV, Math.abs(rec[i].cam - rec[i - 1].cam) * fps);
+out.turnCamTravel300ms = +(rec.at(-1).cam - t2cam).toFixed(1);
+out.turnPlayerTravel300ms = +(rec.at(-1).x - t2x).toFixed(1);
+await run(1700);
+out.turnMaxCamSpeed = +maxCamV.toFixed(0);
+out.turnCamTravel2s = +(rec.at(-1).cam - t2cam).toFixed(1);
+out.turnPlayerTravel2s = +(rec.at(-1).x - t2x).toFixed(1);
+await s.key('KeyA', false);
+// sprint speed
+await s.key('ShiftLeft', true); await s.key('KeyD', true); await run(1500);
+out.sprintSpeed = +Math.max(...rec.slice(-30).map(f => f.vx)).toFixed(1);
+await s.key('KeyD', false); await s.key('ShiftLeft', false);
+const sp = r.player;
+out.walkAnim = { timeScale: null };
+await s.key('KeyD', true); await run(600); out.walkAnim.timeScale = +sp.anims.timeScale.toFixed(2); out.walkAnim.key = sp.anims.currentAnim?.key; out.walkAnim.spriteH = sp.displayHeight;
+out.feetY = sp.y; out.npcs = r.npcs.map(n => ({ id: n.def.id, y: n.spr.y, back: !!n.def.back }));
+console.log(JSON.stringify({ fps, ...out }, null, 1));
+s.close();

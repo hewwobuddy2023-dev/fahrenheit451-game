@@ -4,7 +4,8 @@ import Phaser from 'phaser';
 import { paint, rng, vgrad } from '../art/core.ts';
 import type { FloorStyle } from '../art/kits.ts';
 import type { Light, RoomDef } from '../content/types.ts';
-import { FLOOR_TOP, H, W } from '../view.ts';
+import { FLOOR_TOP, H, K, W } from '../view.ts';
+import { snapScroll } from '../movement.ts';
 
 /** Floor bands: [top, bottom, scroll factor]. Bands in front of the walk line scroll faster: perspective. */
 export const BANDS: [number, number, number][] = [
@@ -42,7 +43,7 @@ export function buildFloor(s: Phaser.Scene, st: FloorStyle) {
 }
 
 export function scrollFloor(bands: ReturnType<typeof buildFloor>, camX: number, time: number) {
-  for (const b of bands) b.band.tilePositionX = camX * b.f + (b.water ? time * 0.02 * b.f : 0);
+  for (const b of bands) b.band.tilePositionX = snapScroll(camX * b.f + (b.water ? time * 0.02 * b.f : 0), K);
 }
 
 /** Tint a character from the room's lights: warm under lamps, cold near TV walls, dim in between. */

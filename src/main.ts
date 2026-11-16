@@ -49,7 +49,7 @@ const game = new Phaser.Game({
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   input: { activePointers: 3 },
   audio: { noAudio: true }, // Soundscape owns the sole, gesture-created Web Audio context.
-  render: { antialias: true, powerPreference: 'low-power' },
+  render: { antialias: true, roundPixels: true, powerPreference: 'low-power' },
   // Game time must follow real time on slow devices. Phaser's focus cool-down otherwise clamps every frame to
   // 16.7 ms for 120 frames after any focus reset; at 7 fps that ran the game clock at about 1/8 speed.
   // Per-frame deltas are still capped at 200 ms (fps.min 5), and the focus guard freezes play on blur.

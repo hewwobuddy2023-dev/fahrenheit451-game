@@ -18,11 +18,11 @@ import { Hud } from '../ui/Hud.ts';
 import { openJournal } from '../ui/Journal.ts';
 import { MenuList } from '../ui/MenuList.ts';
 import { buildFloor, darkness, lightTint, scrollFloor, shadowFor, stageDetails } from '../world/stage.ts';
-import { addAtmosphere, C, FONT, H, W, WALK_Y, onActions, params, setupCamera, text, type Act } from '../view.ts';
+import { addAtmosphere, BACK_Y, C, FONT, GROUND_Y, H, K, W, WALK_Y, onActions, params, setupCamera, text, type Act } from '../view.ts';
+import { LIMP, LIMP_SPRINT, SPEED, SPRINT, crossedFoot, snapScroll, stepCamera, stepVelocity, walkTimeScale, type CamState } from '../movement.ts';
 
 type Mode = 'play' | 'dialogue' | 'cutscene' | 'journal' | 'pause' | 'exit';
 
-const SPEED = 175;
 const REACH = 70;
 const sleep = (s: Phaser.Scene, ms: number) => new Promise<void>((r) => s.time.delayedCall(ms, r));
 
@@ -84,6 +84,9 @@ export class RoomScene extends Phaser.Scene {
   private pressureLabel!: Phaser.GameObjects.Text;
   private controlHint!: Phaser.GameObjects.Text;
   private camTarget: number | null = null;
+  private cam: CamState = { cx: 0, look: 0 };
+  private camWritten = NaN;   // last scroll we set; anything else moved the camera behind our back (scripted jumps)
+  private footFrame = new WeakMap<Phaser.GameObjects.Sprite, number>();
   private done = new Set<number>();
   private get touch() { return isTouch(); }
   private overlay?: { destroy: () => void; list?: MenuList };
@@ -144,13 +147,13 @@ export class RoomScene extends Phaser.Scene {
     const swimming = this.room.id === 'river' && !this.session.flags['c13.shore'];
     const fig = swimming ? 'fig:montagFloat' : this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag';
     this.shadow = shadowFor(this, x, WALK_Y);
-    this.player = this.add.sprite(x, WALK_Y + 6, fig, 0).setOrigin(0.5, 1).setDepth(5);
+    this.player = this.add.sprite(x, GROUND_Y, fig, 0).setOrigin(0.5, 1).setDepth(5);
     this.player.play(fig + ':idle');
     this.rim = this.rimFor(this.player);
     if (this.room.id === 'river') this.wake = this.add.image(x, WALK_Y + 3, 'wake').setDepth(5.1);
     for (const n of this.room.npcs ?? []) {
-      const y = n.back ? 452 : WALK_Y;
-      const spr = this.add.sprite(n.x, y + 6, 'fig:' + n.fig, 0).setOrigin(0.5, 1).setDepth(n.back ? 4.5 : 5 - 0.01).setFlipX(n.face === -1);
+      const y = n.back ? BACK_Y : WALK_Y;
+      const spr = this.add.sprite(n.x, y + (GROUND_Y - WALK_Y), 'fig:' + n.fig, 0).setOrigin(0.5, 1).setDepth(n.back ? 4.5 : 5 - 0.01).setFlipX(n.face === -1);
       const size = n.scale ?? (n.back ? 0.9 : 1);
       if (size !== 1) spr.setScale(size);
       spr.play({ key: 'fig:' + n.fig + ':idle', startFrame: Math.floor(Math.random() * 4) });
@@ -293,9 +296,8 @@ export class RoomScene extends Phaser.Scene {
     }
     // Shift / RUN sprints on land; the numbed leg after the lawn only manages a hobbling run
     const sprint = playing && !this.stillWatch && !(this.room.id === 'river' && !f['c13.shore']) && (this.keys.run.some((k) => k.isDown) || this.hud.touchRun);
-    const speed = SPEED * (this.room.limp ? 0.72 : 1) * (sprint ? (this.room.limp ? 1.25 : 1.6) : 1);
-    this.vx += (dir * speed - this.vx) * (1 - Math.exp(-dt * (dir ? 9 : 12)));
-    if (Math.abs(this.vx) < 3) this.vx = 0;
+    const speed = SPEED * (this.room.limp ? LIMP : 1) * (sprint ? (this.room.limp ? LIMP_SPRINT : SPRINT) : 1);
+    this.vx = stepVelocity(this.vx, dir, speed, dt);
     let nx = p.x + this.vx * dt;
     for (const v of this.room.hotspots) {
       // low fences stop walking (never teleports or scripted moves); vault() carries Montag over
@@ -305,7 +307,6 @@ export class RoomScene extends Phaser.Scene {
     }
     p.x = Phaser.Math.Clamp(nx, 40, this.room.width - 40);
     if (dir) this.facing = dir;
-    if (playing && Math.abs(this.vx) > 35 && this.room.id !== 'river') sound.cue('step');
     const swimming = this.room.id === 'river' && !f['c13.shore'];
     if (!this.scriptedWalk && p.getData('pose') !== 'lying' && !this.carrying) this.animate(p, this.vx, this.facing, swimming ? 'fig:montagFloat' : this.near?.hold && (this.keys.act.some(k => k.isDown) || this.hud.touchAct) ? 'fig:montagWork' : this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag');
     const diveHeld = playing && (this.keys.down.some((k) => k.isDown) || this.hud.touchDown) && (this.room.hazards ?? []).some((h) => h.dive);
@@ -314,7 +315,7 @@ export class RoomScene extends Phaser.Scene {
     this.breathText.setVisible(swimming && playing).setText(this.breath.exhausted ? controls('OUT OF BREATH: release [DOWN] to recover') : `BREATH ${Math.round(this.breath.air * 100)}% · dive only as the light reaches you`);
 
     this.hud.showDive(this.room.id === 'river' && !f['c13.shore']);
-    if (!this.scriptedPose) p.setAlpha(diving ? 0.35 : 1).setY(WALK_Y + 6 + (diving ? 14 : swimming ? Math.sin(time * 0.002) * 2 : 0));
+    if (!this.scriptedPose) p.setAlpha(diving ? 0.35 : 1).setY(GROUND_Y + (diving ? 14 : swimming ? Math.sin(time * 0.002) * 2 : 0));
     this.shadow.setX(p.x).setVisible(!swimming && !this.scriptedPose);
     this.rim?.setPosition(p.x, p.y - 78).setVisible(!swimming && p.alpha > 0.5 && !p.getData('norim'));
     this.wake?.setX(p.x).setVisible(swimming).setAlpha(diving ? 0.18 : 0.6).setScale(1 + Math.sin(time * 0.003) * 0.08, 1);
@@ -336,9 +337,9 @@ export class RoomScene extends Phaser.Scene {
 
     // camera: framing target or follow with look-ahead
     const cam = this.cameras.main;
-    const goal = this.camTarget ?? p.x + this.facing * 70;
-    const tx = Phaser.Math.Clamp(goal - W / 2, 0, this.room.width - W);
-    cam.scrollX += (tx - cam.scrollX) * (1 - Math.exp(-dt * 3));
+    if (cam.scrollX !== this.camWritten) this.cam.cx = cam.scrollX + W / 2; // a scripted jump moved it
+    this.cam = stepCamera(this.cam, p.x, this.vx, dt, this.room.width, W, this.camTarget);
+    this.camWritten = cam.scrollX = snapScroll(this.cam.cx - W / 2, K);
     scrollFloor(this.floor, cam.scrollX, time);
     this.kit.tick?.(dtMs, cam.scrollX);
     this.set.tick(dtMs);
@@ -364,7 +365,11 @@ export class RoomScene extends Phaser.Scene {
     s.setFlipX(face < 0);
     if (Math.abs(vx) > 15) {
       if (s.anims.currentAnim?.key !== key + ':walk') s.play(key + ':walk');
-      s.anims.timeScale = Math.max(0.5, Math.abs(vx) / SPEED);
+      const anim = s.anims.currentAnim!;
+      s.anims.timeScale = walkTimeScale(vx, anim.duration / 1000, s.displayHeight);
+      const frame = s.anims.currentFrame?.index ?? 0; // footfall on the stride, only for Montag (npcs are silent)
+      if (s === this.player && this.room.id !== 'river' && crossedFoot(this.footFrame.get(s) ?? -1, frame - 1, anim.getTotalFrames())) sound.cue('step');
+      this.footFrame.set(s, frame - 1);
     } else if (s.anims.currentAnim?.key !== key + ':idle') {
       s.play(key + ':idle');
       s.anims.timeScale = 1;
@@ -533,7 +538,7 @@ export class RoomScene extends Phaser.Scene {
         const distance = hz.from - this.player.x;
         if (this.mode === 'play' && distance > -100 && distance < 360 && Math.abs(distance) < nearest) {
           nearest = Math.abs(distance);
-          label = st.lit ? 'WAIT ON THE ISLAND: LANE LIT' : st.untilLit < crossMs(hz, SPEED * (this.room.limp ? 0.72 : 1)) + 150 ? 'WAIT: LIGHT COMING' : 'GO NOW: CROSS TO THE NEXT ISLAND';
+          label = st.lit ? 'WAIT ON THE ISLAND: LANE LIT' : st.untilLit < crossMs(hz, SPEED * (this.room.limp ? LIMP : 1)) + 150 ? 'WAIT: LIGHT COMING' : 'GO NOW: CROSS TO THE NEXT ISLAND';
         }
         // the glare grows through the warning, then sweeps across the lane while lit
         const glow = st.lit ? 0.85 : st.warn ? 0.12 + 0.5 * (1 - st.untilLit / WARN_MS) : 0;
@@ -795,7 +800,7 @@ export class RoomScene extends Phaser.Scene {
   /** Contextual vault: a short arc over a low obstacle, input-locked for under half a second. */
   private async vault(h: Hotspot) {
     this.mode = 'cutscene'; this.vx = 0; this.hud.showTouch(false);
-    const p = this.player, to = p.x < h.x ? h.x + 46 : h.x - 46, y0 = WALK_Y + 6;
+    const p = this.player, to = p.x < h.x ? h.x + 46 : h.x - 46, y0 = GROUND_Y;
     this.facing = to > p.x ? 1 : -1;
     this.scriptedPose = true; sound.cue('step');
     this.tweens.add({ targets: p, y: y0 - (settings.reducedMotion ? 20 : 44), duration: 200, yoyo: true, ease: 'Quad.easeOut' });
@@ -998,7 +1003,7 @@ export class RoomScene extends Phaser.Scene {
         this.scriptedPose = true;
         this.player.setPosition(316, 120).setAlpha(0);
         this.tweens.add({ targets: this.player, alpha: 1, duration: 200 });
-        await this.tween({ targets: this.player, y: WALK_Y + 6, duration: 900, ease: 'Quad.easeIn' });
+        await this.tween({ targets: this.player, y: GROUND_Y, duration: 900, ease: 'Quad.easeIn' });
         this.scriptedPose = false;
         this.tweens.add({ targets: this.player, scaleY: 0.95, yoyo: true, duration: 110 });
         return;
@@ -1016,7 +1021,7 @@ export class RoomScene extends Phaser.Scene {
           p.setPosition(foot.x + (top.x - foot.x) * t, foot.y + (top.y - foot.y) * t - Math.abs(Math.sin(t * treads * Math.PI)) * 4).setScale(0.9 - 0.32 * t).setAlpha(t > 0.74 ? (1 - t) / 0.26 : 1);
         } });
         cam.fadeOut(450, 0, 0, 0); await sleep(this, 520);
-        p.setAlpha(1).setScale(1).setPosition(1100, WALK_Y + 6).play('fig:montag:idle');
+        p.setAlpha(1).setScale(1).setPosition(1100, GROUND_Y).play('fig:montag:idle');
         cam.scrollX = Phaser.Math.Clamp(1100 + 70 - W / 2, 0, this.room.width - W);
         this.scriptedPose = false; this.scriptedWalk = false; p.setData('norim', false);
         cam.fadeIn(600, 0, 0, 0); await sleep(this, 640);
@@ -1034,7 +1039,7 @@ export class RoomScene extends Phaser.Scene {
         const p = this.player;
         await this.tween({ targets: p, angle: -40, y: 446, duration: 420, ease: 'Sine.easeIn' });
         this.setPose(p);
-        await this.tween({ targets: p, angle: 0, y: WALK_Y + 6, duration: 380, ease: 'Sine.easeOut' });
+        await this.tween({ targets: p, angle: 0, y: GROUND_Y, duration: 380, ease: 'Sine.easeOut' });
         p.setDepth(5).setData('norim', false); this.scriptedPose = false;
         return;
       }
@@ -1063,7 +1068,7 @@ export class RoomScene extends Phaser.Scene {
         this.scriptedPose = true;
         await this.tween({ targets: this.player, angle: -80 * this.facing, y: WALK_Y + 20, duration: 220 });
         await sleep(this, 900);
-        await this.tween({ targets: this.player, angle: 0, y: WALK_Y + 6, duration: 400 });
+        await this.tween({ targets: this.player, angle: 0, y: GROUND_Y, duration: 400 });
         this.scriptedPose = false;
         return;
       }

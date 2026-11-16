@@ -5,14 +5,18 @@ import { settings } from './settings.ts';
 export const W = 960;
 export const H = 540;
 export const FLOOR_TOP = 392;  // where back walls meet the floor
-export const WALK_Y = 480;     // Montag's feet: the walk line, mid-floor
+export const WALK_Y = 480;     // the walk line: where everyone's feet stand, mid-floor
+export const GROUND_Y = WALK_Y + 6;  // a figure sprite's bottom edge sits 6 px below its feet
+export const BACK_Y = WALK_Y - 28;   // `back` characters stand a little deeper, on the same rule
 
 export const params = new URLSearchParams(location.search);
 const fit = Math.min(innerWidth / W, innerHeight / H) * (devicePixelRatio || 1);
 let saved = NaN;
 try { saved = Number(localStorage.getItem('f451.k')); } catch { /* storage blocked */ }
-/** Render zoom. Capped at 1.5 for Chromebooks; the governor may lower it and remembers that choice. */
-export let K = params.has('lowres') ? 1 : Math.min(1.5, Math.max(1, Math.round(fit * 4) / 4), saved > 0 ? saved : 9);
+/** Render zoom. */
+// The canvas matches the screen's real pixels (rounded down to 1/8 so it never needs upscaling), so the browser doesn't
+// resample it and text stays sharp. Capped at 1.5 for Chromebooks.
+export let K = params.has('lowres') ? 1 : Math.min(1.5, Math.max(1, Math.floor(fit * 8) / 8), saved > 0 ? saved : 9);
 
 /** Performance governor step: render at a lower resolution. Cosmetic only: gameplay is unchanged. */
 export function lowerK(game: Phaser.Game): boolean {
