@@ -14,128 +14,127 @@ const talk = (key: string) => [{ if: (f: Flags) => down(f) === 0, then: [{ say: 
 export const SCRIPTS1: Record<string, Script> = {
   // ---- 01 The Burn ----
   b_open: { lines: [
-    { who: 'BEATTY', text: 'Evening, gentlemen. Montag, the books are yours. Soak them through.', pose: 'reach' },
-    { who: 'BLACK', text: 'Last load from upstairs!' },
+    { who: 'BEATTY', text: "Evening. Montag, you've the hose. Be generous, it saves a lot of arguing later.", pose: 'reach' },
+    { who: 'BLACK', text: 'Last of the attic!' },
   ] },
   // the igniter is Montag's own (in the novel he flicks it himself); Beatty only gives the nod
   b_light: { lines: [
-    { who: 'BEATTY', text: "Wet as a river. All yours, Montag." },
-    { who: N, text: 'You thumb your igniter. The salamander on its silver face is worn bright.', pose: 'hold' },
+    { who: 'BEATTY', text: "Well? They won't light themselves." },
+    { who: N, text: 'Your thumb has worn the salamander on the igniter smooth.', pose: 'hold' },
   ], choices: [
-    { text: 'Flick it, grinning. "My pleasure."', set: { 'c01.tone': 'eager', 'c01.igniter': true }, reply: [{ who: 'BEATTY', text: "That's the spirit." }] },
-    { text: '"On your word, Captain."', set: { 'c01.tone': 'deferent', 'c01.igniter': true }, reply: [{ who: 'BEATTY', text: 'You did the work. Burn it.', pose: 'reach' }] },
+    { text: 'Flick it, grinning. "My pleasure."', set: { 'c01.tone': 'eager', 'c01.igniter': true }, reply: [{ who: 'BEATTY', text: 'Ha. Good lad.' }] },
+    { text: '"On your word, Captain."', set: { 'c01.tone': 'deferent', 'c01.igniter': true }, reply: [{ who: 'BEATTY', text: "Don't wait on me. It's your fire.", pose: 'reach' }] },
   ] },
   b_after: { sub: true, lines: [
     { who: N, text: 'It was a pleasure to burn.', pose: 'recoil' },
-    { who: N, text: 'The books rise like startled birds, wings beating, and fall burning on the lawn.' },
-    { who: 'STONEMAN', text: 'Pretty one tonight.' },
-    { who: 'BEATTY', text: 'Clean work. Back to the House, gentlemen.' },
+    { who: N, text: 'Pages lift off the lawn, flapping, and come down on fire.' },
+    { who: 'STONEMAN', text: 'Pretty.' },
+    { who: 'BEATTY', text: "Tidy. Home, gentlemen, before the coffee's cold." },
   ] },
 
   // ---- firehouse, end of shift ----
   s1_time: { lines: [{ who: 'CEILING VOICE', text: 'One-oh-two A.M. One-oh-three A.M.' }] },
-  s1_helmet: { set: { 's1.helmet': true }, lines: [{ who: N, text: 'You hang up the helmet and polish the 451 until it holds the lamplight.', pose: 'reach' }] },
+  s1_helmet: { set: { 's1.helmet': true }, lines: [{ who: N, text: 'You rub the 451 on your sleeve and hang the helmet up.', pose: 'reach' }] },
   // ambient only: the needle and Beatty's "it doesn't like anybody" are Chapter 2's scene (novel order)
-  s1_hound: { top: true, lines: [{ who: N, text: 'In its kennel the Hound lies folded, humming, neither asleep nor awake.' }] },
-  s1_cards: { lines: [{ who: 'BLACK', text: 'Good fire tonight.', pose: 'reach' }, { who: 'STONEMAN', text: 'Night, Montag. Same time tomorrow.' }] },
-  s1_beatty: { lines: [{ who: 'BEATTY', text: 'Go home, Montag. Sleep. The city does its best burning in the dark.' }] },
+  s1_hound: { top: true, lines: [{ who: N, text: 'Something in the kennel hums, one note, over and over.' }] },
+  s1_cards: { lines: [{ who: 'BLACK', text: 'Good fire.', pose: 'reach' }, { who: 'STONEMAN', text: "Pair of sevens. Don't look so pleased, Black." }] },
+  s1_beatty: { lines: [{ who: 'BEATTY', text: "Go home, Montag. You've the look of a man who's been enjoying himself, and nothing is more tiring." }] },
 
   // ---- 02 Clarisse's Question ----
   c_meet: { set: { 'c02.meet': true }, lines: [
-    { who: N, text: 'At the corner you slow down without knowing why. A girl stands there, very still, as if the wind had been expecting you.' },
-    { who: 'CLARISSE', text: "You're the fireman. I'm the new neighbor. Clarisse McClellan." },
-    { who: 'MONTAG', text: "Guy Montag. You're out late." },
-    { who: 'CLARISSE', text: 'I like walking at night. You smell of kerosene. I noticed before I saw your face.' },
+    { who: N, text: "A girl is standing at the corner where the sidewalk widens. She doesn't step aside." },
+    { who: 'CLARISSE', text: "Oh, you're the fireman. I'm next door, since Tuesday. Clarisse McClellan." },
+    { who: 'MONTAG', text: "Guy Montag. Shouldn't you be in bed?" },
+    { who: 'CLARISSE', text: "I like walking at night. You smell of kerosene, did you know? I noticed before I saw your face. Is it your hands or your hair?" },
   ], choices: [
-    { text: '"Smells like perfume to me."', set: { 'c02.k': 'perfume' }, reply: [{ who: 'CLARISSE', text: 'Does it? Really?' }, { who: 'MONTAG', text: 'Sure. Why not?' }] },
-    { text: '"My wife says it never washes out."', set: { 'c02.k': 'wife' }, reply: [{ who: 'CLARISSE', text: "No. I don't suppose it does." }] },
+    { text: '"Smells like perfume to me."', set: { 'c02.k': 'perfume' }, reply: [{ who: 'CLARISSE', text: 'Does it?' }, { who: 'MONTAG', text: 'Sure. Why not?' }] },
+    { text: '"My wife says it never washes out."', set: { 'c02.k': 'wife' }, reply: [{ who: 'CLARISSE', text: "Mm. I suppose it wouldn't." }] },
   ] },
   c_moon: { set: { 'c02.n1': 'look' }, lines: [
-    { who: 'CLARISSE', text: "There's a man in the moon tonight. When did you last look?", pose: 'pointUp' },
-    { who: N, text: 'You look. A face, pale and patient, looking back. You cannot remember the last time.', pose: 'pointUp' },
+    { who: 'CLARISSE', text: "There's a man in the moon tonight. Have you looked? I mean really?", pose: 'pointUp' },
+    { who: 'MONTAG', text: 'Huh. So there is.', pose: 'pointUp' },
   ] },
   c_dew: { set: { 'c02.n2': 'look' }, lines: [
-    { who: 'CLARISSE', text: 'In the early morning there is dew on all of this. Have you ever seen it?', pose: 'reach' },
-    { who: N, text: 'You try to picture a morning lawn. You cannot find one anywhere in your head. It annoys you.' },
+    { who: 'CLARISSE', text: "In the mornings there's dew on all of this. Grass, fences. You can taste it, if you're early.", pose: 'reach' },
+    { who: 'MONTAG', text: 'Taste it.' },
+    { who: 'CLARISSE', text: 'Well, I do.' },
   ] },
   c_signs: { set: { 'c02.n3': 'look' }, lines: [
-    { who: 'CLARISSE', text: 'Out on the highway the billboards are two hundred feet long now, so drivers can read them at speed.', pose: 'reach' },
-    { who: 'MONTAG', text: 'Two hundred feet.' },
-    { who: 'CLARISSE', text: 'Nobody slows down long enough to see anything smaller.' },
+    { who: 'CLARISSE', text: 'The billboards on the highway are two hundred feet long now. For the speed.', pose: 'reach' },
+    { who: 'MONTAG', text: 'So?' },
+    { who: 'CLARISSE', text: "So nothing smaller gets seen. That's all I mean." },
   ] },
   c_house: { lines: [
-    { who: 'MONTAG', text: 'Every light in your house is on. What do they find to talk about, this late?' },
-    { who: 'CLARISSE', text: 'Everything. Good night, Mr. Montag.' },
+    { who: 'MONTAG', text: 'Your whole house is lit up. What do they find to talk about, this late?' },
+    { who: 'CLARISSE', text: 'Everything, mostly with their mouths full. Good night, Mr. Montag.' },
   ] },
   // the pivotal question plays as subtitles inside the letterbox, so nothing covers the two of them
   c_happy: { set: { 'c02.asked': true }, sub: true, lines: [{ who: 'CLARISSE', text: 'Are you happy?' }] },
   c_reply: { sub: true, lines: [{ who: 'MONTAG', text: 'Am I what?', pose: 'recoil' }] },
-  c_after: { lines: [{ who: N, text: 'But she is gone, and the door is closing softly on the light.' }, { who: 'MONTAG', text: 'Happy. Of all the nonsense.' }] },
+  c_after: { lines: [{ who: 'MONTAG', text: 'Happy. What a thing to ask a stranger.' }] },
 
   // ---- home: the night (restrained, not playable) ----
   h_dark: { lines: [
-    { who: N, text: 'The bedroom is cold and dark. Mildred lies with her eyes open, tiny radios humming in her ears.' },
-    { who: N, text: 'Something small and glass rolls away from your foot. The bottle is empty.' },
+    { who: N, text: 'Mildred is on top of the covers with her eyes open, a little radio in each ear. Something glass rolls off the sheet and against your foot.' },
+    { who: 'MONTAG', text: 'Millie? ...Millie.' },
   ] },
   h_call: { lines: [
-    { who: 'MONTAG', text: 'Emergency hospital. Please. Hurry.' },
-    { who: N, text: 'Two technicians come with their machines, work without looking at her, and leave. They get calls like this every night.' },
+    { who: 'MONTAG', text: "Emergency hospital. It's my wife. Please, hurry." },
+    { who: 'TECHNICIAN', text: "That's the ninth tonight. Hold her head, would you?" },
   ] },
 
   // ---- 03 Parlor Walls: she hears every word and does not listen ----
   // Turning a wall off is optional. It changes the room and her reactions, never whether the talk goes on.
   m_w1: { set: { 'c03.w1': true }, lines: [
-    { who: N, text: 'You turn the first wall off. A man and a woman go on shouting without a sound.' },
-    { who: 'MILDRED', text: 'Guy! That was my family.', pose: 'seatedLook' },
+    { who: N, text: 'The mouths on the first wall go on opening for a second after the sound is gone.' },
+    { who: 'MILDRED', text: 'Guy! That was my family. They were just getting to the good part.', pose: 'seatedLook' },
   ] },
   m_w2: { set: { 'c03.w2': true }, lines: [
-    { who: N, text: 'The second wall: an audience laughing on cue. You turn it off mid-laugh.' },
-    { who: 'MILDRED', text: "You'll make me miss my cue.", pose: 'seatedLook' },
+    { who: 'MILDRED', text: 'Honestly, Guy. I was about to laugh.', pose: 'seatedLook' },
   ] },
   m_w3: { set: { 'c03.w3': true }, lines: [
-    { who: N, text: 'The third wall goes dark. You can hear the clock. She waits for the walls, not for you.' },
+    { who: N, text: 'The third wall dies. Somewhere in the room a clock is going.' },
   ] },
   m_t1_loud: { set: { 'c03.t1': true }, lines: [
     { who: 'MONTAG', text: 'Millie. About last night.' },
     { who: 'THE WALL', text: 'Helen? Helen, darling, what do you think?' },
     { who: 'MILDRED', text: "I think it's wonderful!", pose: 'seatedLook' },
-    { who: 'MILDRED', text: "Last night? I'm starving, Guy. Did we have people over? I feel like I've been to a party." },
+    { who: 'MILDRED', text: "Last night? Is there any toast? I feel as if I've been to a party, I'm that hungry." },
     { who: 'MONTAG', text: 'Something like that.' },
     { who: 'MILDRED', text: "Well. I hope I wasn't silly." },
   ] },
   m_t1: { set: { 'c03.t1': true }, lines: [
     { who: 'MONTAG', text: 'Millie. About last night.' },
-    { who: 'MILDRED', text: "Last night? I'm starving, Guy. Did we have people over? I feel like I've been to a party." },
+    { who: 'MILDRED', text: "Last night? Is there any toast? I feel as if I've been to a party, I'm that hungry." },
     { who: 'MONTAG', text: 'Something like that.' },
     { who: 'MILDRED', text: "Well. I hope I wasn't silly." },
   ] },
   m_t2_loud: { set: { 'c03.t2': true }, lines: [
-    { who: 'MONTAG', text: 'The bottle was empty, Millie. You took every pill in it.' },
-    { who: 'MILDRED', text: 'Me? I would never do something that silly.' },
+    { who: 'MONTAG', text: 'The bottle was empty, Millie. Every pill in—' },
+    { who: 'MILDRED', text: "Me? I'd never. That would be so silly." },
     { who: 'THE WALL', text: 'Helen? Are you with us?' },
     { who: 'MILDRED', text: 'Always!', pose: 'seatedLook' },
-    { who: N, text: 'She has already decided the conversation is over.' },
   ] },
   m_t2: { set: { 'c03.t2': true }, lines: [
-    { who: 'MONTAG', text: 'The bottle was empty, Millie. You took every pill in it.' },
-    { who: 'MILDRED', text: 'Me? I would never do something that silly.' },
-    { who: N, text: 'She turns a page. She heard every word. She has already decided the conversation is over.' },
+    { who: 'MONTAG', text: 'The bottle was empty, Millie. Every pill in—' },
+    { who: 'MILDRED', text: "Me? I'd never. That would be so silly." },
+    { who: N, text: 'She turns a page of the script with a wet fingertip.' },
   ] },
   m_t3_loud: { set: { 'c03.t3': true }, lines: [
     { who: 'MONTAG', text: 'What are you reading?' },
     { who: 'MILDRED', text: "My part! They mailed it this morning. The play leaves one person out, and I'm the one." },
     { who: 'MONTAG', text: "What's it about?" },
     { who: 'MILDRED', text: "I told you. There's a family, and me. Shh, here's my line.", pose: 'seatedLook' },
-    { who: 'MILDRED', text: "With a fourth wall, Guy, it would be like living in somebody else's house. Wouldn't that be fun?" },
+    { who: 'MILDRED', text: "If we had a fourth wall, Guy, it would be like living inside the play. Wouldn't that be fun?" },
   ] },
   m_t3: { set: { 'c03.t3': true }, lines: [
     { who: 'MONTAG', text: 'What are you reading?' },
     { who: 'MILDRED', text: "My part! They mailed it this morning. The play leaves one person out, and I'm the one." },
     { who: 'MONTAG', text: "What's it about?" },
     { who: 'MILDRED', text: "I told you. There's a family, and me." },
-    { who: 'MILDRED', text: "With a fourth wall, Guy, it would be like living in somebody else's house. Wouldn't that be fun?" },
+    { who: 'MILDRED', text: "If we had a fourth wall, Guy, it would be like living inside the play. Wouldn't that be fun?" },
   ] },
-  m_quiet: { lines: [{ who: N, text: 'In the silence she looks at you for a long moment, the way she looks at a dark wall.' }] },
+  m_quiet: { lines: [{ who: 'MILDRED', text: 'What? Why are you standing like that?' }] },
   // novel order: goodbye, then the question, then he reads the last page, folds the script and hands it back
   m_script: { set: { 'c03.script': true }, lines: [
     { who: 'MILDRED', text: 'Well, goodbye, dear.' },
@@ -143,11 +142,11 @@ export const SCRIPTS1: Record<string, Script> = {
     { who: 'MONTAG', text: 'Does it have a happy ending?' },
     { who: 'MILDRED', text: "I haven't read that far." },
   ] },
-  m_after: { lines: [{ who: N, text: 'You read the last page, fold it, and hand it back. She does not ask how it ends.' }] },
-  m_done: { lines: [{ who: 'MILDRED', text: "Shh. My line's coming up." }] },
-  m_notyet: { lines: [{ who: N, text: 'You stop at the door. You have not said goodbye.' }] },
-  m_leave_on: { lines: [{ who: N, text: 'Behind you the walls come back on, one by one. She has turned them all the way up.' }] },
-  m_leave2: { sub: true, lines: [{ who: N, text: 'At the door you stop, hand on the latch, not knowing what you wait for.' }] },
+  m_after: { lines: [{ who: N, text: 'You read the last page standing up, fold it in three, and put it back in her hand.' }] },
+  m_done: { lines: [{ who: 'MILDRED', text: "Shh. Shh, it's my line." }] },
+  m_notyet: { lines: [{ who: N, text: "Your hand is on the latch and you haven't said goodbye." }] },
+  m_leave_on: { lines: [{ who: N, text: 'The walls come back on behind you, louder than before.' }] },
+  m_leave2: { sub: true, lines: [{ who: N, text: 'The latch is cold. You stand there holding it.' }] },
 };
 
 export const ROOMS1: Record<string, RoomDef> = {
