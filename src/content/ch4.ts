@@ -240,7 +240,7 @@ export const ROOMS4: Record<string, RoomDef> = {
       })),
     ],
     quietUi: true,
-    objective: (f) => !f['c12.river'] ? 'Reach the river before the count ends' : '',
+    objective: (f) => !f['c12.river'] ? 'Reach the river before the count ends' : 'Reach the river.',
     barks: [{ x: 430, range: 80, who: 'MONTAG', text: 'Lit doorway ahead. Wait for it to pass.', when: (f) => !f['c12.river'] }],
     hints: () => ['Keep moving. The count is running.', 'Stay in the dark gaps between the lit doorways and the searchlights.', 'Watch each light sweep. Run through a gap, and wait in the dark until a light passes.'],
     enter: [{ key: 'e.run', steps: [{ say: 'rn_open' }] }],

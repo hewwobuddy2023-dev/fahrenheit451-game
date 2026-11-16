@@ -162,7 +162,7 @@ export const ROOMS5: Record<string, RoomDef> = {
       { id: 'b3', fig: 'bookman3', name: 'REVEREND', x: 960, face: 1, back: true },
     ],
     quietUi: true,
-    objective: (f) => !f['cp.met'] ? 'Go toward the fire' : !f['c14.met'] ? 'Talk to Granger' : !f['c15.ending'] ? 'Answer Granger' : '',
+    objective: (f) => !f['cp.met'] ? 'Go toward the fire' : !f['c14.met'] ? 'Talk to Granger' : !f['c15.ending'] ? 'Answer Granger' : 'Stay by the fire.',
     hints: (f) => {
       if (!f['cp.met']) return ['Someone is waiting ahead, near a fire.', 'The fire is ahead to the right.', 'Walk right toward the firelight and stop there.'];
       if (!f['c14.met']) return ['These people want to know what you know.', 'Granger is in the middle of the camp, by the fire.', 'Walk to Granger and press [E]. He will ask what you can offer.'];
