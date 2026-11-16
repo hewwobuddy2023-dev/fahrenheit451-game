@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { SequencePuzzle } from './SequencePuzzle.ts';
 import { sound } from '../audio.ts';
 import { controls, isTouch, onInputMode } from '../input.ts';
-import { C, FONT, H, W, text } from '../view.ts';
+import { C, H, W, text } from '../view.ts';
+import { keycap } from './Keycap.ts';
 import type { Choice, Line, Script, Step } from '../content/types.ts';
 import type { Flags } from '../state.ts';
 
@@ -41,6 +42,7 @@ export class Dialogue {
   private more: Phaser.GameObjects.Triangle;
   private hit: Phaser.GameObjects.Zone;
   private hint: Phaser.GameObjects.Text;
+  private hintKey: Phaser.GameObjects.Container;
   private boxParts: Phaser.GameObjects.GameObject[];
   private sub: Phaser.GameObjects.Text;
   private subName: Phaser.GameObjects.Text;
@@ -74,20 +76,21 @@ export class Dialogue {
     const hit = this.hit = scene.add.zone(BOX.x, BOX.y, BOX.w, BOX.h).setOrigin(0).setScrollFactor(0).setInteractive();
     hit.on('pointerdown', () => { if (!this.choices) this.advance(); });
     this.nameBg = scene.add.rectangle(BOX.x, BOX.y - 26, 10, 26, C.panel, 0.93).setOrigin(0);
-    this.name = text(scene, BOX.x + 16, BOX.y - 13, '', { fontFamily: FONT.display, fontSize: '15px', fontStyle: '600', color: C.ember })
-      .setOrigin(0, 0.5).setLetterSpacing(3);
+    this.name = text(scene, BOX.x + 16, BOX.y - 13, '', { fontSize: '16px', fontStyle: '600', color: C.ember })
+      .setOrigin(0, 0.5);
     this.body = text(scene, BOX.x + 28, BOX.y + 20, '', { fontSize: '19px', lineSpacing: 7, wordWrap: { width: BOX.w - 70 } });
     this.more = scene.add.triangle(BOX.x + BOX.w - 26, BOX.y + BOX.h - 20, 0, 0, 12, 0, 6, 8, C.amberN);
     scene.tweens.add({ targets: this.more, y: '+=4', yoyo: true, repeat: -1, duration: 500 });
-    const hint = this.hint = text(scene, BOX.x + BOX.w - 44, BOX.y + BOX.h - 21, '', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
-      .setOrigin(1, 0.5).setLetterSpacing(2);
-    const label = () => hint.setText(isTouch() ? 'TAP' : 'E / ENTER');
+    const hint = this.hint = text(scene, BOX.x + BOX.w - 44, BOX.y + BOX.h - 21, '', { fontSize: '13px', color: C.creamDim })
+      .setOrigin(1, 0.5);
+    this.hintKey = keycap(scene, 0, 0, 'E').c;
+    const label = () => { hint.setText(isTouch() ? 'Tap to continue' : 'Continue'); this.hintKey.setVisible(!isTouch()); this.placeHint(hint.x, hint.y); };
     label();
     scene.events.once('shutdown', onInputMode(label));
     this.sub = text(scene, 0, SUB_Y, '', { fontSize: '19px' }).setOrigin(0, 0.5);
-    this.subName = text(scene, 0, SUB_Y, '', { fontFamily: FONT.display, fontSize: '14px', fontStyle: '600', color: C.ember }).setOrigin(0, 0.5).setLetterSpacing(3);
+    this.subName = text(scene, 0, SUB_Y, '', { fontSize: '16px', fontStyle: '600', color: C.ember }).setOrigin(0, 0.5);
     this.boxParts = [g, this.nameBg, this.name, this.body, this.more];
-    this.root = scene.add.container(0, 0, [g, hit, this.nameBg, this.name, this.body, this.more, hint, this.sub, this.subName])
+    this.root = scene.add.container(0, 0, [g, hit, this.nameBg, this.name, this.body, this.more, hint, this.hintKey, this.sub, this.subName])
       .setScrollFactor(0, 0, true).setDepth(1200).setVisible(false);
     this.out = this.body;
   }
@@ -175,8 +178,14 @@ export class Dialogue {
     this.sub.setVisible(on).setText(''); this.subName.setVisible(on);
     if (on) this.body.setText(''); // the hidden panel must not keep the previous line
     // the tap target stays the full original box even when the drawn panel is shorter (easier on touch screens)
-    if (on) { this.hit.setPosition(0, 0).setSize(W, H); this.hint.setPosition(W - 26, SUB_Y); }
-    else { this.hit.setPosition(BOX.x, BOX.y).setSize(BOX.w, BOX.h); this.hint.setPosition(BOX.x + BOX.w - 44, BOTTOM - 21); }
+    if (on) { this.hit.setPosition(0, 0).setSize(W, H); this.placeHint(W - 26, SUB_Y); }
+    else { this.hit.setPosition(BOX.x, BOX.y).setSize(BOX.w, BOX.h); this.placeHint(BOX.x + BOX.w - 44, BOTTOM - 21); }
+  }
+
+  /** Right edge of the hint text at (x, y); its key cap sits just left of the words. */
+  private placeHint(x: number, y: number) {
+    this.hint.setPosition(x, y);
+    this.hintKey.setPosition(x - this.hint.width - 20, y);
   }
 
   private show(line: Line) {
@@ -241,7 +250,7 @@ export class Dialogue {
     this.armedAt = this.scene.time.now + ARM_MS;
     this.full = '';
     this.body.setText('');
-    this.name.setText('YOUR RESPONSE');
+    this.name.setText('Your response');
     this.nameBg.setVisible(true).setSize(this.name.width + 32, 26);
     this.more.setVisible(false);
     const gap = 68;
@@ -288,8 +297,8 @@ export class Dialogue {
     sound.cue(c.again ? 'wrong' : 'ui');
     if (c.remember) {
       // restrained emphasis: a quiet line above the dialogue box that fades on its own
-      const t = text(this.scene, W / 2, BOX.y - 26, `${c.remember.toUpperCase()} WILL REMEMBER THAT.`, { fontFamily: FONT.display, fontSize: '15px', color: C.amber })
-        .setOrigin(0.5).setLetterSpacing(3).setScrollFactor(0).setDepth(1300).setAlpha(0);
+      const t = text(this.scene, W / 2, BOX.y - 26, `${c.remember} will remember that.`, { fontSize: '15px', fontStyle: '600', color: C.amber })
+        .setOrigin(0.5).setScrollFactor(0).setDepth(1300).setAlpha(0);
       this.scene.tweens.add({ targets: t, alpha: 1, duration: 300, hold: 1800, yoyo: true, onComplete: () => t.destroy() });
     }
     this.choices = undefined;
@@ -324,8 +333,8 @@ export class Dialogue {
 
   private paintMeter() {
     if (!this.watch) return;
-    this.meter ??= text(this.scene, BOX.x + BOX.w, this.panelTop - 22, '', { fontFamily: FONT.display, fontSize: '14px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 10, y: 4 } })
-      .setOrigin(1, 0.5).setLetterSpacing(3).setScrollFactor(0).setDepth(1300);
+    this.meter ??= text(this.scene, BOX.x + BOX.w, this.panelTop - 22, '', { fontSize: '14px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 10, y: 4 } })
+      .setOrigin(1, 0.5).setScrollFactor(0).setDepth(1300);
     // text, not colour alone: readable when muted and for colour-blind players
     this.meter.setY(this.panelTop - 22).setText(`${this.watch.label}  ${'■'.repeat(this.suspicion)}${'□'.repeat(3 - this.suspicion)}  ${this.suspicion}/3`).setVisible(true);
     this.meter.setColor(this.suspicion >= 2 ? C.ember : C.amber);

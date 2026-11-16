@@ -65,10 +65,10 @@ for(const fps of [30,20,10]) {
   try {
     const before=s.save();await s.advance(700);await s.tap(430,474);
     await s.key('KeyM');await s.key('KeyM',false);
-    assert.match(s.scene().list.rows[0].item.label,/OFF/,'keyboard mute updates the visible settings label');
+    assert.match(s.scene().list.rows[0].item.label,/off/i,'keyboard mute updates the visible settings label');
     await s.tap(430,318);assert.equal(JSON.parse(s.w.localStorage.getItem('f451.options')).reducedMotion,true);
     assert.equal(s.save(),before,'preferences do not replace the story checkpoint');
-    await s.tap(430,282);assert.match(s.scene().list.rows[0].item.label,/ON/);
+    await s.tap(430,282);assert.match(s.scene().list.rows[0].item.label,/on/i);
     console.log('PASS touch/keyboard settings, visible mute state, separate persistent preferences');
   }finally{s.close();}
 }

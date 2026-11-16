@@ -175,7 +175,8 @@ test('audio unlock/mute, local offline play and browser frame sample', async ({ 
   });
   console.log(JSON.stringify({ label: 'CI browser sample, NOT Chromebook benchmark', browser: browser.version(), viewport: page.viewportSize(), timing, requestCount: requests.length }));
   console.log(JSON.stringify({label:'Request origins including local image decoder blob',requests:requests.map(url=>url.startsWith('blob:')?url.slice(0,35):url)}));
-  expect(requests.every(url => url.startsWith('http://127.0.0.1:4173/') || url.startsWith('blob:http://127.0.0.1:4173/'))).toBe(true);
+  const origin = new URL(page.url()).origin; // the served origin, whatever port the server runs on
+  expect(requests.every(url => url.startsWith(origin + '/') || url.startsWith('blob:' + origin + '/'))).toBe(true);
 });
 
 test('native pause freezes searchlight phase; DOM focus loss waits for explicit return', async ({ page }, info) => {

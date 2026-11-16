@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { sound } from '../audio.ts';
-import { C, FONT, text } from '../view.ts';
+import { C, text } from '../view.ts';
 
 export interface Item { label: string; action: () => void; enabled?: boolean; note?: string }
 
@@ -18,12 +18,12 @@ export class MenuList {
     this.bar = scene.add.rectangle(-18, 0, 4, size + 6, C.emberN).setOrigin(0, 0.5);
     this.root.add(this.bar);
     items.forEach((item, i) => {
-      const t = text(scene, 0, i * gap, item.label.toUpperCase(), {
-        fontFamily: FONT.display, fontSize: `${size}px`, fontStyle: '500',
-      }).setOrigin(0, 0.5).setLetterSpacing(3);
+      const t = text(scene, 0, i * gap, item.label, {
+        fontSize: `${size}px`, fontStyle: '500',
+      }).setOrigin(0, 0.5);
       const row: (typeof this.rows)[number] = { t, item };
       if (item.note) {
-        row.n = text(scene, t.width + 14, i * gap + 1, item.note, { fontSize: '13px', color: C.muted }).setOrigin(0, 0.5);
+        row.n = text(scene, t.width + 14, i * gap + 1, item.note, { fontSize: '14px', color: C.muted }).setOrigin(0, 0.5);
         this.root.add(row.n);
       }
       if (item.enabled !== false) {
@@ -52,7 +52,7 @@ export class MenuList {
     const row = this.rows[i];
     if (!row || row.item.label === label) return;
     row.item.label = label;
-    row.t.setText(label.toUpperCase());
+    row.t.setText(label);
   }
 
   move(d: number) {
