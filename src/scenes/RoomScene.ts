@@ -19,7 +19,7 @@ import { Dialogue } from '../ui/Dialogue.ts';
 import { Hud } from '../ui/Hud.ts';
 import { openJournal } from '../ui/Journal.ts';
 import { MenuList } from '../ui/MenuList.ts';
-import { buildFloor, darkness, lightTint, scrollFloor, shadowFor, stageDetails } from '../world/stage.ts';
+import { buildFloor, withVariants, darkness, lightTint, scrollFloor, shadowFor, stageDetails } from '../world/stage.ts';
 import { addAtmosphere, BACK_Y, C, FONT, GROUND_Y, H, K, W, WALK_Y, onActions, params, setupCamera, text, type Act } from '../view.ts';
 import { LIMP, LIMP_SPRINT, SPEED, SPRINT, crossedFoot, snapScroll, stepCamera, stepVelocity, walkTimeScale, type CamState } from '../movement.ts';
 
@@ -148,7 +148,7 @@ export class RoomScene extends Phaser.Scene {
 
   create() {
     const cam = setupCamera(this);
-    this.room = ROOMS[this.session.room] ?? ROOMS.burn;
+    this.room = withVariants(ROOMS[this.session.room] ?? ROOMS.burn);
     sound.useScene(this.room.id);
     sound.setQuiet(false);
     const family = this.room.kit.split(':')[0];

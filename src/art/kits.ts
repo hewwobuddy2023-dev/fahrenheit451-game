@@ -8,6 +8,7 @@ import { C, FLOOR_TOP, H, W } from '../view.ts';
 import { hgrad, paint, poly, radial, rng, speckle, vgrad, type Ctx } from './core.ts';
 import { fireAt } from './fx.ts';
 import { pine } from './cinema.ts';
+import { contactShadow } from './setLayers.ts';
 
 export interface FloorStyle { key: string; top: string; bottom: string; line: string; spacing: number; kind: 'tile' | 'boards' | 'asphalt' | 'earth' | 'water' | 'metal' }
 export interface KitParts {
@@ -104,6 +105,7 @@ function lampPost(s: Phaser.Scene, x: number) {
     c.fillStyle = '#0c0909'; c.fillRect(8, 56, 28, 8); c.fillRect(30, 56, 4, 14); c.fillRect(13, 440, 14, 36);
     c.fillStyle = '#ffd08a'; c.fillRect(31, 70, 2, 3);
   });
+  contactShadow(s, x, 472, 70, 0.6);
   return s.add.image(x, 476, 'k:lamppost').setOrigin(0.5, 1).setDepth(3);
 }
 
@@ -184,7 +186,8 @@ const station: Kit = (s, room) => {
   };
   s.time.delayedCall(3000, stutter);
   stationProps(s);
-  s.add.image(300, 52, 'k:pole').setOrigin(0.5, 0).setDepth(3).setScale(1, (F - 52) / 420);
+  s.add.image(190, 52, 'k:pole').setOrigin(0.5, 0).setDepth(3).setScale(1, (F - 52) / 420);
+  for (const [sx, sw] of [[620, 190], [1520, 120], [1770, 220], [2010, 130], [2290, 340], [1110, 190]]) contactShadow(s, sx, sx === 2290 ? 468 : sx === 1110 ? 454 : F - 2, sw, 0.55);
   s.add.image(620, F, 'k:rack').setOrigin(0.5, 1).setDepth(3);
   s.add.image(1110, 456, 'k:table').setOrigin(0.5, 1).setDepth(4.6);
   s.add.image(1520, F, 'k:pump').setOrigin(0.5, 1).setDepth(3);
@@ -479,6 +482,7 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
     let update: ((f: Flags) => void) | undefined;
     if (variant === 'burn') {
       truckTexture(s);
+      contactShadow(s, 380, 466, 360, 0.6);
       s.add.image(380, 470, 'k:truck').setOrigin(0.5, 1).setDepth(3);
       const piles = [900, 1060, 1220].map((x) => s.add.image(x, 474, 'k:pile').setOrigin(0.5, 1).setDepth(4.4));
       const sheen = [900, 1060, 1220].map((x) => s.add.image(x, 474, 'glow').setScale(1.9, 0.22).setTint(0xd8c890).setAlpha(0).setBlendMode(ADD).setDepth(4.35));
@@ -539,6 +543,7 @@ function street(variant: 'burn' | 'corner' | 'lawn' | 'boulevard' | 'alley'): Ki
     }
     if (variant === 'lawn') {
       truckTexture(s);
+      contactShadow(s, 320, 466, 360, 0.6);
       s.add.image(320, 470, 'k:truck').setOrigin(0.5, 1).setDepth(3);
       update = (f) => { if (f['c10.w3']) first('housefire', () => [820, 960, 1100].forEach((x) => fireAt(s, x, F - 20, 3, false, 2.5))); };
     }
@@ -875,7 +880,7 @@ const subway: Kit = (s) => {
   });
   addLayer(s, 'k:subway:wall', 1, 1);
   paint(s, 'k:subpole', 30, 470, (c) => { c.fillStyle = hgrad(c, 10, 20, [[0, '#3a3a40'], [0.5, '#8a8a94'], [1, '#3a3a40']]); c.fillRect(10, 0, 10, 470); c.fillStyle = '#1a1a1e'; c.fillRect(4, 456, 22, 14); });
-  for (let x = 300; x < RW; x += 420) s.add.image(x, 470, 'k:subpole').setOrigin(0.5, 1).setDepth(3);
+  for (let x = 300; x < RW; x += 420) { contactShadow(s, x, 468, 56, 0.55); s.add.image(x, 470, 'k:subpole').setOrigin(0.5, 1).setDepth(3); }
   return {
     floor: { key: 'metal', top: '#2e2c30', bottom: '#0a0a0c', line: 'rgba(255,255,255,0.06)', spacing: 40, kind: 'metal' },
     lights: [{ x: 300, y: 60, color: 0xe8e2d0, r: 300 }, { x: 900, y: 60, color: 0xe8e2d0, r: 300 }],
@@ -920,10 +925,10 @@ function forest(variant: 'river' | 'camp'): Kit {
       paint(s, 'k:rails', RW, 30, (c) => { c.fillStyle = '#3a2e24'; for (let x = 0; x < RW; x += 26) c.fillRect(x, 6, 10, 24); c.fillStyle = '#6a5a4a'; c.fillRect(0, 8, RW, 4); c.fillRect(0, 22, RW, 4); });
       s.add.image(0, 452, 'k:rails').setOrigin(0).setDepth(1.3);
       // a proper bonfire (three tongues wide, so its near edge shows on arrival) with a glow that washes the trees and the near track
-      fireAt(s, 985, 470, 3, false, 4.4);
-      const beacon = s.add.image(960, 400, 'glow').setScale(14, 6).setTint(0xff8a3a).setAlpha(0.34).setBlendMode(ADD).setDepth(4.3);
+      fireAt(s, 1330, 470, 3, false, 4.4);
+      const beacon = s.add.image(1310, 400, 'glow').setScale(14, 6).setTint(0xff8a3a).setAlpha(0.34).setBlendMode(ADD).setDepth(4.3);
       s.tweens.add({ targets: beacon, alpha: 0.2, yoyo: true, repeat: -1, duration: 420, ease: 'Sine.easeInOut' });
-      lights.push({ x: 1000, y: 430, color: 0xffb050, r: 360 });
+      lights.push({ x: 1310, y: 430, color: 0xffb050, r: 360 });
       const tvGlow = s.add.image(1180, 440, 'glow').setScale(0.6).setTint(0x80c0ff).setAlpha(0).setBlendMode(ADD).setDepth(4);
       fx.tvOn = () => { tvGlow.setAlpha(0.5); s.tweens.add({ targets: tvGlow, alpha: 0.3, yoyo: true, repeat: -1, duration: 150 }); };
       fx.tvOff = () => { s.tweens.killTweensOf(tvGlow); tvGlow.setAlpha(0); };

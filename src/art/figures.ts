@@ -12,11 +12,12 @@ export const FEET = FIG_H - 6;
 export const IDLE = [0, 1, 2, 3];
 export const WALK = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 /** Sheet layout: frames 0-3 idle, 4-15 walk, 16..16+N-1 the poses in POSE_NAMES order, then 2 in-betweens per pose. */
-const X0 = 48;            // figure origin inside a frame (extra room in front for outstretched arms)
 const COLS = 20;          // frames per sheet row, so a sheet never exceeds a safe texture width
 const BETWEEN = [0.4, 0.75];
+const TURN = [0.3, 0.58, 0.82];   // width squash of the three turn frames (narrowest first)
+const EXTRA = 11;
 /** Only the Chapter 1 cast carries pose frames (texture memory on school laptops). */
-const POSED = new Set(['fig:montag', 'fig:beatty', 'fig:fireman', 'fig:clarisse', 'fig:mildred']);
+const POSED = new Set(['fig:montag', 'fig:beatty', 'fig:fireman', 'fig:fireman2', 'fig:fireman3', 'fig:clarisse', 'fig:mildred']);
 const SIT = 36, KNEEL = 38; // hips drop this far when seated / on one knee
 const ARM1 = 31, ARM2 = 29, THIGH = 39;
 
@@ -103,7 +104,7 @@ function figure(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim'
   const chest = breath * 1.2, top = -146 - chest;
   const skin = o.skin, hairCol = o.hairCol ?? '#2a2420';
   const shinLen = o.heels ? 35 : 39, thigh = 7 * w, ankle = 4.4 * w;
-  const sway = moving ? Math.sin(p * 2) * 1.2 : 0, tail = moving ? -Math.abs(Math.sin(p)) * 4 - 2 : -1;
+  const sway = moving ? Math.sin(p * 2) * 2.4 : breath * 0.4, tail = moving ? -Math.abs(Math.sin(p)) * 6.5 - 2 : -1 - breath * 0.8;
 
   // ---- legs (back leg first) ----
   const shoe = (fx: number, fy: number, dir = 1) => {
@@ -113,6 +114,7 @@ function figure(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim'
   };
   const legCol = o.dress ? (o.stock ?? tint(skin, -0.12)) : (o.pants ?? tint(o.coat, -0.2));
   const legs: [number, number, number][] = [[p + Math.PI, 0, -1], [p, 0, 1]];
+  const backLeg = (q: number) => q !== p;
   if (drop > 0.5) {
     [st!.fb, st!.ff].forEach((f, i) => {
       const [kx, ky, fx, fy] = ik(0, -80 + drop, f[0], f[1], THIGH, shinLen);
@@ -126,13 +128,16 @@ function figure(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim'
     const kx = Math.sin(th) * THIGH, ky = -80 + Math.cos(th) * THIGH;
     const fx = kx + Math.sin(sh) * shinLen, fy = ky + Math.cos(sh) * shinLen;
     col(legCol); limb(c, 0, -80, kx, ky, thigh, thigh - 1); limb(c, kx, ky, fx, fy, thigh - 1, ankle);
+    if (base && backLeg(q)) { c.fillStyle = 'rgba(0,0,0,0.3)'; limb(c, 0, -80, kx, ky, thigh, thigh - 1); limb(c, kx, ky, fx, fy, thigh - 1, ankle); }
+    if (base && !backLeg(q)) { c.fillStyle = 'rgba(255,225,190,0.12)'; limb(c, 2, -78, kx + 2, ky, thigh * 0.35, thigh * 0.3); }   // lit front edge of the thigh
     shoe(fx, fy);
   }
 
   // ---- torso, arms, head: stoop and lean pivot about the hips ----
   c.save();
   c.translate(0, drop); c.translate(0, -80); c.rotate(stoop * 0.2 + (st?.lean ?? 0)); c.translate(0, 80);
-  c.translate(0, moving ? -Math.abs(Math.cos(p)) * 1.5 : 0);
+  c.translate(0, moving ? -Math.abs(Math.cos(p)) * 2.6 : 0);
+  if (moving) { c.translate(0, -80); c.rotate(Math.sin(p) * 0.028); c.translate(0, 80); }   // shoulders counter-rotate against the stride
   const sl = -15 * bulk, sr = 13 * bulk, belly = o.belly ?? 0, hump = stoop * 6;
   const k = Math.min(1, drop / 30); // 0 standing .. 1 seated: skirts and coat fronts spread over the lap
   const sleeve = o.dress ? o.dress : o.coat;
@@ -143,9 +148,12 @@ function figure(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim'
     const ex = ox + Math.sin(a) * ARM1, ey = top + 6 + Math.cos(a) * ARM1;
     const hx2 = ex + Math.sin(bAng) * ARM2, hy2 = ey + Math.cos(bAng) * ARM2;
     const r = o.dress ? 4.4 * w : 6.5 * bulk * w;
-    col(sleeve); limb(c, ox, top + 6, ex, ey, r, r * 0.76);
-    col(o.dress ? skin : sleeve); limb(c, ex, ey, hx2, hy2, r * 0.76, r * 0.6);
-    col(skin); c.beginPath(); c.ellipse(hx2 + Math.sin(bAng) * 2, hy2 + Math.cos(bAng) * 2, 3.8 * w, 3.2 * w, -bAng, 0, Math.PI * 2); c.fill();
+    const sh = front ? 0 : -0.3;
+    col(tint(sleeve, sh)); limb(c, ox, top + 6, ex, ey, r, r * 0.76);
+    col(o.dress ? tint(skin, sh) : tint(sleeve, sh - 0.06)); limb(c, ex, ey, hx2, hy2, r * 0.76, r * 0.6);
+    if (base && front) { c.fillStyle = 'rgba(255,230,190,0.13)'; limb(c, ox + 2, top + 8, ex + 2, ey, r * 0.3, r * 0.25); }
+    if (base && !o.dress) { c.strokeStyle = 'rgba(0,0,0,0.3)'; c.lineWidth = 1; c.beginPath(); c.arc(ex, ey, r * 0.7, bAng + 0.4, bAng + 2.4); c.stroke(); }  // elbow crease
+    col(front ? skin : tint(skin, -0.25)); c.beginPath(); c.ellipse(hx2 + Math.sin(bAng) * 2, hy2 + Math.cos(bAng) * 2, 3.8 * w, 3.2 * w, -bAng, 0, Math.PI * 2); c.fill();
     if (front) hands.push([hx2, hy2, bAng]); else hands.push([hx2, hy2, bAng]);
   };
   drawArm(st ? st.ba : arm(p + Math.PI), -3, false);
@@ -182,6 +190,10 @@ function figure(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim'
       c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(-60, hem - 4, 120, 10);                                         // hem in shade
       c.fillStyle = tint(o.coat, 0.2); poly(c, [-9, top - 2, 0, top + 16, 8, top - 3, 5, top + 6]);                  // collar
       if (o.shirt) { c.fillStyle = o.shirt; c.fillRect(sr - 3 + belly * 0.4, top + 4, 4, 52 + belly); c.fillStyle = '#6b4a3a'; poly(c, [sr - 2, top + 6, sr + 3, top + 7, sr + 3, top + 30, sr - 1, top + 28]); }
+      c.strokeStyle = 'rgba(0,0,0,0.22)'; c.lineWidth = 1.4;                                                        // cloth folds from the belt
+      for (const fx0 of [-9, -2, 5]) { c.beginPath(); c.moveTo(fx0 * bulk, top + 30); c.quadraticCurveTo(fx0 * bulk - 3 + sway, top + 80, fx0 * bulk - 5 + sway * 1.5, hem + 2); c.stroke(); }
+      c.fillStyle = 'rgba(255,225,185,0.07)'; poly(c, [sr - 5, top + 4, sr, top + 1, sr + belly * 0.5, top + 22, sr + belly, top + 50, sr + belly - 6, top + 50, sr - 4 + belly * 0.4, top + 20]);   // light side plane
+      c.fillStyle = 'rgba(0,0,0,0.16)'; poly(c, [sl - hump, top + 16, sl, top + 3, -6, top + 4, -10, top + 40, -14 * bulk, top + 56]);                                 // back panel in shade
       c.strokeStyle = tint(o.coat, 0.18); c.lineWidth = 1; c.beginPath(); c.moveTo(sr - 8, top + 20); c.lineTo(sr - 6 + belly * 0.5, hem + 4); c.stroke();
       c.fillStyle = o.rank ? '#c9a24a' : tint(o.coat, 0.3);
       for (let y = top + 28; y < hem - 2; y += 16) { dot(c, sr - 6 + belly * 0.3, y, 1.3); if (o.rank) dot(c, sr - 12 + belly * 0.3, y, 1.3); }
@@ -230,7 +242,12 @@ function figure(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim'
     c.fillStyle = o.lips ?? tint(skin, -0.28); hc([10.9, 7.5, 11.8, 8.2, 11.1, 10.3, 10.2, 9]);                              // lips
     c.strokeStyle = 'rgba(25,14,10,0.7)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(hx + 10.2, hy + 8.9); c.lineTo(hx + 7.2, hy + 8.5); c.stroke();
     c.strokeStyle = o.age ? 'rgba(25,14,10,0.7)' : hairCol; c.lineWidth = 1.3; c.beginPath(); c.moveTo(hx + 2.5, hy - 5.8); c.lineTo(hx + 9.3, hy - 5.2); c.stroke(); // brow
-    c.fillStyle = '#1b130f'; c.beginPath(); c.ellipse(hx + 6.1, hy - 2.2, 1.6, 1.15, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(20,10,6,0.2)'; c.beginPath(); c.ellipse(hx + 6, hy - 2.6, 4.2, 3.1, 0, 0, Math.PI * 2); c.fill();                  // eye socket
+    c.fillStyle = 'rgba(255,235,205,0.12)'; c.beginPath(); c.ellipse(hx + 6.5, hy + 3.4, 3.2, 2.4, 0, 0, Math.PI * 2); c.fill();             // cheek light
+    c.fillStyle = 'rgba(20,10,6,0.45)'; dot(c, hx + 9.1 + 5.2 * (o.nose ?? 1) * 0.6, hy + 3.6, 0.7);                                             // nostril
+    c.fillStyle = 'rgba(20,10,6,0.22)'; c.fillRect(hx + 5.5, hy + 10.2, 5, 1.2);                                                             // under the lip
+    c.fillStyle = '#e9dfcb'; c.beginPath(); c.ellipse(hx + 6.0, hy - 2.2, 2.2, 1.55, 0, 0, Math.PI * 2); c.fill();                           // eye white
+    c.fillStyle = '#1b130f'; c.beginPath(); c.ellipse(hx + 6.7, hy - 2.2, 1.3, 1.15, 0, 0, Math.PI * 2); c.fill();
     c.fillStyle = '#fff6e4'; dot(c, hx + 6.6, hy - 2.6, 0.6);                                                               // eye glint
     if (o.lips) { c.strokeStyle = '#1b130f'; c.lineWidth = 0.7; c.beginPath(); c.moveTo(hx + 4.6, hy - 3.2); c.lineTo(hx + 7.2, hy - 3.9); c.stroke(); } // lashes
     if (o.age) { c.strokeStyle = 'rgba(30,18,12,0.35)'; c.lineWidth = 0.7; c.beginPath(); c.moveTo(hx + 7.5, hy + 4); c.quadraticCurveTo(hx + 6, hy + 7, hx + 8, hy + 9.5); c.moveTo(hx + 3, hy - 0.5); c.lineTo(hx - 1, hy + 0.5); c.stroke(); }
@@ -270,9 +287,13 @@ function figure(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim'
     if (base) { c.fillStyle = 'rgba(0,0,0,0.25)'; poly(c, [hx - 12, hy - 6.5, hx - 11, hy - 11, hx + 14, hy - 7, hx + 14, hy - 5.5]); }
   }
   if (o.pipe) {
-    if (base) c.fillStyle = '#2a1b12';
-    c.save(); c.translate(hx + 10, hy + 9); c.rotate(-0.22); c.fillRect(0, -1.1, 11, 2.2); poly(c, [9, -6, 15, -6.5, 15.5, 1, 9.5, 1.5]); c.restore();
-    if (base) { c.fillStyle = '#ff8a3a'; dot(c, hx + 20, hy + 2.8, 1.5); c.fillStyle = 'rgba(255,170,80,0.25)'; dot(c, hx + 20, hy + 2.8, 4.5); }
+    // a briar pipe held in the corner of the mouth: slim stem angled down, upright bowl with an ember at the rim
+    const mx = hx + 10.5, my = hy + 9.5, ex = mx + 13, ey = my + 5;
+    if (base) c.fillStyle = '#1c130e';
+    limb(c, mx, my, ex, ey, 0.9, 0.9);
+    if (base) c.fillStyle = '#3a2316';
+    poly(c, [ex - 3, ey + 0.5, ex + 5.5, ey - 1, ex + 6.5, ey - 9, ex - 1, ey - 10]);
+    if (base) { c.fillStyle = 'rgba(255,200,150,0.18)'; c.fillRect(ex - 1, ey - 9, 1.2, 8); c.fillStyle = '#ff8a3a'; poly(c, [ex - 1, ey - 10.5, ex + 6.5, ey - 10.5, ex + 6.5, ey - 9, ex - 1, ey - 9]); c.fillStyle = 'rgba(255,170,80,0.28)'; dot(c, ex + 2.7, ey - 10, 4.5); }
   }
   if (o.shell && base) {
     const g = c.createRadialGradient(hx - 3, hy + 3, 0, hx - 3, hy + 3, 9); g.addColorStop(0, 'rgba(150,225,255,0.4)'); g.addColorStop(1, 'rgba(150,225,255,0)');
@@ -285,11 +306,11 @@ function figure(c: Ctx, o: Fig, walk: number | null, breath: number, pass: 'rim'
   c.restore();
 }
 
-function frame(c: Ctx, x: number, y: number, o: Fig, walk: number | null, breath: number, st?: St) {
+function frame(c: Ctx, x: number, y: number, o: Fig, walk: number | null, breath: number, st?: St, sx = 1) {
   if (st?.lie) o = { ...o, hat: 'none', hair: o.hair ?? 'short', stripe: false, badge: undefined }; // in bed: no helmet
   c.save();
   c.translate(x, y);
-  c.scale(o.tall ?? 1, o.tall ?? 1);
+  c.scale((o.tall ?? 1) * sx, o.tall ?? 1);
   c.save(); c.translate(2, -1); c.fillStyle = o.rim; figure(c, o, walk, breath, 'rim', st); c.restore();
   figure(c, o, walk, breath, 'base', st);
   if (st?.lie) { c.fillStyle = '#8c8a96'; poly(c, [-17, -96, -9, -101, 7, -101, 14, -94, 16, 1, -18, 1]); c.fillStyle = 'rgba(255,255,255,0.2)'; c.fillRect(-17, -97, 3, 97); c.strokeStyle = 'rgba(40,38,50,0.35)'; c.lineWidth = 1; c.beginPath(); c.moveTo(-6, -98); c.lineTo(-4, -4); c.moveTo(6, -97); c.lineTo(8, -4); c.stroke(); } // blanket over the legs
@@ -300,24 +321,33 @@ function frame(c: Ctx, x: number, y: number, o: Fig, walk: number | null, breath
 export function figureSheet(scene: Phaser.Scene, key: string, o: Fig) {
   if (scene.textures.exists(key)) return;
   const poses = POSED.has(key) ? POSE_NAMES : [];
-  const N = poses.length, n = 16 + N * 3, rows = Math.ceil(n / COLS);
-  const cell = (i: number) => [(i % COLS) * FIG_W, Math.floor(i / COLS) * FIG_H];
-  const t = paint(scene, key, FIG_W * Math.min(n, COLS), FIG_H * rows, (c) => {
+  const N = poses.length, n = 16 + N * 3 + EXTRA, rows = Math.ceil(n / COLS), cols = Math.ceil(n / rows);
+  // Figures that never reach out in front get a narrower frame (same -7 px offset from the frame centre, so the origin is unchanged).
+  const FW = poses.length || o.work ? FIG_W : 80, X0 = FW / 2 - 7;
+  const cell = (i: number) => [(i % cols) * FW, Math.floor(i / cols) * FIG_H];
+  const t = paint(scene, key, FW * cols, FIG_H * rows, (c) => {
     const draw = (i: number, walk: number | null, breath: number, st?: St) => {
       const [cx, cy] = cell(i);
-      c.save(); c.beginPath(); c.rect(cx, cy, FIG_W, FIG_H); c.clip();
+      c.save(); c.beginPath(); c.rect(cx, cy, FW, FIG_H); c.clip();
       frame(c, cx + X0, cy + FEET, o, walk, breath, st); c.restore();
     };
     [0, 0.5, 1, 0.5].forEach((b, i) => draw(i, null, b));
     for (let i = 0; i < 12; i++) draw(i + 4, (i / 12) * Math.PI * 2, 0.5);
+    const X = 16 + N * 3;   // appended frames: 3 turn frames (narrowing squash), then 8 smooth idle frames
+    TURN.forEach((q, i) => { const [cx, cy] = cell(X + i); c.save(); c.beginPath(); c.rect(cx, cy, FW, FIG_H); c.clip(); frame(c, cx + X0, cy + FEET, o, null, 0.5, undefined, q); c.restore(); });
+    for (let i = 0; i < 8; i++) draw(X + 3 + i, null, (1 - Math.cos((i / 8) * Math.PI * 2)) / 2);
     poses.forEach((k, i) => {
       draw(16 + i, null, 0.5, resolve(POSES[k]));
       BETWEEN.forEach((b, j) => draw(16 + N + i * 2 + j, null, 0.5, resolve(POSES[k], b)));
     });
   });
-  for (let i = 0; i < n; i++) { const [cx, cy] = cell(i); t.add(i, 0, cx, cy, FIG_W, FIG_H); }
+  for (let i = 0; i < n; i++) { const [cx, cy] = cell(i); t.add(i, 0, cx, cy, FW, FIG_H); }
   const a = scene.anims;
-  if (!a.exists(key + ':idle')) a.create({ key: key + ':idle', frames: IDLE.map((f) => ({ key, frame: f })), frameRate: 2.4, repeat: -1 });
+  const X = 16 + N * 3;
+  // `:idle` breathes through 8 sub-pixel frames; `:turn` (3 frames) is played by the room scene right after it flips the sprite
+  // to its new direction, narrow to wide, then chained to idle/walk.
+  if (!a.exists(key + ':idle')) a.create({ key: key + ':idle', frames: Array.from({ length: 8 }, (_, i) => ({ key, frame: X + 3 + i })), frameRate: 6, repeat: -1 });
+  if (!a.exists(key + ':turn')) a.create({ key: key + ':turn', frames: [0, 1, 2].map((i) => ({ key, frame: X + i })), frameRate: 22 });
   if (!a.exists(key + ':walk')) a.create({ key: key + ':walk', frames: WALK.map((f) => ({ key, frame: f })), frameRate: 14, repeat: -1 });
   poses.forEach((k, i) => {
     const b = 16 + N + i * 2;
@@ -335,12 +365,14 @@ export const CAST: Record<string, Fig> = {
   montag: { coat: '#463d35', skin: '#a88a72', rim: WARM, hat: 'helmet', stripe: true, badge: '#c98a3a', hairCol: '#2b231e', tall: 1.02 },
   montagWork: { coat: '#4c443c', skin: '#a88a72', rim: WARM, hat: 'helmet', stripe: true, badge: '#c98a3a', work: true, tall: 1.02 },
   montagCivil: { coat: '#4d4842', skin: '#a88a72', rim: WARM, hat: 'none', hair: 'short', hairCol: '#2b231e', coatLen: 70, tall: 1.02 },
-  beatty: { coat: '#47302b', skin: '#b4907a', rim: 'rgba(232,104,46,0.85)', hat: 'cap', pipe: true, bulk: 1.12, belly: 5, slim: 1.14, tall: 1.05, stripe: true, rank: true, nose: 1.2, chin: 1.5, hairCol: '#3a2a22' },
+  beatty: { coat: '#47302b', skin: '#b4907a', rim: 'rgba(232,104,46,0.85)', hat: 'cap', pipe: true, bulk: 1.12, belly: 5, slim: 1.14, tall: 1.05, stripe: true, rank: true, nose: 1.0, chin: 1.3, hairCol: '#3a2a22' },
   fireman: { coat: '#3c3431', skin: '#8c7464', rim: 'rgba(242,165,74,0.55)', hat: 'helmet', stripe: true, bulk: 1.08, slim: 1.05, hairCol: '#1d1713' },
+  fireman2: { coat: '#363a3a', skin: '#a8876f', rim: 'rgba(242,165,74,0.55)', hat: 'helmet', stripe: true, badge: '#b8b0a0', bulk: 0.96, slim: 0.92, tall: 1.0, hairCol: '#4a3a2a', glasses: true, nose: 1.1 },
+  fireman3: { coat: '#42352e', skin: '#74604f', rim: 'rgba(242,165,74,0.55)', hat: 'helmet', stripe: true, badge: '#a85a3a', bulk: 1.16, belly: 4, slim: 1.14, tall: 0.97, beard: true, hairCol: '#33261d', chin: 1.1 },
   clarisse: { coat: '#cfc6b5', rim: COLD, hair: 'long', hairCol: '#2a2420', dress: '#ddd5c4', collar: '#f3ece0', sash: '#a89e8c', tall: 0.9, bulk: 0.82, slim: 0.72, skin: '#d6c2ab', flare: 0.55, hemY: 46, nose: 0.75, chin: 0.6, lips: '#a35a55', stock: '#cdb9a2', heels: false },
   mildred: { coat: '#4a3c44', rim: 'rgba(160,200,215,0.75)', hair: 'bob', hairCol: '#d6c286', dress: '#86606f', collar: '#ece2cf', sash: '#3a2a32', tall: 0.97, bulk: 0.8, slim: 0.7, skin: '#dcc0a8', flare: 1, hemY: 38, nose: 0.7, chin: 0.55, lips: '#b04650', stock: '#bba28f', heels: true, shell: true },
   faber: { coat: '#6a6a58', skin: '#c2aa94', rim: WARM, hair: 'white', hairCol: '#d8d2c6', shirt: '#cfc8b8', pants: '#3f3a34', stoop: 0.8, tall: 0.95, slim: 0.78, coatLen: 66, glasses: true, nose: 1.25, chin: 0.8, age: true },
-  granger: { coat: '#1e2a36', skin: '#a3866d', rim: 'rgba(242,165,74,0.9)', hair: 'short', hairCol: '#a7a49b', beard: true, coatLen: 78, bulk: 1.05, tall: 1.04, hat: 'none', pants: '#20262c' },
+  granger: { coat: '#1e2a36', skin: '#a3866d', rim: 'rgba(242,165,74,0.9)', hair: 'short', hairCol: '#a7a49b', beard: true, coatLen: 66, bulk: 1.08, slim: 1.22, tall: 1.0, hat: 'none', pants: '#20262c' },
   bookman: { coat: '#2f3a34', skin: '#b39a82', rim: 'rgba(242,165,74,0.8)', hair: 'hood', coatLen: 72, bulk: 0.9, slim: 0.85, tall: 0.92, stoop: 0.25, nose: 0.9, pants: '#262b27' },
   bookman2: { coat: '#4f3d2e', skin: '#b8957c', rim: 'rgba(242,165,74,0.8)', hat: 'flat', hair: 'short', hairCol: '#9b968c', beard: false, coatLen: 66, bulk: 1.12, belly: 6, slim: 1.1, tall: 0.88, nose: 1.1, pants: '#2e261f' },
   bookman3: { coat: '#16181e', skin: '#c4a98f', rim: 'rgba(242,165,74,0.8)', hair: 'white', hairCol: '#dcd7cc', collar: '#e6e0d2', coatLen: 84, bulk: 0.92, slim: 0.82, tall: 1.08, stoop: 0.15, nose: 1.2, chin: 0.9, age: true, pants: '#101216' },
