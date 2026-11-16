@@ -19,7 +19,7 @@ const png = await page.evaluate(([z, only, crop, pickFrames]) => {
   let fw = 110, fh = 212, label = 100, sx = 0, sy = 0;
   if (crop) { [sx, sy, fw, fh] = crop.split(',').map(Number); }
   // Default: idle, two walk frames and the held poses; in-betweens (16+N..) via pickFrames.
-  const picks = keys.map((k) => { const n = frames(k); if (pickFrames) return pickFrames.split(',').map(Number).filter((f) => f < n); const np = Math.max(0, (n - 16) / 3); return [0, 6, 10, ...Array.from({ length: np }, (_, i) => 16 + i)]; });
+  const picks = keys.map((k) => { const n = frames(k); if (pickFrames) return pickFrames.split(',').map(Number).filter((f) => f < n); const np = Math.max(0, (n - 27) / 3); return [0, 6, 10, ...Array.from({ length: np }, (_, i) => 16 + i)]; });
   const wide = Math.max(...picks.map((p) => p.length));
   const rows = keys.length, perRow = Math.min(wide, 11), bands = Math.ceil(wide / perRow);
   const cv = document.createElement('canvas');
@@ -33,7 +33,7 @@ const png = await page.evaluate(([z, only, crop, pickFrames]) => {
     picks[r].forEach((f, i) => {
       const fr = tex.get(String(f));
       const b = Math.floor(i / perRow), col = i % perRow, y = 10 + (r * bands + b) * fh;
-      c.drawImage(src, fr.cutX + sx, fr.cutY + sy, fw, fh, label + col * fw, y, fw, fh);
+      c.drawImage(src, fr.cutX + sx, fr.cutY + sy, Math.min(fw, fr.width - sx), fh, label + col * fw, y, fw, fh);
       c.fillStyle = 'rgba(207,198,181,0.5)'; c.fillText(String(f), label + col * fw + 2, y + 10);
     });
     c.fillStyle = '#cfc6b5'; c.fillText(k.slice(4), 8, 10 + r * bands * fh + fh / 2);

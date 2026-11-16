@@ -98,3 +98,10 @@ export function stageDetails(s: Phaser.Scene, room: RoomDef, floor: FloorStyle, 
     }
   }
 }
+
+/** Gives the two named firemen their own build and face. Content keeps `fig: 'fireman'`; the room scene swaps it here. */
+const VARIANT: Record<string, string> = { black: 'fireman2', stoneman: 'fireman3' };
+export function withVariants(room: RoomDef): RoomDef {
+  if (!room.npcs?.some((n) => n.fig === 'fireman' && VARIANT[n.id])) return room;
+  return { ...room, npcs: room.npcs.map((n) => (n.fig === 'fireman' && VARIANT[n.id] ? { ...n, fig: VARIANT[n.id] } : n)) };
+}
