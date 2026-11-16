@@ -16,6 +16,8 @@ import { completedIds, type Flags, type Session } from '../state.ts';
 import { Dialogue } from '../ui/Dialogue.ts';
 import { Hud } from '../ui/Hud.ts';
 import { openJournal } from '../ui/Journal.ts';
+import { keyRow } from '../ui/Keycap.ts';
+import { volumeBars } from '../ui/Volume.ts';
 import { MenuList } from '../ui/MenuList.ts';
 import { buildFloor, darkness, lightTint, scrollFloor, shadowFor, stageDetails } from '../world/stage.ts';
 import { addAtmosphere, C, FONT, H, W, WALK_Y, onActions, params, setupCamera, text, type Act } from '../view.ts';
@@ -250,7 +252,7 @@ export class RoomScene extends Phaser.Scene {
 
   update(_time: number, dtMs: number) {
     sound.setQuiet(this.mode === 'pause' || this.mode === 'journal');
-    if (this.mode === 'pause') this.overlay?.list?.setLabel(3, `Sound: ${settings.muted ? 'OFF' : 'ON'} [M]`);
+    if (this.mode === 'pause') this.overlay?.list?.setLabel(4, `Sound: ${settings.muted ? 'off' : 'on'}`);
     if (this.mode === 'pause' || this.mode === 'journal') return;
     if (this.mode === 'play') {
       const h = this.near;
@@ -1157,24 +1159,28 @@ export class RoomScene extends Phaser.Scene {
     this.before = this.mode;
     this.mode = 'pause';
     this.hud.showTouch(false);
-    const g = this.add.graphics().fillStyle(0x000000, 0.72).fillRect(0, 0, W, H)
-      .fillStyle(C.panel, 0.95).fillRect(W / 2 - 220, 110, 440, 420)
-      .lineStyle(1, C.emberN, 0.5).strokeRect(W / 2 - 219.5, 110.5, 439, 419);
+    // a plain card: title, one key line, then rows; the volume row carries its own bars
+    const px = W / 2 - 220, py = 110, pw = 440, ph = 420;
+    const g = this.add.graphics().fillStyle(0x000000, 0.6).fillRect(0, 0, W, H)
+      .fillStyle(C.panel, 0.97).fillRoundedRect(px, py, pw, ph, 10)
+      .lineStyle(1, C.emberN, 0.4).strokeRoundedRect(px + 0.5, py + 0.5, pw - 1, ph - 1, 10);
     const block = this.add.zone(0, 0, W, H).setOrigin(0).setScrollFactor(0).setInteractive();
-    const title = text(this, W / 2, 150, 'PAUSED', { fontFamily: FONT.display, fontSize: '30px', fontStyle: '600' }).setOrigin(0.5).setLetterSpacing(8);
-    const help = text(this, W / 2, 192, this.touch ? 'TAP A ROW TO CHOOSE' : 'ARROWS / W S TO CHOOSE · ENTER OR E TO CONFIRM', {
-      fontFamily: FONT.display, fontSize: '11px', color: C.creamDim,
-    }).setOrigin(0.5).setLetterSpacing(1);
-    const root = this.add.container(0, 0, [g, block, title, help]).setScrollFactor(0, 0, true).setDepth(1290);
-    const list = new MenuList(this, W / 2 - 110, 234, [
+    const title = text(this, px + 28, 150, 'Paused', { fontFamily: FONT.type, fontSize: '24px' }).setOrigin(0, 0.5);
+    const help = keyRow(this, px + pw - 28, 150, this.touch
+      ? [{ word: 'Tap a row to choose' }]
+      : [{ key: 'W' }, { key: 'S' }, { word: 'choose' }, { key: 'Enter' }, { word: 'confirm' }]);
+    const vol = volumeBars(this, px + 230, 390); // row 3 of the list below
+    const list = new MenuList(this, px + 28, 234, [
       { label: 'Resume', action: () => this.resume() },
       { label: 'Journal', action: () => { this.overlay?.destroy(); this.showJournal(this.before); } },
       { label: this.session.demo ? 'Quit to title' : 'Save & quit to title', action: () => this.quit() },
-      { label: `Sound: ${settings.muted ? 'OFF' : 'ON'} [M]`, action: () => { sound.toggleMute(); this.overlay?.destroy(); this.mode = this.before; this.openPause(); this.overlay?.list?.select(3); } },
-      { label: `Reduced motion: ${settings.reducedMotion ? 'ON' : 'OFF'}`, action: () => { setSetting('reducedMotion', !settings.reducedMotion); this.overlay?.destroy(); this.mode = this.before; this.openPause(); this.overlay?.list?.select(4); } },
-    ], 64, 22);
+      { label: 'Volume', action: () => vol.step() },
+      { label: `Sound: ${settings.muted ? 'off' : 'on'}`, note: 'press M', action: () => { sound.toggleMute(); this.overlay?.destroy(); this.mode = this.before; this.openPause(); this.overlay?.list?.select(4); } },
+      { label: `Reduced motion: ${settings.reducedMotion ? 'on' : 'off'}`, action: () => { setSetting('reducedMotion', !settings.reducedMotion); this.overlay?.destroy(); this.mode = this.before; this.openPause(); this.overlay?.list?.select(5); } },
+    ], 52, 20);
     list.root.setDepth(1295);
-    this.overlay = { list, destroy: () => { root.destroy(); list.destroy(); this.overlay = undefined; } };
+    const root = this.add.container(0, 0, [g, block, title, ...help]).setScrollFactor(0, 0, true).setDepth(1290);
+    this.overlay = { list, destroy: () => { root.destroy(); list.destroy(); vol.root.destroy(); this.overlay = undefined; } };
   }
 
   private resume() {

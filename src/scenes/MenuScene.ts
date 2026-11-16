@@ -7,6 +7,9 @@ import { CHAPTERS, CHAPTER_STARTS } from '../content.ts';
 import { loadSave, Session } from '../state.ts';
 import { restoreCheckpoint } from '../checkpoints.ts';
 import { MenuList, type Item } from '../ui/MenuList.ts';
+import { keyRow } from '../ui/Keycap.ts';
+import { volumeBars } from '../ui/Volume.ts';
+import { skylineKey } from '../ui/Skyline.ts';
 import { addAtmosphere, C, FONT, H, W, onActions, setupCamera, text } from '../view.ts';
 
 
@@ -22,6 +25,8 @@ export class MenuScene extends Phaser.Scene {
   private busy = false;
   private panelTitle = '';
   private branding!: Phaser.GameObjects.Container;
+  private bars?: ReturnType<typeof volumeBars>;
+  private sky?: Phaser.GameObjects.TileSprite;
 
   constructor() { super('menu'); }
 
@@ -32,7 +37,8 @@ export class MenuScene extends Phaser.Scene {
     this.busy = false;
     // The room-specific sky texture does not exist at boot. Keep the title's
     // procedural glow backdrop rather than displaying Phaser's missing texture.
-    if (this.textures.exists('city:backdrop')) this.add.image(0, 0, 'city:backdrop').setOrigin(0).setDisplaySize(W, H).setAlpha(0.4);
+    // slow night skyline behind the menu: one painted strip, drifting slowly
+    this.sky = this.add.tileSprite(0, 0, W, H, skylineKey(this)).setOrigin(0).setAlpha(0.55);
     const fire = this.add.image(W * 0.62, H + 60, 'glow').setScale(9, 3).setTint(C.emberN).setAlpha(0.45).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({ targets: fire, alpha: 0.3, scaleX: 8.4, yoyo: true, repeat: -1, duration: 900, ease: 'Sine.easeInOut' });
     this.add.particles(0, 0, 'dot', {
@@ -45,14 +51,15 @@ export class MenuScene extends Phaser.Scene {
     const brandStart = this.children.length;
     const t1 = text(this, 78, 150, 'FAHRENHEIT', { fontFamily: FONT.display, fontSize: '74px', fontStyle: '700' }).setOrigin(0, 0.5).setLetterSpacing(8);
     text(this, 78 + t1.width + 18, 150, '451', { fontFamily: FONT.display, fontSize: '74px', fontStyle: '700', color: C.ember }).setOrigin(0, 0.5);
-    text(this, 82, 214, "THE FIREMAN'S CHOICE", { fontFamily: FONT.type, fontSize: '22px', color: C.creamDim }).setOrigin(0, 0.5).setLetterSpacing(4);
+    text(this, 82, 214, "The fireman's choice", { fontFamily: FONT.type, fontSize: '22px', color: C.creamDim }).setOrigin(0, 0.5);
     this.add.rectangle(82, 248, 120, 2, C.emberN).setOrigin(0, 0.5);
     this.branding = this.add.container(0, 0, this.children.list.slice(brandStart));
-    text(this, 82, H - 34, "An interactive adaptation of Ray Bradbury's novel", {
+    text(this, 82, H - 16, "An interactive adaptation of Ray Bradbury's novel", {
       fontSize: '12px', color: C.muted,
     }).setOrigin(0, 0.5);
-    text(this, W - 28, H - 34, isTouch() ? 'TAP A ROW  ·  LANDSCAPE RECOMMENDED' : 'ARROWS / W S  ·  ENTER', { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
-      .setOrigin(1, 0.5).setLetterSpacing(2);
+    keyRow(this, W - 28, H - 16, isTouch()
+      ? [{ word: 'Tap a row. Landscape recommended.' }]
+      : [{ word: 'Arrows or' }, { key: 'W' }, { key: 'S' }, { word: 'move' }, { key: 'Enter' }, { word: 'choose' }], C.muted);
     if (new URLSearchParams(location.search).has('diagnostics')) text(this, W - 24, H - 12, `${BUILD.version} · ${BUILD.sha.slice(0, 7)}`, { fontSize: '10px', color: C.creamDim }).setOrigin(1);
     addAtmosphere(this);
     onActions(this, (a) => {
@@ -66,12 +73,14 @@ export class MenuScene extends Phaser.Scene {
     this.main();
   }
 
-  update() {
-    if (this.panelTitle === 'SETTINGS') this.list?.setLabel(0, `Sound: ${settings.muted ? 'OFF' : 'ON'} [M]`);
+  update(_t: number, delta: number) {
+    if (this.sky) this.sky.tilePositionX += delta * 0.01;
+    if (this.panelTitle === 'Settings') this.list?.setLabel(0, `Sound: ${settings.muted ? 'off' : 'on'}`);
   }
 
   private show(items: Item[], y = 282, gap = 64, size = 24) {
     this.list?.destroy();
+    this.bars?.root.destroy(); this.bars = undefined;
     this.list = new MenuList(this, 104, y, items, gap, size);
   }
 
@@ -90,7 +99,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private confirmNew() {
-    this.panel('RESTART YOUR STORY?', ['Starting again replaces your saved checkpoint. Chapter Select lets you visit any chapter without touching that save.']);
+    this.panel('Restart your story?', ['Starting again replaces your saved checkpoint. Chapter Select lets you visit any chapter without touching that save.']);
     this.show([
       { label: 'Keep current game', action: () => this.main() },
       { label: 'Restart from the beginning', action: () => this.start(this.fresh(false)) },
@@ -107,15 +116,15 @@ export class MenuScene extends Phaser.Scene {
     this.sub?.destroy();
     this.branding.setVisible(false);
     const x = W * 0.54, y = 94, w = W - x - 36, h = H - y - 64;
-    const g = this.add.graphics().fillStyle(C.panel, 0.94).fillRect(x, y, w, h)
-      .lineStyle(1, C.emberN, 0.5).strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
-    const t = text(this, x + 24, y + 18, title, { fontFamily: FONT.display, fontSize: '16px', color: C.amber }).setLetterSpacing(4);
+    const g = this.add.graphics().fillStyle(C.panel, 0.94).fillRoundedRect(x, y, w, h, 10)
+      .lineStyle(1, C.emberN, 0.4).strokeRoundedRect(x + 0.5, y + 0.5, w - 1, h - 1, 10);
+    const t = text(this, x + 24, y + 18, title, { fontFamily: FONT.type, fontSize: '22px', color: C.amber });
     const body = text(this, x + 24, y + 48, lines.join('\n\n'), { fontSize: '14px', color: C.creamDim, lineSpacing: 4, wordWrap: { width: w - 48 } });
     this.sub = this.add.container(0, 0, [g, t, body]).setDepth(1050);
   }
 
   private chapters() {
-    this.panel('CHAPTER SELECT', [
+    this.panel('Chapter select', [
       'Jump to any chapter. Progress made here is not saved.',
     ]);
     this.show([
@@ -127,11 +136,11 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private settings(selected = 0) {
-    this.panel('SETTINGS', ['Sound starts after your first tap or key. Press M to mute.', 'Reduced motion stops the grain and camera shake. Preferences are saved on this device.']);
+    this.panel('Settings', ['Sound starts after your first tap or key. Press M to mute.', 'Reduced motion stops the grain and camera shake. Preferences are saved on this device.']);
     this.show([
-      { label: `Sound: ${settings.muted ? 'OFF' : 'ON'} [M]`, action: () => { sound.toggleMute(); this.settings(0); } },
-      { label: `Reduced motion: ${settings.reducedMotion ? 'ON' : 'OFF'}`, action: () => { setSetting('reducedMotion', !settings.reducedMotion); this.settings(1); } },
-      { label: `Controls: ${({ auto: 'AUTO', keyboard: 'KEYBOARD', touch: 'TOUCH' })[settings.inputMode]}`, action: () => { setInputPreference(settings.inputMode === 'auto' ? 'keyboard' : settings.inputMode === 'keyboard' ? 'touch' : 'auto'); this.settings(2); } },
+      { label: `Sound: ${settings.muted ? 'off' : 'on'}`, note: 'press M', action: () => { sound.toggleMute(); this.settings(0); } },
+      { label: `Reduced motion: ${settings.reducedMotion ? 'on' : 'off'}`, action: () => { setSetting('reducedMotion', !settings.reducedMotion); this.settings(1); } },
+      { label: `Controls: ${({ auto: 'auto', keyboard: 'keyboard', touch: 'touch' })[settings.inputMode]}`, action: () => { setInputPreference(settings.inputMode === 'auto' ? 'keyboard' : settings.inputMode === 'keyboard' ? 'touch' : 'auto'); this.settings(2); } },
       { label: 'Audio & accessibility', action: () => this.audioOptions() },
       { label: 'Back', action: () => this.main() },
     ], 262, 56); // five rows must end well inside the 540 px frame
@@ -139,19 +148,20 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private audioOptions() {
-    this.panel('AUDIO & ACCESS', ['Test the sound at a low device volume.', 'Assisted hose keeps the flow steady for you. Analog effects are optional. Hazards always show.']);
+    this.panel('Audio & access', ['Test the sound at a low device volume.', 'Assisted hose keeps the flow steady for you. Analog effects are optional. Hazards always show.']);
     this.show([
       { label: 'Test sound (unmutes)', action: () => { if (settings.muted) sound.toggleMute(); void sound.unlock().then(() => sound.cue('complete')); } },
-      { label: `Volume: ${Math.round(settings.volume * 100)}%`, action: () => { setSetting('volume', settings.volume >= 1 ? 0.4 : settings.volume < 0.7 ? 0.75 : 1); sound.refresh(); this.audioOptions(); } },
-      { label: `Assisted hose: ${settings.assistedHose ? 'ON' : 'OFF'}`, action: () => { setSetting('assistedHose', !settings.assistedHose); this.audioOptions(); } },
-      { label: `Analog effects: ${settings.analog ? 'ON' : 'OFF'}`, action: () => { setSetting('analog', !settings.analog); this.audioOptions(); } },
+      { label: 'Volume', action: () => this.bars?.step() },
+      { label: `Assisted hose: ${settings.assistedHose ? 'on' : 'off'}`, action: () => { setSetting('assistedHose', !settings.assistedHose); this.audioOptions(); } },
+      { label: `Analog effects: ${settings.analog ? 'on' : 'off'}`, action: () => { setSetting('analog', !settings.analog); this.audioOptions(); } },
       { label: 'Credits', action: () => this.credits() },
       { label: 'Back', action: () => this.settings() },
     ], 162, 60, 21);
+    this.bars = volumeBars(this, 300, 162 + 60);
   }
 
   private credits() {
-    this.panel('CREDITS', CREDITS);
+    this.panel('Credits', CREDITS);
     this.show([{ label: 'Back', action: () => this.main() }], 300);
   }
 

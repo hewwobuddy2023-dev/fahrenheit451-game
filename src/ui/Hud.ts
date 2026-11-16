@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { C, FONT, W, H, text } from '../view.ts';
 import { controls, isTouch, onInputMode } from '../input.ts';
+import { keycap } from './Keycap.ts';
 
-/** Objective panel, journal chip, toasts and (on touch devices) on-screen buttons. */
+/** Objective note, journal chip, toasts and (on touch devices) on-screen buttons. */
 export class Hud {
   touchLeft = false;
   touchRight = false;
@@ -16,28 +17,34 @@ export class Hud {
   private wantTouch = true;
   private lastObjective = '';
   private lastDone = 0;
-  private panel: Phaser.GameObjects.Graphics;
+  private rule: Phaser.GameObjects.Graphics;
   private chapter: Phaser.GameObjects.Text;
   private objective: Phaser.GameObjects.Text;
-  private journal: Phaser.GameObjects.Text;
+  private chipBg: Phaser.GameObjects.Graphics;
+  private chipText: Phaser.GameObjects.Text;
+  private chipKey: Phaser.GameObjects.Container;
+  private chipHit: Phaser.GameObjects.Zone;
   private touchUi?: Phaser.GameObjects.Container;
   private toastRoot?: Phaser.GameObjects.Container;
 
   constructor(scene: Phaser.Scene, chapter: string, opts: { demo: boolean; onJournal: () => void; onPause: () => void; onAct: () => void }) {
     this.scene = scene;
-    this.panel = scene.add.graphics().setScrollFactor(0).setDepth(1000);
-    this.chapter = text(scene, 34, 24, chapter, { fontFamily: FONT.display, fontSize: '11px', color: C.creamDim })
-      .setLetterSpacing(2).setScrollFactor(0).setDepth(1001);
-    this.objective = text(scene, 34, 42, '', { fontSize: '18px', fontStyle: '600' }).setScrollFactor(0).setDepth(1001);
+    // No panel: the objective is a plain note written on the page.
+    this.rule = scene.add.graphics().setScrollFactor(0).setDepth(1000);
+    this.chapter = text(scene, 34, 22, chapter, { fontSize: '13px', color: C.creamDim }).setScrollFactor(0).setDepth(1001).setShadow(0, 1, '#000000', 6, false, true);
+    this.objective = text(scene, 34, 42, '', { fontFamily: FONT.type, fontSize: '17px', color: C.cream }).setScrollFactor(0).setDepth(1001)
+      .setShadow(0, 1, '#000000', 6, false, true);
 
-    this.journal = text(scene, W - 24, 34, '', { fontFamily: FONT.display, fontSize: '14px', color: C.cream })
-      .setOrigin(1, 0.5).setLetterSpacing(2).setScrollFactor(0).setDepth(1001)
-      .setPadding(14, 18, 14, 18).setBackgroundColor('rgba(13,10,9,0.8)')
-      .setInteractive({ useHandCursor: true }).on('pointerdown', opts.onJournal);
+    this.chipBg = scene.add.graphics();
+    this.chipText = text(scene, 0, 0, '', { fontSize: '14px', color: C.cream }).setOrigin(1, 0.5);
+    this.chipKey = keycap(scene, 0, 0, 'J').c;
+    this.chipHit = scene.add.zone(0, 0, 10, 10).setOrigin(0).setScrollFactor(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', opts.onJournal);
+    scene.add.container(0, 0, [this.chipBg, this.chipText, this.chipKey]).setScrollFactor(0).setDepth(1001);
 
     if (opts.demo) {
-      text(scene, W - 24, 58, 'CHAPTER SELECT  ·  NOT SAVED', { fontFamily: FONT.display, fontSize: '11px', color: C.ember })
-        .setOrigin(1, 0).setLetterSpacing(2).setScrollFactor(0).setDepth(1001);
+      text(scene, W - 24, 62, 'Chapter select, not saved', { fontSize: '12px', color: C.ember })
+        .setOrigin(1, 0).setScrollFactor(0).setDepth(1001);
     }
 
     {
@@ -47,7 +54,7 @@ export class Hud {
         const dir = label === '<' ? -1 : label === '>' ? 1 : 0;
         const t = dir
           ? (dir > 0 ? scene.add.triangle(x + 2, y, 0, 0, 0, 22, 16, 11, C.creamN, 0.9) : scene.add.triangle(x - 2, y, 16, 0, 16, 22, 0, 11, C.creamN, 0.9))
-          : text(scene, x, y, label, { fontFamily: FONT.display, fontSize: '15px' }).setOrigin(0.5).setLetterSpacing(1);
+          : text(scene, x, y, label, { fontSize: '14px', fontStyle: '600' }).setOrigin(0.5);
         // Phaser's Container.setScrollFactor(..., true) skips inherited default
         // properties. Set this on each hit target explicitly or it drifts by cam.scrollX.
         c.setScrollFactor(0).setInteractive();
@@ -55,10 +62,10 @@ export class Hud {
       };
       const [l, lt] = btn(66, H - 62, 47, '<');
       const [r, rt] = btn(174, H - 62, 47, '>');
-      const [a, at] = btn(W - 72, H - 66, 47, 'ACT');
+      const [a, at] = btn(W - 72, H - 66, 47, 'Act');
       const [p, pt] = btn(W - 46, 112, 32, 'II');
-      const [d, dt] = btn(W - 184, H - 66, 47, 'DIVE');
-      const [u, ut] = btn(272, H - 62, 38, 'RUN');
+      const [d, dt] = btn(W - 184, H - 66, 47, 'Dive');
+      const [u, ut] = btn(272, H - 62, 38, 'Run');
       const release = (p: Phaser.Input.Pointer) => { this.held.delete(p.id); this.syncTouch(); };
       for (const [obj, action] of [[l, 'left'], [r, 'right'], [a, 'act'], [d, 'down'], [u, 'run']] as const) {
         obj.on('pointerdown', (p: Phaser.Input.Pointer) => {
@@ -92,15 +99,26 @@ export class Hud {
     if (!on) this.resetTouch();
   }
 
+  /** Bottom edge of the objective note; the timer sits below it. */
+  private noteBottom() { return this.objective.y + this.objective.height; }
+
   setObjective(s: string, done: number) {
     this.lastObjective = s; this.lastDone = done;
     this.objective.setText(controls(s));
     this.objective.setWordWrapWidth(W - 340);
-    const w = Math.max(this.objective.width, this.chapter.width) + 40;
-    this.panel.clear()
-      .fillStyle(C.panel, 0.78).fillRect(18, 14, w, Math.max(56, this.objective.height + 40))
-      .fillStyle(C.emberN, 1).fillRect(18, 14, 3, Math.max(56, this.objective.height + 40));
-    this.journal.setText(`JOURNAL  ${done}/15  [J]`);
+    const y = this.noteBottom() + 5;
+    this.rule.clear().lineStyle(1, C.emberN, 0.35).lineBetween(34, y, 34 + Math.min(this.objective.width, 260), y);
+    this.layoutChip(done);
+  }
+
+  private layoutChip(done: number) {
+    this.chipText.setText(`Journal ${done} of 15`);
+    const right = W - 24, cy = 34, kw = 22;
+    this.chipKey.setPosition(right - 12 - kw / 2, cy);
+    this.chipText.setPosition(right - 12 - kw - 10, cy);
+    const left = this.chipText.x - this.chipText.width - 14;
+    this.chipBg.clear().fillStyle(C.panel, 0.7).fillRoundedRect(left, cy - 16, right - left, 32, 6);
+    this.chipHit.setPosition(left, cy - 16).setSize(right - left, 32);
   }
 
   /** Quiet rooms: the objective steps aside while a conversation or cutscene owns the screen. */
@@ -108,7 +126,7 @@ export class Hud {
   setFocus(on: boolean) {
     if (on === this.focused) return;
     this.focused = on;
-    const parts = [this.panel, this.chapter, this.objective];
+    const parts = [this.rule, this.chapter, this.objective];
     this.scene.tweens.killTweensOf(parts);
     this.scene.tweens.add({ targets: parts, alpha: on ? 0 : 1, duration: on ? 160 : 320 });
   }
@@ -132,11 +150,11 @@ export class Hud {
   toast(title: string, sub: string) {
     this.toastRoot?.destroy();
     const s = this.scene;
-    const t1 = text(s, W / 2, 104, title, { fontFamily: FONT.display, fontSize: '22px', color: C.amber }).setOrigin(0.5).setLetterSpacing(4);
+    const t1 = text(s, W / 2, 104, title, { fontFamily: FONT.type, fontSize: '20px', color: C.amber }).setOrigin(0.5);
     const t2 = text(s, W / 2, 134, sub, { fontSize: '14px', color: C.creamDim }).setOrigin(0.5);
     const w = Math.max(t1.width, t2.width) + 80;
-    const bg = s.add.graphics().fillStyle(C.panel, 0.88).fillRect(W / 2 - w / 2, 84, w, 70)
-      .lineStyle(1, C.emberN, 0.6).lineBetween(W / 2 - w / 2, 84.5, W / 2 + w / 2, 84.5).lineBetween(W / 2 - w / 2, 153.5, W / 2 + w / 2, 153.5);
+    const bg = s.add.graphics().fillStyle(C.panel, 0.9).fillRoundedRect(W / 2 - w / 2, 84, w, 70, 8)
+      .fillStyle(C.emberN, 0.9).fillRect(W / 2 - w / 2, 96, 3, 46);
     const root = s.add.container(0, 0, [bg, t1, t2]).setScrollFactor(0, 0, true).setDepth(1150).setAlpha(0);
     this.toastRoot = root;
     s.tweens.chain({ targets: root, tweens: [
@@ -144,18 +162,17 @@ export class Hud {
     ] });
   }
 
-  /** Countdown or meter readout under the objective panel (text, so never colour-only). */
+  /** Countdown or meter readout under the objective note (text, so never colour-only). */
   setTimer(s: string | null) {
     if (s === null) { this.timer?.setVisible(false); return; }
-    this.timer ??= text(this.scene, 18, 82, '', { fontFamily: FONT.display, fontSize: '18px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.78)', padding: { x: 16, y: 6 } })
-      .setLetterSpacing(3).setScrollFactor(0).setDepth(1001);
-    // sit just under the objective panel, whose height grows when the objective wraps
-    this.timer.setVisible(true).setText(s).setY(14 + Math.max(56, this.objective.height + 40) + 8);
+    this.timer ??= text(this.scene, 34, 82, '', { fontSize: '15px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.78)', padding: { x: 12, y: 5 } })
+      .setScrollFactor(0).setDepth(1001);
+    this.timer.setVisible(true).setText(s).setY(this.noteBottom() + 14);
   }
 
   note(s: string) {
-    const t = text(this.scene, W - 24, 64, s, { fontFamily: FONT.display, fontSize: '11px', color: C.muted })
-      .setOrigin(1, 0.5).setLetterSpacing(2).setScrollFactor(0).setDepth(1001);
+    const t = text(this.scene, W - 24, 70, s, { fontSize: '12px', color: C.creamDim })
+      .setOrigin(1, 0.5).setScrollFactor(0).setDepth(1001);
     this.scene.tweens.add({ targets: t, alpha: 0, delay: 1400, duration: 600, onComplete: () => t.destroy() });
   }
 }
