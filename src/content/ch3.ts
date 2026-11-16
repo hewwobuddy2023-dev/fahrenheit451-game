@@ -217,7 +217,7 @@ export const ROOMS3: Record<string, RoomDef> = {
       { id: 'bowles', fig: 'lady2', name: 'MRS. BOWLES', x: 2150, face: -1, when: (f) => !f['c09.read'] },
     ],
     quietUi: true,
-    objective: (f) => !f['c09.off'] ? 'Switch off the parlor walls' : !f['c09.read'] ? 'Talk to the ladies' : !f['c09.burned'] ? 'Burn the book in the incinerator' : '',
+    objective: (f) => !f['c09.off'] ? 'Switch off the parlor walls' : !f['c09.read'] ? 'Talk to the ladies' : !f['c09.burned'] ? 'Burn the book in the incinerator' : 'Go to the firehouse.',
     hints: (f) => {
       if (!f['c09.off']) return ['The walls are loud. Mildred wants them left on.', 'The main switch is in the wall just ahead of you, to the right.', 'Stand by the wall switch and press [E] to pull it.'];
       if (!f['c09.read']) return ['The ladies are waiting. Say something to them.', 'Mrs. Phelps and Mrs. Bowles are on the right, past Mildred.', 'Walk right to the ladies and press [E] to talk.'];
@@ -240,7 +240,7 @@ export const ROOMS3: Record<string, RoomDef> = {
       { id: 'stoneman', fig: 'fireman', name: 'STONEMAN', x: 1170, face: -1, back: true },
     ],
     quietUi: true,
-    objective: () => '',
+    objective: () => 'Listen to Beatty at the firehouse.',
     hints: () => ['Beatty is waiting for you at the firehouse.', 'Listen to what he says. Nothing here needs you yet.', 'Wait for the scene to finish.'],
     enter: [{ key: 'e.station3', steps: [
       { fx: 'poleSlide' }, { say: 'st_duel' }, { fx: 'alarm' }, { say: 'st_alarm' }, { fade: 'out', ms: 900 }, { goto: 'lawn', x: 640 },

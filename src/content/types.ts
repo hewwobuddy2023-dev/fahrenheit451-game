@@ -54,6 +54,7 @@ export type Step =
 export interface Hotspot {
   id: string;
   x: number;
+  span?: [number, number];   // a wide prop (a pile, a row): in reach anywhere between these x; x is only its centre
   label: string;
   py?: number;               // prompt height (default 300)
   when?: Cond;               // present only when true

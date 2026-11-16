@@ -233,10 +233,10 @@ export const ROOMS2: Record<string, RoomDef> = {
     ],
     quietUi: true,
     objective: (f) => {
-      if (!f['c05.done']) return '';
+      if (!f['c05.done']) return 'Answer Beatty.';
       if (!f['c06.chair']) return 'Bring the chair to the hall ventilator';
       if (!f['c06.vent']) return 'Pull the books out of the ventilator';
-      return '';
+      return 'Stay still until she has passed.';
     },
     hints: (f) => {
       if (!f['c05.done']) return ['Beatty is sitting by your bed. Keep your answers calm.', 'Keep the book out of Beatty\'s sight.', 'Let Beatty finish before you move.'];

@@ -12,6 +12,8 @@ import { FIG_H, POSE_NAMES } from '../art/figures.ts';
 import { KITS, resetKitOnce, type KitParts } from '../art/kits.ts';
 import { CHALLENGES, CHAPTERS, ROOMS, RULES, SCRIPTS } from '../content.ts';
 import type { Bark, Hotspot, Light, Line, Npc, RoomDef, Script, Step } from '../content/types.ts';
+import { MUSE } from '../content/muse.ts';
+import { laneReadout, placeLine, reachDistance } from '../guidance.ts';
 import { completedIds, type Flags, type Session } from '../state.ts';
 import { Dialogue } from '../ui/Dialogue.ts';
 import { Hud } from '../ui/Hud.ts';
@@ -24,6 +26,21 @@ import { LIMP, LIMP_SPRINT, SPEED, SPRINT, crossedFoot, snapScroll, stepCamera, 
 type Mode = 'play' | 'dialogue' | 'cutscene' | 'journal' | 'pause' | 'exit';
 
 const REACH = 70;
+/** First-use keycaps: each control is taught the first time it is needed, then never again (per browser). */
+const tipsSeen = new Set<string>();
+try { for (const k of JSON.parse(localStorage.getItem('f451.tips') ?? '[]')) tipsSeen.add(String(k)); } catch { /* storage may be blocked */ }
+function markTip(k: string) {
+  if (tipsSeen.has(k)) return;
+  tipsSeen.add(k);
+  try { localStorage.setItem('f451.tips', JSON.stringify([...tipsSeen])); } catch { /* seen for this visit only */ }
+}
+const TIPS: Record<string, [string, string]> = {
+  move: ['A / D', 'move'],
+  interact: ['E', 'interact'],
+  hold: ['HOLD E', 'keep holding'],
+  vault: ['SPACE', 'vault the fence'],
+  journal: ['J', 'journal: your tasks'],
+};
 const sleep = (s: Phaser.Scene, ms: number) => new Promise<void>((r) => s.time.delayedCall(ms, r));
 
 interface NpcView { def: Npc; spr: Phaser.GameObjects.Sprite; sh: Phaser.GameObjects.Image; rim: Phaser.GameObjects.Image; y: number }
@@ -74,8 +91,12 @@ export class RoomScene extends Phaser.Scene {
   private barked = new Set<Bark>();
   private playMs = 0;
   private idleMs = 0;
-  private hintFor = '';
-  private nudged = '';
+  private lastObjective = '';
+  private thinkLevel = 0;
+  private lastThought = '';
+  private tipKind = '';
+  private tipBox?: Phaser.GameObjects.Container;
+  private journalDue = false;                  // a stall has happened: J is now worth knowing
   /** The thing behind each hazard's light: an approaching car or a helicopter. */
   private rigs = new Map<string, Phaser.GameObjects.Image>();
   private caughtScene = false;
@@ -109,14 +130,14 @@ export class RoomScene extends Phaser.Scene {
   init(d: { session: Session }) {
     this.session = d.session;
     this.mode = 'play';
-    this.hintLevel = 0; this.breath = { air: 1, exhausted: false };
+    this.thinkLevel = 0; this.lastThought = ''; this.lastObjective = ''; this.tipKind = ''; this.tipBox = undefined; this.journalDue = false; this.breath = { air: 1, exhausted: false };
     this.hose = { pressure: 0, progress: 0, overheated: false };
     this.scriptedWalk = false; this.scriptedPose = false;
     this.vx = 0; this.facing = 1; this.near = undefined; this.holdMs = 0;
     this.camTarget = null; this.overlay = undefined; this.caughtAt = 0; this.holdMoveUntil = 0;
     this.activeTime = 0;
     this.linePosed = undefined; this.barkTexts = [];
-    this.npcs = []; this.glows = new Map(); this.laneStrips = new Map(); this.rigs = new Map(); this.barked = new Set(); this.bars = undefined; this.playMs = 0; this.idleMs = 0; this.hintFor = ''; this.nudged = ''; this.caughtScene = false; this.caughtHz = ''; this.failScenes = 0; this.beams = new Map(); this.eyes = new Map();
+    this.npcs = []; this.glows = new Map(); this.laneStrips = new Map(); this.rigs = new Map(); this.barked = new Set(); this.bars = undefined; this.playMs = 0; this.idleMs = 0; this.caughtScene = false; this.caughtHz = ''; this.failScenes = 0; this.beams = new Map(); this.eyes = new Map();
     // Scene restarts destroy its objects, but retain class fields. Never reuse a
     // destroyed emitter when a later chapter starts its next hold interaction.
     this.spray = undefined;
@@ -230,7 +251,7 @@ export class RoomScene extends Phaser.Scene {
     this.controlHint = text(this, W / 2, 104, '', { fontFamily: FONT.display, fontSize: '15px', color: C.cream, backgroundColor: '#111315', padding: { x: 12, y: 8 }, wordWrap: { width: 620 } }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(1003);
     this.hintBtn = (this.room.quietUi
       ? text(this, W - 22, this.touch ? 158 : 96, controls(this.touch ? 'HINT' : 'H  HINT'), { fontFamily: FONT.display, fontSize: '12px', color: C.creamDim, backgroundColor: 'rgba(13,10,9,0.7)', padding: { x: 10, y: 5 } }).setOrigin(1, 0).setLetterSpacing(2)
-      : text(this, W - 50, 176, '?', { fontFamily: FONT.display, fontSize: '22px', backgroundColor: '#111315', padding: { x: 18, y: 10 } }).setOrigin(0.5)).setScrollFactor(0).setDepth(1001).setInteractive({ useHandCursor: true }).on('pointerdown', () => { if (this.mode === 'play') this.flashNote(this.hint()); });
+      : text(this, W - 50, 176, '?', { fontFamily: FONT.display, fontSize: '22px', backgroundColor: '#111315', padding: { x: 18, y: 10 } }).setOrigin(0.5)).setScrollFactor(0).setDepth(1001).setInteractive({ useHandCursor: true }).on('pointerdown', () => { if (this.mode === 'play') this.think(); });
     addAtmosphere(this, this.room.chapter >= 5 ? 0.45 : 1);
     onActions(this, (a) => this.onAction(a));
 
@@ -258,13 +279,14 @@ export class RoomScene extends Phaser.Scene {
     if (this.mode === 'play') {
       const h = this.near;
       const moveHelp = this.touch ? 'Arrows: move  ·  RUN: hold to run  ·  ACT: interact' : 'A / D or arrows: move  ·  Shift: run  ·  E: interact  ·  J: journal  ·  Esc: pause  ·  H: hint';
-      if (this.room.quietUi) this.controlHint.setText(controls(this.room.id === 'burn' && !this.session.flags['c01.p3'] && this.playMs < 9000 && !h ? moveHelp : ''));
+      if (this.room.quietUi) this.controlHint.setText(''); // first-use keycaps teach the controls now (updateTip)
       else this.controlHint.setText(controls(this.room.id === 'burn' ? h?.hold?.pressure
         ? (this.hose.overheated || this.hose.pressure > BAND[1] ? 'PRESSURE HIGH. The hose sputters. Release [E] for a moment, then hold again.' : 'Hold [E] to spray. Keep the needle in FLOW for full pressure.')
         : moveHelp : h?.watcher ? 'Watch his turn. Hold [E] only while he looks away. If he turns, the attempt resets.' : ''));
     }
     this.controlHint.setVisible(this.mode === 'play' && this.controlHint.text !== ''); // an empty hint would show as a stray box
     if (this.mode === 'play') { this.playMs += dtMs; this.updateBarks(); this.updateIdle(dtMs); }
+    this.updateTip();
     if (this.room.quietUi) this.hintBtn?.setVisible(this.mode === 'play');
     // the objective steps aside while a conversation or cutscene owns the screen (rendered comparison: it stacked with the panel)
     if (this.room.quietUi) this.hud.setFocus(this.mode === 'dialogue' || this.mode === 'cutscene' || this.mode === 'exit');
@@ -379,18 +401,19 @@ export class RoomScene extends Phaser.Scene {
   private isExit() { return this.mode === 'exit'; }
   private active(h: Hotspot) { return !h.when || h.when(this.session.flags); }
   private locked(h: Hotspot) { return !!h.requires && !h.requires.every((k) => this.session.flags[k]); }
+  private promptX(h: Hotspot) { return h.span ? Phaser.Math.Clamp(this.player.x, h.span[0], h.span[1]) : h.x; }
 
   private updateNear() {
     let best: Hotspot | undefined;
     for (const h of this.room.hotspots) {
       if (!this.active(h)) continue;
       if (h.hold && this.session.flags[h.hold.flag]) continue;
-      const d = Math.abs(h.x - this.player.x);
+      const d = reachDistance(this.player.x, h);
       if (h.auto) { if (d < 26 && !this.locked(h)) { this.near = h; this.interact(); return; } continue; }
-      if (d < REACH && (!best || d < Math.abs(best.x - this.player.x))) best = h;
+      if (d < REACH && (!best || d < reachDistance(this.player.x, best))) best = h;
     }
     // a new input mode only relabels the prompt; it must not drop the hotspot the same key press is about to use
-    if (best === this.near && this.promptMode === inputMode()) return;
+    if (best === this.near && this.promptMode === inputMode()) { if (best?.span) this.prompt.setX(this.promptX(best)); return; }
     if (best !== this.near) { this.holdMs = 0; this.hose = { pressure: 0, progress: 0, overheated: false }; }
     this.near = best;
     this.promptMode = inputMode();
@@ -408,7 +431,7 @@ export class RoomScene extends Phaser.Scene {
     const kt = text(this, -w / 2 + 7 + kw / 2, 0, key, { fontFamily: FONT.display, fontSize: '13px', fontStyle: '700', color: C.ink }).setOrigin(0.5);
     kt.name = 'key';
     this.prompt.add(kt);
-    this.prompt.setPosition(best.x, best.py ?? 300).setVisible(true).setAlpha(0);
+    this.prompt.setPosition(this.promptX(best), best.py ?? 300).setVisible(true).setAlpha(0);
     this.tweens.add({ targets: this.prompt, alpha: 1, duration: 120 });
   }
 
@@ -419,6 +442,7 @@ export class RoomScene extends Phaser.Scene {
     this.pressureLabel.setVisible(false);
     if (!h?.hold || this.locked(h) || this.session.flags[h.hold.flag]) { this.spray?.stop(); this.carryOff(); return; }
     const held = this.keys.act.some((k) => k.isDown) || this.hud.touchAct;
+    if (held) markTip('hold');
     if (h.watcher) {
       const watcher = this.npcs.find(n => n.def.id === h.watcher);
       if (watcher && this.isWatching(watcher.def)) {
@@ -538,7 +562,7 @@ export class RoomScene extends Phaser.Scene {
         const distance = hz.from - this.player.x;
         if (this.mode === 'play' && distance > -100 && distance < 360 && Math.abs(distance) < nearest) {
           nearest = Math.abs(distance);
-          label = st.lit ? 'WAIT ON THE ISLAND: LANE LIT' : st.untilLit < crossMs(hz, SPEED * (this.room.limp ? LIMP : 1)) + 150 ? 'WAIT: LIGHT COMING' : 'GO NOW: CROSS TO THE NEXT ISLAND';
+          label = laneReadout(hz, st.lit, st.untilLit < crossMs(hz, SPEED * (this.room.limp ? LIMP : 1)) + 150);
         }
         // the glare grows through the warning, then sweeps across the lane while lit
         const glow = st.lit ? 0.85 : st.warn ? 0.12 + 0.5 * (1 - st.untilLit / WARN_MS) : 0;
@@ -633,17 +657,26 @@ export class RoomScene extends Phaser.Scene {
     }
   }
 
-  private hintLevel = 0;
-  private hint() {
-    if (this.room.hints) {
-      // escalate while the objective stays the same: nudge -> precise target -> direct guidance
-      const obj = this.room.objective(this.session.flags);
-      if (obj !== this.hintFor) { this.hintFor = obj; this.hintLevel = 0; }
-      return controls(this.room.hints(this.session.flags)[Math.min(2, this.hintLevel++)]);
-    }
-    const h = this.room.hotspots.find(h => this.active(h) && !this.locked(h) && h.required && !(h.doneFlag && this.session.flags[h.doneFlag]) && !(h.hold && this.session.flags[h.hold.flag]));
-    const level = this.hintLevel++ % 3;
-    return level === 0 ? 'Look for the warm marker. Read the objective above.' : level === 1 ? (h ? 'Try: ' + h.label + '. Release a held control to stop.' : this.room.objective(this.session.flags)) : h ? (h.x > this.player.x ? 'Move right. ' : 'Move left. ') + h.label + controls(h.hold?.pressure ? ' — hold [E]; release briefly when the needle hits HIGH.' : h.hold ? ' — hold [E].' : ' — press [E].') : 'Journal J lists every required challenge.';
+  /** Montag thinks aloud (the `?` button, H, and the stall bark all use this): each ask goes one step further. */
+  private think() {
+    const lines = MUSE[this.room.id]?.(this.session.flags);
+    if (!lines) return;
+    const n = this.thinkLevel++;
+    const i = n < 2 ? n : n % 2 ? 3 : 2;               // 0, 1, 2, then alternate 2 and 3
+    const t = this.guideTarget(), px = this.player.x;
+    const tx = t ? this.promptX(t) : undefined, near = !!t && reachDistance(this.player.x, t) < REACH;
+    let line = placeLine(lines[i], px, tx, near);
+    if (line === this.lastThought) line = placeLine(lines[i === 2 ? 3 : 2], px, tx, near);
+    this.lastThought = line;
+    this.barkTexts.forEach((x) => { this.tweens.killTweensOf(x); x.destroy(); }); this.barkTexts = []; // one voice at a time
+    this.bubble(this.player, line);
+  }
+
+  /** The thing Montag should go to next: the first open required hotspot, else the first open labelled one. */
+  private guideTarget(): Hotspot | undefined {
+    const f = this.session.flags;
+    const open = (h: Hotspot) => this.active(h) && !this.locked(h) && !(h.doneFlag && f[h.doneFlag]) && !(h.hold && f[h.hold.flag]);
+    return this.room.hotspots.find((h) => open(h) && h.required) ?? this.room.hotspots.find((h) => open(h) && !h.auto && !!h.label);
   }
 
   /** Ambient lines: spoken as Montag passes, above the speaker, without stopping play. */
@@ -667,14 +700,39 @@ export class RoomScene extends Phaser.Scene {
     this.tweens.add({ targets: t, alpha: 1, y: t.y - 6, duration: 220, hold: 2600 + line.length * 35, yoyo: true, onComplete: () => { t.destroy(); this.barkTexts = this.barkTexts.filter((x) => x !== t); } });
   }
 
-  /** After a long idle stretch, offer the gentlest hint once per objective. */
+  /** Stalled for 8 s (standing or wandering; walking alone is not progress): Montag thinks aloud, one step further each time. */
   private updateIdle(dtMs: number) {
-    const moving = Math.abs(this.vx) > 5;
-    this.idleMs = moving || this.near ? 0 : this.idleMs + dtMs;
-    if (!this.room.hints || this.idleMs < 30000) return;
     const obj = this.room.objective(this.session.flags);
-    if (obj && obj !== this.nudged) { this.nudged = obj; this.flashNote(controls(this.room.hints(this.session.flags)[0])); }
+    if (obj !== this.lastObjective) { this.lastObjective = obj; this.thinkLevel = 0; this.idleMs = 0; }
+    this.idleMs += dtMs;
+    if (this.idleMs < 8000) return;
     this.idleMs = 0;
+    this.journalDue = true;
+    this.think();
+  }
+
+  /** The keycap for the one control the player needs next (never shown twice: see markTip). */
+  private updateTip() {
+    const h = this.near, moving = this.keys.left.some((k) => k.isDown) || this.keys.right.some((k) => k.isDown) || this.hud.touchLeft || this.hud.touchRight;
+    if (moving && this.mode === 'play') markTip('move');
+    const want = this.stillWatch || this.mode !== 'play' ? ''
+      : !tipsSeen.has('move') ? (this.playMs > 1200 ? 'move' : '') // the first thing a new player needs, once the room has settled
+      : h?.hold && !h.vault && !tipsSeen.has('hold') && !this.locked(h) ? 'hold'
+      : h?.vault && !tipsSeen.has('vault') ? 'vault'
+      : h && !h.hold && !h.vault && !h.auto && !tipsSeen.has('interact') ? 'interact'
+      : this.journalDue && !tipsSeen.has('journal') ? 'journal' : '';
+    if (want !== this.tipKind) {
+      this.tipBox?.destroy(); this.tipBox = undefined; this.tipKind = want;
+      if (want) {
+        const [keys0, label] = TIPS[want], keys = want === 'move' && this.touch ? 'ARROWS' : keys0;
+        const k = text(this, 0, 0, keys, { fontFamily: FONT.display, fontSize: '13px', fontStyle: '700', color: C.ink }).setOrigin(0, 0.5);
+        const l = text(this, 0, 0, label, { fontFamily: FONT.display, fontSize: '13px', color: C.cream }).setOrigin(0, 0.5);
+        const kw = k.width + 14, w = kw + 10 + l.width + 14;
+        const bg = this.add.graphics().fillStyle(C.panel, 0.88).fillRoundedRect(-w / 2, -15, w, 30, 4).fillStyle(C.creamN, 0.95).fillRoundedRect(-w / 2 + 7, -10, kw, 20, 3);
+        k.setX(-w / 2 + 14); l.setX(-w / 2 + kw + 17);
+        this.tipBox = this.add.container(W / 2, H - 64, [bg, k, l]).setScrollFactor(0).setDepth(1100);
+      }
+    }
   }
 
   private spriteFor(id: string) { return id === 'montag' ? this.player : this.npcs.find((n) => n.def.id === id)?.spr; }
@@ -762,9 +820,9 @@ export class RoomScene extends Phaser.Scene {
         return;
       case 'play':
         if (a === 'act') this.interact();
-        else if (a === 'journal') this.showJournal('play');
+        else if (a === 'journal') { markTip('journal'); this.showJournal('play'); }
         else if (a === 'pause') this.openPause();
-        else if (a === 'hint') this.flashNote(this.hint());
+        else if (a === 'hint') this.think();
         return;
       default:
     }
@@ -776,6 +834,8 @@ export class RoomScene extends Phaser.Scene {
     if (h.hold && !this.locked(h)) return; // filled by holding, not pressing
     const f = this.session.flags;
     const locked = this.locked(h);
+    this.idleMs = 0;
+    if (h.vault) markTip('vault'); else if (!h.hold) markTip('interact');
     let key = locked ? h.lockedScript : h.doneFlag && f[h.doneFlag] && h.doneScript ? h.doneScript : h.script;
     if (!locked && h.watcher) {
       const w = this.npcs.find((n) => n.def.id === h.watcher);
@@ -925,6 +985,7 @@ export class RoomScene extends Phaser.Scene {
       this.mode = 'play';
       this.hud.showTouch(true);
       this.hud.setTimer(s.label);
+      this.flashNote(`Stand still for ${Math.round(s.still / 1000)} seconds. Any step starts the count over.`);
       this.stillWatch = { until: this.activeTime + s.still, x: this.player.x, ms: s.still };
       while (this.activeTime < this.stillWatch.until) await sleep(this, 100);
       this.stillWatch = undefined;
