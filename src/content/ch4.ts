@@ -94,7 +94,7 @@ export const SCRIPTS4: Record<string, Script> = {
   ] },
   m2: { lines: [{ who: 'FABER', text: 'Yes. And then?' }], choices: [
     { text: 'Shut the windows and wait.', again: true, reply: both("It doesn't need windows.") },
-    { text: 'Leave the lights on so it looks normal.', again: true, reply: both('It follows your smell, not the lights.') },
+    { text: 'Leave the lights on so it looks normal.', again: true, reply: both('It follows your smell. The lights mean nothing to it.') },
     { text: 'Turn on your sprinklers, full. Wash the walks.', next: 'm3' },
   ] },
   m3: { lines: [{ who: 'FABER', text: 'And you? It knows your scent.' }], choices: [

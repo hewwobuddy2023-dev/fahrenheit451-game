@@ -58,7 +58,7 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: 'FABER', text: "May I? ...It's been so long. Do you know they smell of nutmeg? Or some spice from a country far away." },
     { who: 'FABER', text: 'I am a coward, Mr. Montag. I saw where things were going and said nothing. Now. Why did you come? Be exact.' },
     { who: 'MONTAG', text: "Nobody listens. I can't talk to the walls because they talk back, and my wife listens to the walls. I want someone to teach me to understand what I read." },
-    { who: 'FABER', text: "It isn't books you want. It's what used to be in them." },
+    { who: 'FABER', text: "What you want is what used to be in them." },
     { who: 'MONTAG', text: "Then help me. We could print more. Hide copies in firemen's houses, call in the alarms, let them burn each other." },
     { who: 'FABER', text: 'Go home, Montag. That kind of talk gets people burned. Good night.' },
   ], choices: [
@@ -79,10 +79,10 @@ export const SCRIPTS3: Record<string, Script> = {
   fb_three2: { lines: [{ who: 'FABER', text: 'And the second? Detail is useless if...' }], choices: [
     { text: '"...if the walls are louder than the book. Quieter walls."', again: true, reply: [{ who: 'FABER', text: 'A quiet wall is still a wall. It still will not let you argue back. What do you need, yourself?' }] },
     { text: '"...if someone just tells me what it means."', again: true, reply: [{ who: 'FABER', text: "Then you'd be borrowing my thinking, and I am a coward. No." }] },
-    { text: '"...if you never get time to think it over."', next: 'fb_three3', reply: [{ who: 'FABER', text: 'Leisure to digest it. Time. Not the time they give us at a hundred miles an hour.' }] },
+    { text: '"...if you never get time to think it over."', next: 'fb_three3', reply: [{ who: 'FABER', text: 'Leisure to digest it. Time, the kind they don\'t give us at a hundred miles an hour.' }] },
   ] },
   fb_three3: { lines: [{ who: 'FABER', text: 'And the third. The one I never had.' }], choices: [
-    { text: '"The right to act on what the first two teach us."', set: { 'faber.three': true }, next: 'fb_ear', reply: [{ who: 'FABER', text: 'The right to carry out actions, based on the first two. That is where an old coward stops, Montag. That is where you begin.' }] },
+    { text: '"The right to act on what the first two teach us."', set: { 'faber.three': true }, next: 'fb_ear', reply: [{ who: 'FABER', text: 'The right to carry out actions, based on the first two. That is where an old coward stops, Montag. You start there.' }] },
     { text: '"Permission. From the Captain."', again: true, reply: [{ who: 'FABER', text: 'Beatty grants nothing but matches. Again.' }] },
     { text: '"Courage."', again: true, reply: [{ who: 'FABER', text: 'Courage comes after. What do you DO with what you have understood?' }] },
   ] },
@@ -90,7 +90,7 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: 'FABER', text: 'I know a printer who has been out of work forty years. That much I can do. And this.' },
     { who: N, text: 'In a back room of coils and crystals he gives you something green, no bigger than a bullet.' },
     { who: 'FABER', text: "In your ear. I'll hear what you hear, and I'll talk to you. Go to the firehouse tonight; we'll listen to your Captain together." },
-    { who: 'FABER', text: "Tonight, let Beatty do the talking. A man like that says more than he means to. Listen, and I will listen with you." },
+    { who: 'FABER', text: "Tonight, let Beatty do the talking. A man like that says more than he means to. Listen. I'll listen too." },
   ] },
 
   // ---- 09 Dover Beach ----

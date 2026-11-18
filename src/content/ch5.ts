@@ -62,7 +62,7 @@ export const SCRIPTS5: Record<string, Script> = {
   // ---- 15 The Fireman's Choice ----
   in_angry: { lines: [{ who: N, text: "Black's front door, then the sirens. You still want every firehouse in the city to burn." }] },
   in_tired: { lines: [{ who: N, text: "You are tired in a way sleep won't touch. Montag is dead, officially. It would be restful to leave him that way." }] },
-  in_quiet: { lines: [{ who: N, text: 'Clarisse. The woman on her porch. The verse on the train that would not stay lost.' }] },
+  in_quiet: { lines: [{ who: N, text: 'Clarisse on her porch. The verse from the train, still in your head.' }] },
   cp_choice: { lines: [
     { who: 'GRANGER', text: "The war's about to start. We sit it out here, then walk back toward whatever is left and start remembering out loud." },
     { who: 'GRANGER', text: "You owe us nothing, Montag. Which way are you walking?" },
@@ -80,7 +80,7 @@ export const SCRIPTS5: Record<string, Script> = {
 
   ep_pres: { lines: [
     { who: N, text: 'At dawn someone lights a small fire and fries a little bacon. Granger looks into the flames.' },
-    { who: 'GRANGER', text: "There was a bird once that burned itself to ash and climbed out of the pile, over and over. We're a lot like it. The difference is, we can remember what we did last time." },
+    { who: 'GRANGER', text: "There was a bird once that burned itself to ash and climbed out of the pile, over and over. We're something like it. Only we can remember what we did last time." },
     { who: 'GRANGER', text: "If anyone asks what we're up to, say we're remembering." },
     { who: 'GRANGER', text: 'And when we get back, the first thing we build is a mirror, a big one, and we stand in front of it a good long while.' },
     { who: N, text: 'Someone kicks dirt over the fire. They start upstream toward the city, and Granger nods you to the front.' },

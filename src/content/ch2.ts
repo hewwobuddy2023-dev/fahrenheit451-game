@@ -6,14 +6,14 @@ const N = '';
 
 export const SCRIPTS2: Record<string, Script> = {
   s2_days: { lines: [
-    { who: N, text: 'All week Clarisse turns up on your way home: shaking a walnut tree, pinning a leaf to your door, offering you a jar of rainwater. Thursday, the lawn next door is empty.' },
+    { who: N, text: 'All week Clarisse turns up on your way home, shaking a walnut tree or offering you a jar of rainwater. Thursday, the lawn next door is empty.' },
   ] },
   s2_hound1: { lines: [{ who: N, text: "You put two fingers on the Hound's muzzle. It is warm, like a stove just turned off." }] },
   s2_hound2: { set: { 's2.hound': true }, lines: [
     { who: N, text: 'It growls. A silver needle slides out an inch, wet at the tip, and goes back in.' },
     { who: 'BEATTY', text: 'Montag?' },
     { who: 'MONTAG', text: "It doesn't like me." },
-    { who: 'BEATTY', text: "Like. It doesn't like or dislike. It runs a course, we set the course. Copper wire and a few batteries; that's your devil." },
+    { who: 'BEATTY', text: "Like. It has no opinions. It runs a course, and we set the course. Copper wire and a few batteries; that's your devil." },
     { who: 'MONTAG', text: 'Somebody could set it to my chemistry. Just enough to growl.' },
     { who: 'BEATTY', text: "Who? Nobody here has it in for you. We'll have it looked at." },
     { who: 'BEATTY', text: "Unless there's something on your conscience, Guy?" },
