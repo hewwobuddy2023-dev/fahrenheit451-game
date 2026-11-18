@@ -136,7 +136,7 @@ export const ROOMS4: Record<string, RoomDef> = {
       { title: 'CHAPTER FOUR', sub: 'Burning Bright' }, { say: 'lw_1' }, { npc: 'mildred', x: 160, ms: 2600 },
       { set: { 'lw.gone': true } }, { say: 'lw_2' },
     ] }],
-    hotspots: [{ id: 'door', x: 950, label: 'Go in with the flame thrower', required: true, exit: { room: 'home5', x: 1500 } }],
+    hotspots: [{ id: 'door', x: 950, label: 'Go in with the flame thrower', required: true, door: true, exit: { room: 'home5', x: 1500 } }],
   },
 
   home5: {
@@ -158,7 +158,7 @@ export const ROOMS4: Record<string, RoomDef> = {
       { id: 'w2', x: 1980, label: 'Burn the wall', py: 330, required: true, hold: { flag: 'c10.w2', ms: 1300, fx: 'flame' } },
       { id: 'w3', x: 2300, label: 'Burn the wall', py: 330, required: true, hold: { flag: 'c10.w3', ms: 1300, fx: 'flame' } },
       { id: 'out', x: 140, label: 'Go back outside', required: true, requires: ['c10.beds', 'c10.w1', 'c10.w2', 'c10.w3'], lockedScript: 'h5_out_locked',
-        script: 'h5_out', exit: { room: 'lawn2', x: 900 } },
+        script: 'h5_out', door: true, exit: { room: 'lawn2', x: 900 } },
     ],
   },
 
@@ -214,7 +214,7 @@ export const ROOMS4: Record<string, RoomDef> = {
       { id: 'kids', x: 965, label: '', auto: true, when: (f) => !f['c11.kids'], steps: [{ flash: 0xfff0d0, ms: 300 }, { fx: 'fall' }, { say: 'bv_kids' }] },
       { id: 'curb', x: 1640, label: '', auto: true, when: (f) => !f['c11.crossed'], script: 'bv_cross' },
       { id: 'black', x: 1900, label: "Black's house", required: true, when: (f) => !f['c11.choice'], requires: ['c11.crossed'], lockedScript: 'bv_locked', script: 'bv_black' },
-      { id: 'on', x: 2140, label: "On to Faber's", required: true, requires: ['c11.choice'], lockedScript: 'bv_on_locked', exit: { room: 'faber2', x: 220 } },
+      { id: 'on', x: 2140, label: "On to Faber's", required: true, requires: ['c11.choice'], lockedScript: 'bv_on_locked', door: true, exit: { room: 'faber2', x: 220 } },
     ],
   },
 
@@ -229,7 +229,7 @@ export const ROOMS4: Record<string, RoomDef> = {
     enter: [{ key: 'e.faber2', steps: [{ fx: 'tvOn' }, { say: 'fb2_open' }] }],
     hotspots: [
       { id: 'faber', x: 640, label: 'Talk to Faber', required: true, when: (f) => !f['c12.mask'], script: 'm1' },
-      { id: 'back', x: 1400, label: 'The back door', required: true, requires: ['c12.mask'], lockedScript: 'fb2_locked', exit: { room: 'run', x: 150 } },
+      { id: 'back', x: 1400, label: 'The back door', required: true, requires: ['c12.mask'], lockedScript: 'fb2_locked', door: true, exit: { room: 'run', x: 150 } },
     ],
   },
 

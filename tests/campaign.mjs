@@ -23,7 +23,7 @@ try{
   await s.until(()=>attic.isWatching(attic.npcs.find(n=>n.def.id==='beatty').def),'watching');
   await s.tap(888,474);await d.settle();assert.ok(!attic.session.flags['c04.book']);
   await s.until(()=>!attic.isWatching(attic.npcs.find(n=>n.def.id==='beatty').def),'look away');
-  await d.visit('hide');assert.ok(attic.session.flags['c04.book']);await d.visit('woman');
+  await d.visit('hide');assert.ok(attic.session.flags['c04.book']);await d.visit('down');await d.visit('woman');
   await d.visit('chair');await d.visit('vent',{moveStill:true});
   expect('home3',6);chapters.push(s.save());
   for(const id of ['file','phone','door','read','faber','out','switch','ladies','incin'])await d.visit(id);

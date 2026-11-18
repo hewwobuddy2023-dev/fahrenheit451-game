@@ -45,8 +45,8 @@ export const SCRIPTS2: Record<string, Script> = {
     { who: 'STONEMAN', text: 'Neighbor says the attic.' },
     { who: 'BEATTY', text: 'Up!' },
   ] },
-  a_books: { set: { 'a.fell': true }, lines: [
-    { who: N, text: 'The attic is books, floor to rafters. A stack slides and a spine catches you across the cheek. One lands open in your hands.' },
+  a_books: { set: { 'a.fell': true }, sub: true, lines: [
+    { who: N, text: 'The stacks let go. Books slide down on you like slaughtered birds, and a spine catches you across the cheek. One drops open into your hands.' },
     { who: N, text: 'Half a line about time dozing in the afternoon sun. Then it is gone.' },
   ] },
   a_watched: { lines: [{ who: 'BEATTY', text: "Montag! Up here! What are you doing?" }, { who: N, text: 'His eyes are on you. Not yet.' }] },
@@ -66,6 +66,10 @@ export const SCRIPTS2: Record<string, Script> = {
     { who: 'BEATTY', text: 'Three. Four.' },
     { who: 'THE WOMAN', text: "Don't trouble yourself with five." },
     { who: N, text: 'She opens her hand: a kitchen match.' },
+  ] },
+  a_strike: { sub: true, lines: [
+    { who: N, text: 'She draws the match along the banister rail. The head flares.' },
+    { who: 'BEATTY', text: 'Back! Out of the house!' },
   ] },
   a_match: { lines: [
     { who: N, text: 'On the lawn you look back. She is on the porch with one hand up, and then there is a small light in it.' },
@@ -187,7 +191,7 @@ export const ROOMS2: Record<string, RoomDef> = {
         steps: [{ fx: 'houndGrowl' }, { fx: 'shake' }, { say: 's2_hound2' }] },
       { id: 'cards', x: 1110, label: 'Sit in at cards', required: true, script: 's2_cards', doneFlag: 's2.cards', doneScript: 's2_cards_done' },
       { id: 'dispatch', x: 2010, label: 'The dispatch board', required: true, requires: ['s2.hound', 's2.cards'], lockedScript: 's2_quiet',
-        script: 's2_alarm', steps: [{ fx: 'alarm' }, { wait: 600 }, { goto: 'attic', x: 220 }] },
+        script: 's2_alarm', steps: [{ fx: 'alarm' }, { wait: 600 }, { goto: 'attic', x: 110 }] },
     ],
   },
 
@@ -196,24 +200,36 @@ export const ROOMS2: Record<string, RoomDef> = {
     npcs: [
       { id: 'woman', fig: 'woman', name: 'THE WOMAN', x: 430, face: -1, scale: 1.2 }, // drawn stooped and small; this brings her up to Montag's height
       { id: 'beatty', fig: 'beatty', name: 'BEATTY', x: 1380, face: -1, watch: { period: 4200, on: 1800 }, when: (f) => !f['c04.book'] },
-      { id: 'stoneman', fig: 'fireman', name: 'STONEMAN', x: 1580, face: -1, back: true },
+      { id: 'stoneman', fig: 'fireman', name: 'STONEMAN', x: 1580, face: -1, back: true, when: (f) => !f['a.down'] },
+      // downstairs again: the men wait by the front door while the old woman makes her stand
+      { id: 'beatty_h', fig: 'beatty', name: 'BEATTY', x: 300, face: 1, when: (f) => !!f['a.down'] },
+      { id: 'stoneman_h', fig: 'fireman', name: 'STONEMAN', x: 235, face: 1, back: true, when: (f) => !!f['a.down'] },
     ],
     quietUi: true,
+    // the hall is below the partition at x 1062, the attic above it
+    walk: (f) => f['a.down'] ? [40, 1000] : f['a.fell'] ? [1070, 1760] : [40, 760],
     objective: (f) => !f['a.fell'] ? 'Climb the stairs to the attic' : !f['c04.book'] ? 'Hide the book under your coat' : 'Go back downstairs',
     hints: (f) => {
-      if (!f['a.fell']) return ['Something is up here with you. Find the way up.', 'The stairs are in the middle of the attic, to the right of the old woman.', 'Walk right to the stairs. Climbing is automatic.'];
+      if (!f['a.fell']) return ['Something is up here with you. Find the way up.', 'The stairs are to the right of the old woman.', 'Walk right to the stairs. You climb by yourself.'];
       if (!f['c04.book']) return ['Beatty is watching the attic. Wait until he looks away.', 'The hiding spot is in the middle of the attic, close to Beatty.', 'Hold [E] there only while Beatty looks away. If he turns, the attempt resets.'];
-      return ['You have the book, and Beatty has not seen it.', 'The woman and the stairs are at the left side of the attic.', 'Walk left to the woman by the stairs.'];
+      return ['You have the book, and Beatty has not seen it.', 'The stairs down are at the left end of the attic.', 'Walk left to the stairs. You go down by yourself.'];
     },
-    enter: [{ key: 'e.attic', steps: [{ say: 'a_open' }] }],
+    enter: [{ key: 'e.attic', steps: [{ fx: 'knob' }, { walk: 380, ms: 1300 }, { say: 'a_open' }] }], // in through the broken door
     hotspots: [
-      { id: 'stairs', x: 700, label: '', auto: true, when: (f) => !f['a.fell'], steps: [{ fx: 'climb' }, { fx: 'books' }, { say: 'a_books' }] },
+      // up: a framed climb, the attic opens empty, then the books come down on him
+      { id: 'stairs', x: 700, label: '', auto: true, when: (f) => !f['a.fell'],
+        steps: [{ fx: 'closeIn' }, { fx: 'climb' }, { fx: 'atticOpen' }, { wait: 500 }, { fx: 'bookfall' }, { say: 'a_books' }, { fx: 'bookDown' }, { fx: 'closeOut' }] },
+      // down: he walks the stairs; Beatty and Stoneman wait in the hall
+      { id: 'down', x: 1080, label: '', auto: true, when: (f) => !!f['c04.book'] && !f['a.down'], steps: [{ fx: 'descend' }] },
       { id: 'hide', x: 1140, label: 'Hide the book', py: 290, required: true, when: (f) => !!f['a.fell'] && !f['c04.book'],
         watcher: 'beatty', watchedScript: 'a_watched', script: 'a_hide', hold: { flag: 'c04.book', ms: 650, fx: 'pull', carry: { x: 1160, y: 300 } },
         // the held book is tucked under the coat, then the line plays
         steps: [{ pose: 'montag', p: 'hold' }, { fx: 'tuckBook' }, { pose: 'montag' }] },
       { id: 'woman', x: 520, label: '', auto: true, when: (f) => !!f['c04.book'] && !f['c04.plea'], script: 'a_woman',
-        steps: [{ fade: 'out', ms: 800 }, { fx: 'glowOrange' }, { say: 'a_match' }, { wait: 700 }, { goto: 'home2', x: 900 }] },
+        // her last stand, framed: she strikes the match, the men back out, the hall catches
+        steps: [{ fx: 'closeIn' }, { wait: 800 }, { say: 'a_strike' }, { fx: 'strike' }, { wait: 500 },
+          { npc: 'beatty_h', x: 120, ms: 900 }, { npc: 'stoneman_h', x: 170, ms: 800 }, { fx: 'hallFire' }, { fx: 'shake' }, { wait: 1300 },
+          { walk: 190, ms: 1400 }, { fade: 'out', ms: 800 }, { fx: 'closeOut' }, { fx: 'glowOrange' }, { say: 'a_match' }, { wait: 700 }, { goto: 'home2', x: 900 }] },
     ],
   },
 

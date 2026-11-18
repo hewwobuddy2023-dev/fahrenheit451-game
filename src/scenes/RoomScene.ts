@@ -329,7 +329,8 @@ export class RoomScene extends Phaser.Scene {
       if (p.x <= v.x - 18 && nx > v.x - 18) { nx = v.x - 18; this.vx = 0; }
       if (p.x >= v.x + 18 && nx < v.x + 18) { nx = v.x + 18; this.vx = 0; }
     }
-    p.x = Phaser.Math.Clamp(nx, 40, this.room.width - 40);
+    const [lo, hi] = playing && this.room.walk ? this.room.walk(f) : [40, this.room.width - 40];
+    p.x = Phaser.Math.Clamp(nx, lo, hi);
     if (dir) this.facing = dir;
     const swimming = this.room.id === 'river' && !f['c13.shore'];
     if (!this.scriptedWalk && p.getData('pose') !== 'lying' && !this.carrying) this.animate(p, this.vx, this.facing, swimming ? 'fig:montagFloat' : this.near?.hold && (this.keys.act.some(k => k.isDown) || this.hud.touchAct) ? 'fig:montagWork' : this.room.chapter >= 5 ? 'fig:montagCivil' : 'fig:montag');
@@ -855,8 +856,19 @@ export class RoomScene extends Phaser.Scene {
     if (key) await this.say(key);
     if (!locked && !blocked && firstTime && h.steps) await this.runSteps(h.steps);
     if (this.isExit()) return;
-    if (!locked && !blocked && h.exit) return this.transition(h.exit.room, h.exit.x);
+    if (!locked && !blocked && h.exit) { if (h.door) await this.throughDoor(h.x); return this.transition(h.exit.room, h.exit.x); }
     this.endCutscene();
+  }
+
+  /** A short walk into the door and through it: latch, then Montag is gone behind it. */
+  private async throughDoor(x: number) {
+    const p = this.player, d = x - p.x;
+    this.facing = Math.sign(d) || this.facing;
+    this.scriptedPose = true; this.scriptedWalk = true; p.setData('norim', true);
+    p.play('fig:montag' + (this.room.chapter >= 5 ? 'Civil' : '') + ':walk').setFlipX(this.facing < 0);
+    if (Math.abs(d) > 3) await this.tween({ targets: p, x, duration: Math.min(700, Math.abs(d) / SPEED * 1000) });
+    sound.cue('knob');
+    await this.tween({ targets: p, alpha: 0, duration: 260 });
   }
 
   /** Contextual vault: a short arc over a low obstacle, input-locked for under half a second. */
@@ -1038,6 +1050,7 @@ export class RoomScene extends Phaser.Scene {
     const cam = this.cameras.main;
     if (name === 'ignite') sound.cue('ignite');
     if (name === 'ignite') this.roomLights.push({ x: 1100, y: 300, color: 0xff8a40, r: 780 }); // the fire lights the crew
+    if (name === 'strike') { sound.cue('ignite'); this.roomLights.push({ x: 440, y: 300, color: 0xff8a40, r: 560 }); return; } // the old woman's match
     if (name === 'click') return sound.cue('click');
     if (name === 'knob') return sound.cue('knob');
     if (name === 'rush') return sound.cue('rush');
@@ -1071,23 +1084,25 @@ export class RoomScene extends Phaser.Scene {
         this.tweens.add({ targets: this.player, scaleY: 0.95, yoyo: true, duration: 110 });
         return;
       }
-      case 'climb': {
-        // up the drawn staircase: in from the floor to the foot, diagonally along the treads (smaller as he recedes), into the dark doorway at the top
-        const p = this.player, foot = { x: 718, y: 392 }, top = { x: 1000, y: 170 }, treads = 10;
-        this.scriptedPose = true; this.scriptedWalk = true; p.setData('norim', true);
-        this.facing = 1; p.play('fig:montag:walk').setFlipX(false);
-        await this.tween({ targets: p, x: foot.x, y: foot.y, scale: 0.9, duration: 650 });
-        const run = { t: 0 }; let last = -1;
-        await this.tween({ targets: run, t: 1, duration: settings.reducedMotion ? 1400 : 2900, onUpdate: () => {
-          const t = run.t, i = Math.min(treads - 1, Math.floor(t * treads));
-          if (i !== last) { last = i; sound.cue('step'); }
-          p.setPosition(foot.x + (top.x - foot.x) * t, foot.y + (top.y - foot.y) * t - Math.abs(Math.sin(t * treads * Math.PI)) * 4).setScale(0.9 - 0.32 * t).setAlpha(t > 0.74 ? (1 - t) / 0.26 : 1);
-        } });
-        cam.fadeOut(450, 0, 0, 0); await sleep(this, 520);
-        p.setAlpha(1).setScale(1).setPosition(1100, GROUND_Y).play('fig:montag:idle');
-        cam.scrollX = Phaser.Math.Clamp(1100 + 70 - W / 2, 0, this.room.width - W);
-        this.scriptedPose = false; this.scriptedWalk = false; p.setData('norim', false);
-        cam.fadeIn(600, 0, 0, 0); await sleep(this, 640);
+      case 'climb': return this.stairs(true);
+      case 'descend': return this.stairs(false);
+      case 'bookfall': { // the stacks let go: the avalanche, a spine across the cheek, one book dropping into Montag's hands
+        const p = this.player;
+        sound.cue('rush');
+        if (!settings.reducedMotion) cam.shake(2200, 0.004);
+        const rain = this.kit.fx.avalanche() as unknown as Promise<void>;
+        await sleep(this, 900);
+        this.setPose(p, 'recoil'); sound.cue('step');
+        const t = this.tome ??= this.add.image(0, 0, 'tome').setDepth(5.3);
+        t.setVisible(true).setAlpha(1).setPosition(p.x + 30, 20).setAngle(40);
+        await this.tween({ targets: t, x: p.x + this.facing * 16, y: p.y - 92, angle: 0, duration: 650, ease: 'Quad.easeIn' });
+        sound.cue('page'); this.setPose(p);
+        await rain;
+        return;
+      }
+      case 'bookDown': { // the book goes onto the nearest stack, where it can be picked up again
+        const c = ROOMS.attic.hotspots.find((h) => h.id === 'hide')!.hold!.carry!;
+        if (this.tome) await this.tween({ targets: this.tome, x: c.x, y: c.y, angle: 12, duration: 500, ease: 'Sine.easeInOut' });
         return;
       }
       case 'toBed': { // sick: Montag lies down on the left bed, helmet off (the lying frame is bare-headed)
@@ -1165,6 +1180,46 @@ export class RoomScene extends Phaser.Scene {
       case 'light': this.dark?.set(false); return;
       default: console.warn('unknown fx', name);
     }
+  }
+
+  /** Montag on the drawn staircase, visibly: along the treads, a door at the head, and the camera on him the whole way. */
+  private async stairs(up: boolean) {
+    const p = this.player, cam = this.cameras.main, foot = { x: 718, y: 392 }, top = { x: 1000, y: 170 }, treads = 10;
+    const frame = (x: number) => { cam.scrollX = Phaser.Math.Clamp(x + 70 - W / 2, 0, this.room.width - W); };
+    this.scriptedPose = true; this.scriptedWalk = true; p.setData('norim', true);
+    this.facing = up ? 1 : -1; p.play('fig:montag:walk').setFlipX(!up);
+    const run = { t: up ? 0 : 1 };
+    const climb = async () => {
+      let last = -1;
+      await this.tween({ targets: run, t: up ? 1 : 0, duration: settings.reducedMotion ? 1400 : 2700, onUpdate: () => {
+        const t = run.t, i = Math.min(treads - 1, Math.floor(t * treads));
+        if (i !== last) { last = i; sound.cue('step'); }
+        p.setPosition(foot.x + (top.x - foot.x) * t, foot.y + (top.y - foot.y) * t - Math.abs(Math.sin(t * treads * Math.PI)) * 4).setScale(0.9 - 0.32 * t);
+      } });
+    };
+    if (up) {
+      await this.tween({ targets: p, x: foot.x, y: foot.y, scale: 0.9, duration: 650 });
+      await climb();
+    } else {
+      await this.tween({ targets: p, x: 1040, duration: Math.abs(p.x - 1040) / SPEED * 1000 });
+    }
+    // the door at the head of the stairs; the floor Montag leaves goes dark behind it
+    sound.cue('knob');
+    await this.tween({ targets: p, alpha: 0, duration: 240 });
+    cam.fadeOut(280, 0, 0, 0); await sleep(this, 340);
+    if (up) { p.setPosition(1100, GROUND_Y).setScale(1).setAlpha(1).play('fig:montag:idle'); frame(1100); }
+    else {
+      this.session.set({ 'a.down': true }); this.refresh(false);
+      p.setPosition(top.x, top.y).setScale(0.58).setAlpha(1).setFlipX(true).play('fig:montag:walk'); frame(top.x);
+    }
+    cam.fadeIn(520, 0, 0, 0);
+    if (!up) {
+      await sleep(this, 300); sound.cue('knob');
+      await climb();
+      await this.tween({ targets: p, x: foot.x - 20, y: GROUND_Y, scale: 1, duration: 450 });
+      p.play('fig:montag:idle');
+    } else await sleep(this, 560);
+    this.scriptedPose = false; this.scriptedWalk = false; p.setData('norim', false);
   }
 
   private async title(t: string, sub?: string) {

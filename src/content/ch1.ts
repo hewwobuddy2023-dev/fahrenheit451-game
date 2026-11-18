@@ -197,7 +197,7 @@ export const ROOMS1: Record<string, RoomDef> = {
       { id: 'cards', x: 1110, label: 'Listen to the card game', script: 's1_cards' },
       { id: 'beatty', x: 1290, label: 'Talk to Beatty', script: 's1_beatty' },
       { id: 'hound', x: 1630, label: 'Watch the Hound', steps: [{ cam: 1740, ms: 700 }, { fx: 'houndStir' }, { say: 's1_hound' }, { follow: true }] },
-      { id: 'out', x: 2250, label: 'Leave for home', required: true, exit: { room: 'corner' } },
+      { id: 'out', x: 2250, label: 'Leave for home', required: true, door: true, exit: { room: 'corner' } },
     ],
   },
 
@@ -233,7 +233,7 @@ export const ROOMS1: Record<string, RoomDef> = {
           { if: (f) => !f['c02.n2'], then: [{ set: { 'c02.n2': 'walk' } }] },
           { if: (f) => !f['c02.n3'], then: [{ set: { 'c02.n3': 'walk' } }] },
           { follow: true }, { say: 'c_after' }] },
-      { id: 'home', x: 2240, label: 'Go inside', required: true, requires: ['c02.asked'], exit: { room: 'home1', x: 200 } },
+      { id: 'home', x: 2240, label: 'Go inside', required: true, requires: ['c02.asked'], door: true, exit: { room: 'home1', x: 200 } },
     ],
   },
 
