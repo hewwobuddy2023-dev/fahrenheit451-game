@@ -62,7 +62,7 @@ export class Dialogue {
   private watch?: Script['suspicion'];
   private suspicion = 0;
   private firstChoices?: Choice[];
-  private meter?: Phaser.GameObjects.Text;
+  private meter?: Phaser.GameObjects.Graphics;
   private sel = 0;
   private acc: Flags = {};
   private flags: Flags = {};
@@ -315,6 +315,7 @@ export class Dialogue {
           this.suspicion = 3; this.caughtReset = true; this.retry = this.firstChoices; this.retrySel = 0;
           sound.cue('caught');
         }
+        this.scene.events.emit('fail');
         this.paintMeter();
       }
       this.scene.cameras.main.flash(160, 120, 30, 20);
@@ -331,13 +332,18 @@ export class Dialogue {
     this.next();
   }
 
+  /** Three eyes above the panel, no words: each one that opens is Beatty looking harder. The third is the catch. */
   private paintMeter() {
     if (!this.watch) return;
-    this.meter ??= text(this.scene, BOX.x + BOX.w, this.panelTop - 22, '', { fontSize: '14px', color: C.amber, backgroundColor: 'rgba(13,10,9,0.85)', padding: { x: 10, y: 4 } })
-      .setOrigin(1, 0.5).setScrollFactor(0).setDepth(1300);
-    // text, not colour alone: readable when muted and for colour-blind players
-    this.meter.setY(this.panelTop - 22).setText(`${this.watch.label}  ${'■'.repeat(this.suspicion)}${'□'.repeat(3 - this.suspicion)}  ${this.suspicion}/3`).setVisible(true);
-    this.meter.setColor(this.suspicion >= 2 ? C.ember : C.amber);
+    const g = (this.meter ??= this.scene.add.graphics().setScrollFactor(0).setDepth(1300));
+    const x0 = BOX.x + BOX.w - 90;
+    g.setY(this.panelTop - 24).setVisible(true).clear();
+    for (let i = 0; i < 3; i++) {
+      const x = x0 + i * 44, on = i < this.suspicion, col = i >= 2 ? C.emberN : C.amberN;
+      g.fillStyle(0x0d0a09, 0.9).fillRoundedRect(x - 20, -14, 40, 28, 14).lineStyle(on ? 2 : 1, on ? col : C.creamN, on ? 1 : 0.35).strokeRoundedRect(x - 20, -14, 40, 28, 14);
+      if (on) g.fillStyle(C.creamN, 1).fillEllipse(x, 0, 28, 16).fillStyle(col, 1).fillCircle(x, 0, 6).fillStyle(0x0d0a09, 1).fillCircle(x, 0, 2.5);
+      else g.lineStyle(2, C.creamN, 0.4).beginPath().arc(x, -3, 9, 0.4, Math.PI - 0.4).strokePath();
+    }
   }
 
   private close() {

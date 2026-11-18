@@ -14,6 +14,7 @@ export class SequencePuzzle {
   private attempts = 0;
   private hintLevel = 0;
   private message = '';
+  private bad = false;   // the last pick was wrong: the panel flashes red once
   /** Interference puzzles: the line you could not recall is drowned out by the jingle until you read the source again. */
   private drowned?: string;
   constructor(privateScene: Phaser.Scene, privateDef: SequenceDef, privateDone: () => void, privatePause: () => void) {
@@ -39,15 +40,13 @@ export class SequencePuzzle {
   }
   private pick(i: number) {
     const word = this.cards[i];
-    if (word === this.drowned) { sound.cue('wrong'); this.message = "The jingle drowns that line. Read the source again to hear it."; this.draw(); return; }
-    if (this.selected.includes(word)) { this.message = 'Already placed. Choose another fragment, or read the source again.'; this.draw(); return; }
+    if (word === this.drowned || this.selected.includes(word)) { sound.cue('wrong'); this.bad = true; this.draw(); return; }
     sound.cue('page'); this.selected.push(word); this.message = '';
     if (this.selected.length === this.def.fragments.length) {
       if (this.selected.every((word, i) => word === this.def.fragments[i])) { this.destroy(); sound.cue('complete'); this.done(); return; }
-      this.attempts++; sound.cue('caught');
+      this.attempts++; sound.cue('caught'); this.bad = true;
       const miss = this.selected.findIndex((w, k) => w !== this.def.fragments[k]);
-      if (this.def.interference) { this.drowned = this.def.fragments[miss]; this.message = 'The advertisement roars over a line. You must read the source again to hear it.'; }
-      else this.message = 'The order slipped. Try again, or read the source. No earlier progress was lost.';
+      if (this.def.interference) this.drowned = this.def.fragments[miss];
       this.selected = [];
     }
     this.draw();
@@ -66,34 +65,43 @@ export class SequencePuzzle {
       const t = text(s, x, y, value, { fontSize: `${size}px`, color, wordWrap: { width: 830 }, lineSpacing: 5 }); parts.push(t); return t;
     };
     label(60, 36, this.def.title.toUpperCase(), 24, C.amber).setFontFamily(FONT.display).setLetterSpacing(4);
-    // the phase tag says what to do now: read first, then recall from memory
-    parts.push(text(s, 60, 74, studying ? 'STUDY  ·  READ THE VERSE' : 'RECALL  ·  FROM MEMORY',
-      { fontFamily: FONT.display, fontSize: '13px', color: C.ember, backgroundColor: '#1a1210', padding: { x: 10, y: 5 } }).setLetterSpacing(3));
-    label(60, 108, studying ? this.def.source : this.def.interference ? 'Let the advertising pass. Nothing is timed.' : 'Nothing is timed. Take your time.', 15, C.creamDim);
     const button = (x: number, y: number, w: number, h: number, value: string, fn: () => void, chosen = false, display = true, placed = false) => {
       const box = s.add.rectangle(x, y, w, h, C.emberN, chosen ? 0.2 : 0.05).setOrigin(0)
-        .setStrokeStyle(1, C.emberN, chosen ? 0.9 : 0.35).setScrollFactor(0).setInteractive({ useHandCursor: true }).on('pointerdown', fn);
-      const shown = display ? value : (chosen ? '›  ' : '   ') + value;
-      const t = text(s, x + 14, y + h / 2, shown, display
+        .setStrokeStyle(chosen ? 2 : 1, chosen ? C.amberN : C.emberN, chosen ? 1 : 0.35).setScrollFactor(0).setInteractive({ useHandCursor: true }).on('pointerdown', fn);
+      const t = text(s, x + 16, y + h / 2, value, display
         ? { fontFamily: FONT.display, fontSize: '16px', color: chosen ? C.amber : C.cream, wordWrap: { width: w - 28 } }
-        : { fontSize: '17px', color: placed ? C.muted : chosen ? C.amber : C.cream, lineSpacing: 2, wordWrap: { width: w - 28 } })
+        : { fontSize: '17px', color: placed ? C.muted : chosen ? C.amber : C.cream, lineSpacing: 2, wordWrap: { width: w - 60 } })
         .setOrigin(0, 0.5).setLetterSpacing(display ? 2 : 0);
       parts.push(box, t);
     };
     button(792, 36, 108, 44, 'PAUSE', this.pause);
     if (studying) {
-      label(60, 150, this.def.fragments.join('\n'), 23);
-      label(60, 330, 'Read the passage as one thought. You can come back to it at any time.', 16, C.creamDim);
-      button(60, 420, 470, 58, controls('BEGIN RECALL  ·  PRESS [E]'), () => this.action('act'), true);
+      label(60, 76, this.def.source, 14, C.creamDim);
+      label(60, 130, this.def.fragments.join('\n'), 25);
+      button(60, 420, 470, 58, controls('[E]') + '   ▸', () => this.action('act'), true);
     } else {
-      label(60, 142, `${this.selected.length} of ${this.def.fragments.length} placed`, 18, C.amber);
-      if (this.message) label(60, 170, this.message, 14, C.amber);
-      this.cards.forEach((word, i) => button(60 + (i % 2) * 425, 201 + Math.floor(i / 2) * 75, 412, 65,
-        `${this.selected.includes(word) ? 'PLACED · ' : word === this.drowned ? 'DROWNED OUT · ' : ''}${word === this.drowned ? '▒▒▒▒▒▒' : word}`,
-        () => this.pick(i), i === this.index, false, this.selected.includes(word)));
-      button(60, 443, 320, 54, 'READ AGAIN  ·  BACKSPACE', () => this.action('back'));
-      button(396, 443, 200, 54, 'HINT  ·  H', () => this.action('hint'));
-      label(617, 456, '↑ / ↓ select\nE / Enter place', 13, C.creamDim);
+      // the verse becomes slots: each placed line fills the next one, in order. A wrong order empties them with a red flash.
+      const n = this.def.fragments.length, sw = (PW - 56) / n;
+      for (let i = 0; i < n; i++) {
+        const filled = i < this.selected.length, x = X + 28 + i * sw;
+        parts.push(s.add.rectangle(x, 100, sw - 10, 78, filled ? C.amberN : C.creamN, filled ? 0.14 : 0.04).setOrigin(0).setStrokeStyle(filled ? 2 : 1, filled ? C.amberN : C.creamN, filled ? 0.9 : 0.25));
+        parts.push(filled
+          ? text(s, x + 10, 139, this.selected[i], { fontSize: '13px', color: C.cream, wordWrap: { width: sw - 30 } }).setOrigin(0, 0.5)
+          : text(s, x + (sw - 10) / 2, 139, String(i + 1), { fontFamily: FONT.display, fontSize: '26px', color: C.creamDim }).setOrigin(0.5).setAlpha(0.35));
+      }
+      this.cards.forEach((word, i) => {
+        const at = this.selected.indexOf(word), dead = word === this.drowned, cx = 60 + (i % 2) * 425, cy = 201 + Math.floor(i / 2) * 75;
+        button(cx, cy, 412, 65, dead ? '▒▒▒▒▒▒▒▒▒▒▒▒' : word, () => this.pick(i), i === this.index, false, at >= 0);
+        if (at >= 0) parts.push(text(s, cx + 390, cy + 32, String(at + 1), { fontFamily: FONT.display, fontSize: '22px', color: C.amber }).setOrigin(0.5));
+      });
+      button(60, 443, 200, 54, '↺   BKSP', () => this.action('back'));
+      button(276, 443, 150, 54, '?   H', () => this.action('hint'));
+      if (this.message) label(450, 456, this.message, 14, C.amber); // only an asked-for hint puts words here
+    }
+    if (this.bad) {
+      this.bad = false;
+      const flash = s.add.rectangle(0, 0, W, H, 0xc02818, 0.35).setOrigin(0).setScrollFactor(0).setDepth(1260);
+      s.tweens.add({ targets: flash, alpha: 0, duration: 380, onComplete: () => flash.destroy() });
     }
     this.root = s.add.container(0, 0, parts).setScrollFactor(0, 0, true).setDepth(1250);
   }

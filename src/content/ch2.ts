@@ -192,6 +192,7 @@ export const ROOMS2: Record<string, RoomDef> = {
   },
 
   attic: {
+    failTip: 'He turns on a beat. I can count it.',
     id: 'attic', chapter: 2, label: '', width: 1800, spawnX: 220, kit: 'attic',
     npcs: [
       { id: 'woman', fig: 'woman', name: 'THE WOMAN', x: 430, face: -1, scale: 1.2 }, // drawn stooped and small; this brings her up to Montag's height
@@ -218,6 +219,7 @@ export const ROOMS2: Record<string, RoomDef> = {
   },
 
   home2: {
+    failTip: 'Slow breaths. Hands still.',
     id: 'home2', chapter: 2, label: '', width: 2600, spawnX: 900, kit: 'home',
     dark: (f) => !f['h2.day'],
     props: [{ tex: 'k:chair', x: 905, y: 478, depth: 4.4, tint: 0xd8c8d0 }], // the bedside chair Beatty takes

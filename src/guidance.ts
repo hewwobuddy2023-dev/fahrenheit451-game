@@ -1,5 +1,5 @@
 // Guidance helpers: where a line points, what a hazard's light is doing, how far a hotspot reaches. Pure, so the tests can check them.
-import type { Hazard, Hotspot } from './content/types.ts';
+import type { Hotspot } from './content/types.ts';
 
 /** Montag's reach to a hotspot: a wide prop (span) is in reach anywhere along it. 0 = in reach. */
 export function reachDistance(x: number, h: Hotspot) {
@@ -13,10 +13,3 @@ export function placeLine(line: string, from: number, target: number | undefined
   return line.replace(/\s*\{dir\}/, dir ? ' ' + dir : '').trim();
 }
 
-/** The readout under the hazard: what the light is doing, and what Montag should do about it. Derived from the hazard's look. */
-export function laneReadout(hz: Hazard, lit: boolean, soon: boolean) {
-  const car = hz.look === 'headlights', door = hz.look === 'doorlight';
-  if (lit) return car ? 'CAR PASSING: WAIT ON THE ISLAND' : door ? 'DOORWAY LIT: WAIT IN THE DARK' : 'SEARCHLIGHT: WAIT IN THE DARK';
-  if (soon) return car ? 'WAIT: CAR COMING' : door ? 'WAIT: DOORWAY ABOUT TO LIGHT' : 'WAIT: LIGHT COMING';
-  return car ? 'GO NOW: CROSS TO THE NEXT ISLAND' : 'GO NOW: RUN THROUGH THE GAP';
-}

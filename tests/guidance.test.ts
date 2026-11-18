@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ROOMS } from '../src/content.ts';
 import { MUSE } from '../src/content/muse.ts';
-import { laneReadout, placeLine, reachDistance } from '../src/guidance.ts';
+import { placeLine, reachDistance } from '../src/guidance.ts';
 import type { Flags } from '../src/state.ts';
 
 // Every flag a room's objective or thinking-aloud lines read, so each state can be tried exhaustively.
@@ -65,10 +65,11 @@ test('the burn soak zone covers all three piles and the light stays in reach too
   assert.ok(reachDistance(1400, douse) > 70, 'out of reach past the piles');
 });
 
-test('the alley readout comes from its own hazard, not the boulevard text', () => {
-  for (const hz of ROOMS.run.hazards ?? []) {
-    const label = laneReadout(hz, true, false) + laneReadout(hz, false, true) + laneReadout(hz, false, false);
-    assert.ok(!/ISLAND|LANE|CAR/.test(label), `${hz.id}: boulevard words in the alley: ${label}`);
+test('every mini-game room has one muttered tip, and none of it reads as a rule banner', () => {
+  for (const id of ['attic', 'boulevard', 'run', 'river', 'lawn2', 'home2']) {
+    const tip = ROOMS[id]?.failTip;
+    assert.ok(tip, `${id} has a failTip`);
+    assert.ok(tip!.length < 70 && !/[A-Z]{4,}/.test(tip!), `${id}: tip is a short spoken line: ${tip}`);
+    assert.ok(!/not [^,.]+, it'?s|—.*—/i.test(tip!), `${id}: tip follows the writing rules`);
   }
-  for (const hz of ROOMS.boulevard.hazards ?? []) assert.match(laneReadout(hz, true, false), /CAR/);
 });

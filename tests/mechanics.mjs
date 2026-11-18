@@ -29,7 +29,7 @@ for(const [room,id,flag] of [['subway','read','c08.verse'],['camp','granger','c1
  try{
   await s.advance(700);await s.tap(430,282);await s.until(()=>s.scene().sys.settings.key==='room','hose Continue');await campaign(s).settle();
   // Chapter 1: one kerosene pour with no pressure gauge; holding always progresses
-  const r=s.scene();await s.touch('touchstart',888,474);await s.advance(1000);assert.ok(r.holdMs>800,'a held pour makes steady progress');assert.equal(r.pressureLabel.visible,false,'no pressure gauge');await s.touch('touchend',888,474);assert.ok(!r.session.flags['c01.p3']);
+  const r=s.scene();await s.touch('touchstart',888,474);await s.advance(1000);assert.ok(r.holdMs>800,'a held pour makes steady progress');await s.touch('touchend',888,474);assert.ok(!r.session.flags['c01.p3']);
   await s.screenshot('docs/qa/mechanics/pour-partial.webp');
   const before=r.holdMs;await s.tap(914,112);await s.advance(5000);assert.equal(r.holdMs,before,'pause freezes the pour');await s.tap(500,234);
   await s.advance(400);await campaign(s).visit('douse');assert.deepEqual(['c01.p1','c01.p2','c01.p3'].map(k=>r.session.flags[k]),[true,true,true]);

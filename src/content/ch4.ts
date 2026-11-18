@@ -156,6 +156,7 @@ export const ROOMS4: Record<string, RoomDef> = {
   },
 
   lawn2: {
+    failTip: 'It jumps at the sound. Be ready for it.',
     id: 'lawn2', chapter: 4, label: '', width: 1900, spawnX: 900, kit: 'street:lawn', limp: true,
     npcs: [
       { id: 'beatty', fig: 'beatty', name: 'BEATTY', x: 760, face: 1, when: (f) => !f['c10.beatty'] },
@@ -182,6 +183,7 @@ export const ROOMS4: Record<string, RoomDef> = {
   },
 
   boulevard: {
+    failTip: 'One lane at a time. Wait where it is dark.',
     id: 'boulevard', chapter: 4, label: '', width: 2200, spawnX: 150, kit: 'street:boulevard', limp: true,
     // One shared rhythm: each lane lights 0.6 s after the one before it, a wave moving the way you walk. A car is lit for 1.3 s,
     // dark for 2 s (a crossing takes under 1 s); the glare builds for 1.2 s first. A hit cuts to black and sends you back to the near kerb.
@@ -191,7 +193,6 @@ export const ROOMS4: Record<string, RoomDef> = {
     })),
     quietUi: true,
     objective: (f) => !f['c11.crossed'] ? 'Cross the boulevard' : !f['c11.choice'] ? "Go to Black's house" : "Go on to Faber's",
-    barks: [{ x: 520, range: 90, who: 'MONTAG', text: 'Wait for each car to pass before you step out.', when: (f) => !f['c11.crossed'] }],
     hints: (f) => {
       if (!f['c11.crossed']) return ['Cars pass in waves, one lane at a time.', 'Wait on the island until the lane in front of you is clear.', 'Step out only when the lane ahead is dark, then wait on the next island.'];
       if (!f['c11.choice']) return ['You are across. Black lives in one of these houses.', "Black's house is ahead on the right.", "Walk right to Black's house and press [E] to decide what to do."];
@@ -222,6 +223,7 @@ export const ROOMS4: Record<string, RoomDef> = {
   },
 
   run: {
+    failTip: 'Do not stop in front of a door.',
     id: 'run', chapter: 4, label: '', width: 2600, spawnX: 150, kit: 'street:alley', limp: true,
     timer: { ms: 34000, reset: 150, label: 'THE COUNT', when: (f) => !!f['e.run'] && !f['c12.river'], fail: [{ flash: 0xfff4d8, ms: 280 }, { say: 'rn_caught' }] },
     hazards: [

@@ -119,6 +119,8 @@ export interface RoomDef {
   npcs?: Npc[];
   lights?: Light[];
   hazards?: Hazard[];
+  /** Montag's one muttered tip, spoken once after the second failed attempt at any mini-game in this room (a bark, not a banner). */
+  failTip?: string;
   timer?: { ms: number; reset: number; label: string; when?: Cond; fail?: Step[] };
   limp?: boolean;            // slower movement (after the Hound's needle)
   dark?: Cond;               // night-time darkness overlay
