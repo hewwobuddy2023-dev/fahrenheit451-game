@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { setDressing } from '../art/set.ts';
 import { cinematicSet, paintCinema } from '../art/cinema.ts';
+import { paintCues } from '../art/cues.ts';
 import { diveStep, type Breath } from '../gameplay/breath.ts';
 import { BAND, hoseStep, inBand, type HoseState } from '../gameplay/pressure.ts';
 import { inLane, laneState, WARN_MS } from '../gameplay/lanes.ts';
@@ -67,7 +68,7 @@ export class RoomScene extends Phaser.Scene {
   private meter!: Phaser.GameObjects.Graphics;
   private glows = new Map<string, Phaser.GameObjects.Image>();
   private beams = new Map<string, Phaser.GameObjects.Image>();
-  private eyes = new Map<string, Phaser.GameObjects.Container>();
+  private eyes = new Map<string, Phaser.GameObjects.Image>();
   private spray?: Phaser.GameObjects.Particles.ParticleEmitter;
   private dark?: ReturnType<typeof darkness>;
   private mode: Mode = 'play';
@@ -78,14 +79,18 @@ export class RoomScene extends Phaser.Scene {
   private facing = 1;
   private near?: Hotspot;
   private breath: Breath = { air: 1, exhausted: false };
-  private airGfx!: Phaser.GameObjects.Graphics;       // the air ring around Montag's head while swimming
-  private worldGfx!: Phaser.GameObjects.Graphics;     // per-frame drawn cues: still ring, count vignette, prompt ring
+  // pre-built cue objects (textures painted at boot in art/cues.ts); each frame only moves, crops or tints them
+  private bubbles: Phaser.GameObjects.Image[] = [];       // air left, as bubbles over Montag's head
+  private stillRing!: Phaser.GameObjects.Image;           // the dashed ring at his feet while he must stay still
+  private edges: Phaser.GameObjects.Image[] = [];        // the red edges closing in during the count
+  private cueKey!: Phaser.GameObjects.Image; private cueKeyText!: Phaser.GameObjects.Text; private cuePips: Phaser.GameObjects.Image[] = [];
+  private barBg!: Phaser.GameObjects.Image; private barFill!: Phaser.GameObjects.Image;
   private fails = 0;                                  // failed attempts at any mini-game this visit
   private tipGiven = false;
   private holdMs = 0;
   private sputter = false;
   private hose: HoseState = { pressure: 0, progress: 0, overheated: false };
-  private laneStrips = new Map<string, Phaser.GameObjects.Rectangle>();
+  private laneStrips = new Map<string, Phaser.GameObjects.TileSprite>();
   private promptMode = inputMode();
   private hintBtn?: Phaser.GameObjects.Text;
   private bars?: Phaser.GameObjects.Rectangle[];
@@ -124,6 +129,7 @@ export class RoomScene extends Phaser.Scene {
   private activeTime = 0;
   private stillWatch?: { until: number; x: number; ms: number; moving?: boolean };
   private promptWait?: { until: number; hit: boolean };
+  private tomeGlow?: Phaser.GameObjects.Image;
   private tome?: Phaser.GameObjects.Image;        // the book that travels from the heap into Montag's hands
   private carrying = false;
   private pillowBook?: Phaser.GameObjects.Image;  // the book Beatty draws from under the pillow
@@ -147,7 +153,7 @@ export class RoomScene extends Phaser.Scene {
     this.spray = undefined;
     this.wake = undefined;
     this.stillWatch = undefined; this.promptWait = undefined;
-    this.tome = undefined; this.carrying = false; this.pillowBook = undefined; this.catches = new Map();
+    this.tome = undefined; this.tomeGlow = undefined; this.carrying = false; this.pillowBook = undefined; this.catches = new Map();
   }
 
   create() {
@@ -159,6 +165,7 @@ export class RoomScene extends Phaser.Scene {
     for (const other of ['station', 'home', 'attic', 'faber', 'subway', 'street', 'forest']) if (other !== family) freeTextures(this, `k:${other}:`);
     resetKitOnce();
     paintCinema(this);
+    paintCues(this);
     this.kit = KITS[this.room.kit](this, this.room);
     const cine = cinematicSet(this, this.room);
     Object.assign(this.kit.fx, cine.fx);
@@ -208,13 +215,9 @@ export class RoomScene extends Phaser.Scene {
         ? this.add.image(hz.from, -10, 'cone').setOrigin(0.5, 0).setScale(hz.width / 200, 1.5).setTint(0xdfefff).setAlpha(0.55)
         : this.add.image(hz.from, WALK_Y - 60, 'beam').setScale(hz.width / 160, 1.4).setTint(hz.look === 'doorlight' ? 0xffd8a0 : 0xfff2d0).setAlpha(0.75);
       if (hz.pulse) {
-        const marks = this.add.graphics().setDepth(4.15).lineStyle(1, 0x78968c, 0.45);
-        marks.strokeRect(hz.from - 14, WALK_Y + 7, hz.to - hz.from + 28, 20);
-        // live danger strip under the lane: dim = clear, amber = coming, white-hot = lit
-        this.laneStrips.set(hz.id, this.add.rectangle(hz.from - 14, WALK_Y + 7, hz.to - hz.from + 28, 20, 0xffffff, 0).setOrigin(0).setDepth(4.16).setBlendMode(Phaser.BlendModes.ADD));
-        // the safe island just before the lane
-        this.add.rectangle(hz.from - 70, WALK_Y + 9, 44, 16, 0x78a68b, 0.18).setOrigin(0).setDepth(4.14);
-        for (let x = hz.from - 8; x < hz.to + 12; x += 16) marks.lineBetween(x, WALK_Y + 8, x + 10, WALK_Y + 26);
+        // the lane's road paint: chevrons that wake amber, then burn hot; the pad before it is the safe spot
+        this.laneStrips.set(hz.id, this.add.tileSprite(hz.from - 14, WALK_Y + 4, hz.to - hz.from + 28, 24, 'cue:stripe').setOrigin(0).setDepth(4.16).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.16).setTint(0x78968c));
+        this.add.image(hz.from - 80, WALK_Y + 3, 'cue:island').setOrigin(0).setDepth(4.14).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.8);
       }
       if (hz.look === 'headlights') this.rigs.set(hz.id, this.add.image((hz.from + hz.to) / 2, WALK_Y, 'car').setOrigin(0.5, 1).setVisible(false));
       if (hz.look === 'searchlight') this.rigs.set(hz.id, this.add.image(hz.to + 40, 34, 'heli').setScale(0.8).setDepth(5.6));
@@ -222,22 +225,21 @@ export class RoomScene extends Phaser.Scene {
     }
     for (const n of this.npcs) if (n.def.watch) {
       // an eye above the watcher, no words: shut and dim = safe, half-lidded amber = about to turn, wide red = looking
-      const eye = this.add.graphics();
-      const box = this.add.container(n.def.x, n.y - FIG_H - 34, [eye]).setDepth(8).setVisible(false);
-      box.setData('paint', (st: number) => {
-        const open = st === 2 ? 17 : st === 1 ? 8 : 0, col = st === 2 ? C.emberN : st === 1 ? C.amberN : C.creamN;
-        eye.clear().fillStyle(0x0d0a09, 0.92).fillCircle(0, 0, 30).lineStyle(st ? 3 : 1, col, st ? 1 : 0.35).strokeCircle(0, 0, 30);
-        if (open) eye.fillStyle(C.creamN, 1).fillEllipse(0, 0, 40, open * 2).fillStyle(col, 1).fillCircle(0, 0, Math.min(10, open)).fillStyle(0x0d0a09, 1).fillCircle(0, 0, Math.min(4.5, open / 2));
-        else eye.lineStyle(3, C.creamN, 0.5).beginPath().arc(0, -5, 14, 0.35, Math.PI - 0.35).strokePath();
-      });
+      const box = this.add.image(n.def.x, n.y - FIG_H - 34, 'cue:eye0').setDepth(8).setVisible(false);
       this.eyes.set(n.def.id, box);
     }
     this.promptBg = this.add.graphics();
     this.promptText = text(this, 0, 0, '', { fontFamily: FONT.display, fontSize: '14px' }).setOrigin(0, 0.5).setLetterSpacing(2);
     this.prompt = this.add.container(0, 0, [this.promptBg, this.promptText]).setDepth(8).setVisible(false);
     this.meter = this.add.graphics().setDepth(8);
-    this.airGfx = this.add.graphics().setDepth(9);
-    this.worldGfx = this.add.graphics().setDepth(1002).setScrollFactor(0);
+    for (let i = 0; i < 6; i++) this.bubbles.push(this.add.image(0, 0, 'cue:bubble').setDepth(9).setVisible(false));
+    this.stillRing = this.add.image(0, WALK_Y + 14, 'cue:stillring').setDepth(4.2).setVisible(false).setBlendMode(Phaser.BlendModes.ADD);
+    this.edges = [this.add.image(0, 0, 'cue:edge').setOrigin(0).setScrollFactor(0).setDepth(1002).setVisible(false), this.add.image(W, 0, 'cue:edge').setOrigin(0).setFlipX(true).setScrollFactor(0).setDepth(1002).setVisible(false)];
+    this.cueKey = this.add.image(W / 2, 232, 'cue:key').setScrollFactor(0).setDepth(1150).setVisible(false);
+    this.cueKeyText = text(this, W / 2, 232, '', { fontFamily: FONT.display, fontSize: '28px', fontStyle: '700', color: C.ink }).setOrigin(0.5).setScrollFactor(0).setDepth(1151).setVisible(false);
+    for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2 - Math.PI / 2; this.cuePips.push(this.add.image(W / 2 + Math.cos(a) * 62, 232 + Math.sin(a) * 62, 'cue:pip').setScrollFactor(0).setDepth(1150).setVisible(false).setTint(0xffb040)); }
+    this.barBg = this.add.image(0, 0, 'cue:barbg').setOrigin(0).setDepth(8).setVisible(false);
+    this.barFill = this.add.image(0, 0, 'cue:barfill').setOrigin(0).setDepth(8.1).setVisible(false);
 
     this.dialogue = new Dialogue(this);
     this.dialogue.onPause = () => this.onAction('pause');
@@ -379,7 +381,7 @@ export class RoomScene extends Phaser.Scene {
     this.updateWatchers(time);
     this.updateHazards(time, diving);
     this.updateTimer(time);
-    if (playing && !this.stillWatch) { this.updateNear(); this.updateHold(dtMs); } else { this.meter.clear(); this.spray?.stop(); }
+    if (playing && !this.stillWatch) { this.updateNear(); this.updateHold(dtMs); } else { this.meter.clear(); this.barBg.setVisible(false); this.barFill.setVisible(false); this.spray?.stop(); }
     sound.setSpray(this.spray?.emitting ? (this.sputter ? 0.4 : 1) : 0);
     if (this.promptWait && this.keys.act.some((k) => Phaser.Input.Keyboard.JustDown(k))) this.promptWait.hit = true;
   }
@@ -439,7 +441,7 @@ export class RoomScene extends Phaser.Scene {
   /** T3: hold ACT near a hold-hotspot to fill its meter. */
   private updateHold(dtMs: number) {
     const h = this.near;
-    this.meter.clear();
+    this.meter.clear(); this.barBg.setVisible(false); this.barFill.setVisible(false);
     if (!h?.hold || this.locked(h) || this.session.flags[h.hold.flag]) { this.spray?.stop(); this.carryOff(); return; }
     const held = this.keys.act.some((k) => k.isDown) || this.hud.touchAct;
     if (held) markTip('hold');
@@ -470,7 +472,7 @@ export class RoomScene extends Phaser.Scene {
     const k = Math.min(1, this.holdMs / h.hold.ms);
     if (h.hold.carry) this.carryBook(h, k);
     const bx = h.x - 50, by = (h.py ?? 300) + (h.hold.pressure ? 60 : 24);
-    this.meter.fillStyle(C.panel, 0.85).fillRect(bx - 2, by - 2, 104, 12).fillStyle(C.amberN, 1).fillRect(bx, by, 100 * k, 8);
+    this.barBg.setPosition(bx - 6, by - 4).setVisible(true); this.barFill.setPosition(bx, by).setVisible(k > 0).setCrop(0, 0, Math.max(1, 100 * k), 8);
     if (h.hold.pressure) { // a gauge, no words: the green band is full flow, the red end sputters and overheats
       const gx = bx, gy = by - 31, hot = this.hose.overheated || this.hose.pressure > BAND[1];
       this.meter.fillStyle(C.panel, 0.95).fillRect(gx - 4, gy, 108, 22)
@@ -515,13 +517,15 @@ export class RoomScene extends Phaser.Scene {
     p.setFlipX(this.facing < 0);
     const t = Phaser.Math.Easing.Sine.Out(Math.min(1, k)), hand = { x: p.x + this.facing * 38, y: p.y - 125 };
     this.tome ??= this.add.image(c.x, c.y, 'tome').setDepth(5.3);
+    this.tomeGlow ??= this.add.image(c.x, c.y, 'cue:glowdot').setDepth(5.2).setBlendMode(Phaser.BlendModes.ADD);
+    this.tomeGlow.setVisible(true).setPosition(Phaser.Math.Linear(c.x, hand.x, t), Phaser.Math.Linear(c.y, hand.y, t)).setScale(1.2 + k).setAlpha(0.35 + 0.5 * k);
     this.tome.setVisible(true).setAlpha(1).setScale(1).setPosition(Phaser.Math.Linear(c.x, hand.x, t), Phaser.Math.Linear(c.y, hand.y, t) - Math.sin(Math.PI * t) * 26).setAngle((1 - t) * 24 * this.facing);
   }
 
   private carryOff() {
     if (!this.carrying) return;
     this.carrying = false;
-    this.tome?.setVisible(false);
+    this.tome?.setVisible(false); this.tomeGlow?.setVisible(false);
     if (this.player.getData('pose') === 'hold') this.setPose(this.player);
   }
 
@@ -534,7 +538,8 @@ export class RoomScene extends Phaser.Scene {
       const st = on ? 2 : this.isWatching(n.def, time + 700) && n.spr.visible ? 1 : 0;  // 700 ms of warning before he turns
       const box = this.eyes.get(n.def.id)!;
       box.setVisible(n.spr.visible).setX(n.spr.x);
-      if (box.getData('st') !== st) { if (st === 1 && this.mode === 'play') sound.cue('click'); if (st === 2 && this.mode === 'play') sound.cue('servo'); box.setData('st', st); (box.getData('paint') as (st: number) => void)(st); }
+      if (box.getData('st') !== st) { if (st === 1 && this.mode === 'play') sound.cue('click'); if (st === 2 && this.mode === 'play') sound.cue('servo'); box.setData('st', st); box.setTexture(`cue:eye${st}`); }
+      if (st === 2) box.setScale(1 + 0.07 * Math.sin(time * 0.012)); else box.setScale(1);
       n.rim.setTint(on ? 0xff6a3a : 0xd8c8b0).setAlpha(on ? 0.55 : 0.2); // he glows hot while he looks
       n.spr.setFlipX(on ? this.player.x < n.spr.x : this.player.x > n.spr.x);
     }
@@ -582,7 +587,8 @@ export class RoomScene extends Phaser.Scene {
         if (hz.look === 'searchlight' && rig) rig.setX(img.x).setFlipX(st.lit);
         // dim = clear, a blinking amber floor = it is coming, hot red-white = lit
         const blink = 0.65 + 0.35 * Math.sin(time * 0.02);
-        this.laneStrips.get(hz.id)?.setFillStyle(st.lit ? 0xffe0c0 : 0xff9030, st.lit ? 0.7 : st.warn ? (0.3 + 0.4 * (1 - st.untilLit / WARN_MS)) * blink : 0);
+        const strip = this.laneStrips.get(hz.id);
+        if (strip) { strip.setTint(st.lit ? 0xffd2b0 : st.warn ? 0xff9030 : 0x78968c).setAlpha(st.lit ? 0.85 : st.warn ? (0.35 + 0.4 * (1 - st.untilLit / WARN_MS)) * blink : 0.16); strip.tilePositionX = st.lit || st.warn ? time * 0.06 : 0; }
         hit = st.lit && inLane(hz, this.player.x);
       } else {
         img.setVisible(true);
@@ -599,9 +605,10 @@ export class RoomScene extends Phaser.Scene {
 
   /** The count of ten, shown without numbers: the screen edges close in red and the ticks quicken until every door opens. */
   private updateTimer(time: number) {
-    const tm = this.room.timer, g = this.worldGfx;
-    g.clear();
-    if (!tm || (tm.when && !tm.when(this.session.flags)) || this.mode !== 'play') {
+    const tm = this.room.timer;
+    const live = !!tm && !(tm.when && !tm.when(this.session.flags));
+    this.edges.forEach((e) => e.setVisible(live));
+    if (!tm || !live || this.mode !== 'play') {
       if (this.mode !== 'play') this.timerStart += this.game.loop.delta; // pause the count during dialogue
       return;
     }
@@ -609,9 +616,9 @@ export class RoomScene extends Phaser.Scene {
     const n = Math.min(10, 1 + Math.floor((el / tm.ms) * 10));
     if (n !== this.countShown) { this.countShown = n; if (n > 1) sound.cue(n >= 9 ? 'alarm' : 'click'); } // a tick for every tenth; the last two ring
     const k = Math.min(1, el / tm.ms), pulse = 0.5 + 0.5 * Math.sin(time * (0.004 + k * 0.012));
-    const edge = 30 + 150 * k * k, a = (0.12 + 0.5 * k * k) * (0.7 + 0.3 * pulse);
-    g.fillGradientStyle(0xb02010, 0xb02010, 0xb02010, 0xb02010, a, 0, a, 0).fillRect(0, 0, edge, H)
-      .fillGradientStyle(0xb02010, 0xb02010, 0xb02010, 0xb02010, 0, a, 0, a).fillRect(W - edge, 0, edge, H);
+    const edge = 40 + 170 * k * k, a = Math.min(1, (0.16 + 0.7 * k * k) * (0.75 + 0.25 * pulse));
+    this.edges.forEach((e) => e.setAlpha(a).setScale(edge / 128, H / 8));
+    this.edges[1].setX(W - edge);
     if (el >= tm.ms && !this.caughtScene) void this.caughtCinematic(tm.reset, { steps: tm.fail });
   }
 
@@ -620,22 +627,17 @@ export class RoomScene extends Phaser.Scene {
    * flickering once he is out of breath). Standing still: a ring at his feet that closes as the count runs down and jumps open when he steps.
    */
   private drawAir(swimming: boolean, time: number) {
-    const g = this.airGfx, p = this.player;
-    g.clear();
-    if (swimming) {
-      const a = this.breath.air, hx = p.x + 50 * this.facing, hy = p.y - 33; // the head of the floating figure
-      const col = this.breath.exhausted ? (Math.floor(time / 120) % 2 ? 0xff4a30 : 0x802010) : a < 0.35 ? 0xffb040 : 0x9fe0ff;
-      g.lineStyle(7, 0x000000, 0.45).beginPath().arc(hx, hy, 24, 0, Math.PI * 2).strokePath();
-      if (a > 0.02) g.lineStyle(5, col, 1).beginPath().arc(hx, hy, 24, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * a).strokePath();
-      return;
-    }
-    const sw = this.stillWatch;
+    const p = this.player, sw = this.stillWatch, air = this.breath.air, bad = this.breath.exhausted;
+    this.bubbles.forEach((b, i) => {
+      const left = swimming && i < Math.ceil(air * 6 - 0.001);
+      // a little cluster rising off the head; the last ones left shake, and he flushes red when empty
+      b.setVisible(left || (swimming && bad && i < 1)).setPosition(p.x + 50 * this.facing + (i % 2 ? 14 : -10) + Math.sin(time * 0.004 + i) * 3, p.y - 50 - i * 20 - ((time * 0.02 + i * 9) % 10))
+        .setScale(1.15 - i * 0.1).setTint(bad ? (Math.floor(time / 120) % 2 ? 0xff5a40 : 0x902818) : air < 0.35 ? 0xffc060 : 0xffffff);
+    });
+    this.stillRing.setVisible(!!sw);
     if (sw) {
-      const k = Phaser.Math.Clamp((sw.until - this.activeTime) / sw.ms, 0, 1), fx = p.x, fy = WALK_Y + 14;
-      g.lineStyle(6, 0x000000, 0.4).strokeEllipse(fx, fy, 130, 34);
-      g.lineStyle(4, sw.moving ? 0xff4a30 : 0xe8dcc0, 0.95);
-      const n = 40, upto = Math.round(n * (1 - k));
-      for (let i = 0; i < upto; i++) { const a0 = (i / n) * Math.PI * 2 - Math.PI / 2, a1 = ((i + 0.7) / n) * Math.PI * 2 - Math.PI / 2; g.beginPath().moveTo(fx + Math.cos(a0) * 65, fy + Math.sin(a0) * 17).lineTo(fx + Math.cos(a1) * 65, fy + Math.sin(a1) * 17).strokePath(); }
+      const k = Phaser.Math.Clamp((sw.until - this.activeTime) / sw.ms, 0, 1);
+      this.stillRing.setX(p.x).setTint(sw.moving ? 0xff5a40 : 0xe8dcc0).setAlpha(sw.moving ? 1 : 0.85).setCrop(0, 0, Math.max(1, 150 * (1 - k)), 44);
     }
   }
 
@@ -1029,24 +1031,23 @@ export class RoomScene extends Phaser.Scene {
       this.stillWatch = { until: this.activeTime + s.still, x: this.player.x, ms: s.still };
       while (this.activeTime < this.stillWatch.until) await sleep(this, 100);
       this.stillWatch = undefined;
-      this.airGfx.clear();
+      this.stillRing.setVisible(false);
       this.mode = 'cutscene';
       return;
     }
     if ('prompt' in s) {
       let misses = 0, ms = s.ms;
       for (;;) {
-        // a big key cap inside a ring that drains: the Hound is coming and the key is the answer, no sentence
-        const ring = this.add.graphics().setScrollFactor(0).setDepth(1150);
-        const kt = text(this, W / 2, 232, controls('[E]'), { fontFamily: FONT.display, fontSize: '26px', fontStyle: '700', color: C.ink }).setOrigin(0.5).setScrollFactor(0).setDepth(1151);
-        const t = { destroy: () => { ring.destroy(); kt.destroy(); } };
+        // a big key cap inside a ring of pips that drain: the Hound is coming and the key is the answer, no sentence
+        this.cueKeyText.setText(controls('[E]')).setVisible(true); this.cueKey.setVisible(true); this.cuePips.forEach((q) => q.setVisible(true));
+        const t = { destroy: () => { this.cueKey.setVisible(false); this.cueKeyText.setVisible(false); this.cuePips.forEach((q) => q.setVisible(false)); } };
         sound.cue('hound');
         this.hud.showTouch(true);
         this.promptWait = { until: this.activeTime + ms, hit: false };
         while (this.activeTime < this.promptWait.until && !this.promptWait.hit && !this.hud.touchAct) {
-          const k = Math.max(0, (this.promptWait.until - this.activeTime) / ms);
-          ring.clear().fillStyle(0x000000, 0.55).fillCircle(W / 2, 232, 62).fillStyle(C.creamN, 0.97).fillRoundedRect(W / 2 - 36, 200, 72, 64, 10)
-            .lineStyle(8, k < 0.35 ? C.emberN : C.amberN, 1).beginPath().arc(W / 2, 232, 56, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k).strokePath();
+          const k = Math.max(0, (this.promptWait.until - this.activeTime) / ms), on = Math.ceil(k * this.cuePips.length);
+          this.cuePips.forEach((q, i) => q.setAlpha(i < on ? 1 : 0.12).setTint(k < 0.35 ? 0xff4a30 : 0xffb040));
+          this.cueKey.setScale(1 + (k < 0.35 ? 0.05 * Math.sin(this.activeTime * 0.03) : 0));
           await sleep(this, 30);
         }
         const hit = this.promptWait.hit || this.hud.touchAct;

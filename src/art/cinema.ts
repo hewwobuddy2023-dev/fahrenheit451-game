@@ -93,6 +93,11 @@ export function paintCinema(s: Phaser.Scene) {
     c.fillStyle = '#b8b2a2'; c.fillRect(48, 84, 74, 4);
     for (const x of [30, 140]) { c.fillStyle = '#fff6dc'; c.beginPath(); c.arc(x, 78, 13, 0, Math.PI * 2); c.fill(); c.fillStyle = '#ffe9a0'; c.beginPath(); c.arc(x, 78, 7, 0, Math.PI * 2); c.fill(); }
     c.fillStyle = '#050506'; c.fillRect(12, 100, 30, 10); c.fillRect(128, 100, 30, 10);
+    // rim light on the roof and wings, a chrome bumper and fender lamps: a clear silhouette against the dark road
+    c.strokeStyle = 'rgba(255,225,170,0.75)'; c.lineWidth = 2.5; c.beginPath(); c.ellipse(85, 70, 80, 36, 0, Math.PI * 1.08, Math.PI * 1.92); c.stroke();
+    c.strokeStyle = 'rgba(190,215,230,0.55)'; c.lineWidth = 2; c.beginPath(); c.ellipse(85, 46, 45, 21, 0, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
+    c.fillStyle = '#d6d0c0'; c.beginPath(); c.roundRect(34, 92, 102, 6, 3); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.8)'; c.fillRect(44, 93, 28, 1.5);
   });
   // A police helicopter silhouette with its rotor and warning lamp.
   paint(s, 'heli', 150, 56, (c) => {

@@ -4,7 +4,7 @@ import { mkdir } from 'node:fs/promises';
 const [base = 'http://localhost:5173', out = 'docs/qa/mg2', rate = '1'] = process.argv.slice(2);
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+const page = await browser.newPage({ viewport: { width: Number(process.env.VW ?? 1366), height: Number(process.env.VH ?? 768) } });
 const cdp = await page.context().newCDPSession(page);
 await cdp.send('Emulation.setCPUThrottlingRate', { rate: Number(rate) });
 page.on('pageerror', (e) => console.log('PAGEERROR', e.message));
@@ -63,5 +63,17 @@ if (want('g')) { // subway puzzle
   await qa(() => window.__qa.scene.dialogue.puzzle.action('act')); await wait(200);
   await qa(() => { const p = window.__qa.scene.dialogue.puzzle; p.pick(p.state.cards.indexOf(p.def.fragments[0])); }); await wait(200); await shot('g-puzzle-one');
   await qa(() => { const p = window.__qa.scene.dialogue.puzzle; p.pick(p.state.cards.findIndex((c) => !p.def.fragments.includes(c))); }); await wait(100); await shot('g-puzzle-flash');
+}
+if (want('h')) { // standing still (home2)
+  await load('home2', 420, { 'e.home2': true, 'h2.day': true, 'c05.done': true, 'c06.chair': true, 'c06.vent': true });
+  await settle(); await qa(() => window.__qa.go(420)); await wait(200);
+  await qa(() => { const s = window.__qa.scene; s.stillWatch = { until: s.activeTime + 5000, x: s.player.x, ms: 5000 }; });
+  await wait(2500); await shot('h-still-mid'); await page.keyboard.down('ArrowLeft'); await wait(200); await shot('h-still-moved'); await page.keyboard.up('ArrowLeft');
+}
+if (want('i')) { // pillow suspicion meter
+  await load('home2', 900, { 'e.home2': true });
+  for (let i = 0; i < 200 && !(await qa(() => window.__qa.options().length)); i++) { await qa(() => window.__qa.adv()); await wait(100); }
+  await wait(300); await shot('i-pillow-1');
+  await qa(() => window.__qa.choose(0)); await wait(500); await shot('i-pillow-2');
 }
 await browser.close();
