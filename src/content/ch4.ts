@@ -33,14 +33,21 @@ export const SCRIPTS4: Record<string, Script> = {
     { who: N, text: 'The blow lands on your ear. The green bullet drops into the grass, and Beatty picks it up, smiling.' },
     { who: 'BEATTY', text: "Well. A friend. We'll trace it and call on him." },
     { who: 'MONTAG', text: 'No.' },
-    { who: 'BEATTY', text: 'Look at you. A weapon in your hand so a man will hear you out. Go on, then. Quote something at me.' },
+    { who: 'BEATTY', text: 'Look at you. A weapon in your hand so a man will hear you out. Go on, then. Belch some Shakespeare at me.' },
   ], choices: [
     { text: '"Leave him alone."', set: { 'c10.words': 'leave' } },
     { text: '"You wanted this. Didn\'t you?"', set: { 'c10.words': 'wanted' } },
     { text: 'Say nothing.', set: { 'c10.words': 'silent' } },
   ] },
+  lw_trig: { sub: true, lines: [
+    { who: 'BEATTY', text: 'Go on. Pull the trigger.' },
+    { who: 'MONTAG', text: 'We never burned right.' },
+  ] },
+  lw_hand: { sub: true, lines: [{ who: 'BEATTY', text: 'Hand it over, Guy.' }] },
+  lw_shut: { sub: true, lines: [{ who: N, text: 'You shut your eyes and shout, and the shouting does not cover the sound.' }] },
+  lw_turn: { sub: true, lines: [{ who: 'MONTAG', text: 'Turn around.' }] },
   lw_after: { set: { 'c10.beatty': true }, lines: [
-    { who: N, text: 'When your eyes clear, the grass is on fire and Beatty is not there. Black and Stoneman lie where they fell.' },
+    { who: N, text: 'When your eyes clear, the grass is still burning where he lay. Black and Stoneman have not moved.' },
   ] },
   lw_hound: { lines: [{ who: N, text: 'The Hound is crossing the lawn. It makes no sound at all.' }] },
   lw_miss: { lines: [{ who: N, text: 'Too late. It veers off, circles, and comes again.' }] },
@@ -170,7 +177,12 @@ export const ROOMS4: Record<string, RoomDef> = {
     enter: [{ key: 'e.lawn2', steps: [
       { if: (f) => f['c09.book'] === 'outburst', then: [{ say: 'lw_cb_book' }] },
       { say: 'lw_arrest' }, { if: (f) => f['st.reply'] === 'ask', then: [{ say: 'lw_cb_ask' }] }, { wait: 300 },
-      { flash: 0xffffff, ms: 900 }, { fade: 'out', ms: 250 }, { npc: 'beatty', show: false }, { wait: 1100 }, { fade: 'in', ms: 900 },
+      // the novel's death scene: letterbox, the nozzle comes up, Beatty steps in, is burned, falls; then the other two
+      { fx: 'closeIn' }, { cam: 830, ms: 800 }, { walk: 890, ms: 200 }, { pose: 'montag', p: 'hose' }, { wait: 500 },
+      { say: 'lw_trig' }, { npc: 'beatty', x: 815, ms: 700 }, { wait: 350 }, { say: 'lw_hand' }, { wait: 700 },
+      { fx: 'beattyBurn' }, { wait: 2600 }, { say: 'lw_shut' }, { pose: 'montag' }, { wait: 400 },
+      { say: 'lw_turn' }, { pose: 'montag', p: 'hose' }, { fx: 'firemenDown' }, { wait: 900 }, { pose: 'montag' }, { fx: 'closeOut' }, { follow: true },
+      { fade: 'out', ms: 600 }, { npc: 'beatty', show: false }, { wait: 900 }, { fade: 'in', ms: 900 },
       { say: 'lw_after' }, { say: 'lw_hound' }, { fx: 'houndLeap' }, { prompt: 'PRESS [E]  ·  FIRE', ms: 1800, miss: 'lw_miss', strike: 'lw_needle' }, { fx: 'houndBurn' }, { flash: 0xff8040, ms: 400 },
       { say: 'lw_hound2' },
     ] }],

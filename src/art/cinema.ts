@@ -182,6 +182,29 @@ export function cinematicSet(s: Phaser.Scene, room: RoomDef): CinemaParts {
       for (let x = 4; x < 120; x += 14) { c.fillStyle = '#3a2e25'; poly(c, [x, 70, x, 14, x + 5, 6, x + 10, 14, x + 10, 70]); c.fillStyle = 'rgba(255,190,120,0.18)'; c.fillRect(x + 1, 14, 2, 56); }
     });
     s.add.image(1190, 476, 'k:street:fence').setOrigin(0.5, 1).setDepth(5.15);
+    // Beatty's death. RoomScene stores the nozzle and Beatty's positions in s.data 'burn' ({ nx, ny, bx, by }) before calling these.
+    // A gout of fire leaves the nozzle and reaches him; flames then wrap his coat and stay lit on the lawn after he falls.
+    const burnAt = () => s.data.get('burn') as { nx: number; ny: number; bx: number; by: number };
+    parts.fx.beattyJet = () => {
+      const { nx, ny, bx, by } = burnAt(), dx = bx - nx, dy = (by - 120) - ny, len = Math.hypot(dx, dy);
+      const jet = s.add.particles(nx, ny, 'dot', {
+        speed: len / 0.34, angle: Math.atan2(dy, dx) * 180 / Math.PI, lifespan: 340, frequency: 12, quantity: 3, scale: { start: 1.1, end: 2.4 },
+        alpha: { start: 1, end: 0.25 }, tint: [0xfff0b0, 0xffb040, 0xff5a20], blendMode: ADD, duration: 1100,
+      }).setDepth(5.6);
+      const flare = s.add.image(nx, ny, 'glow').setScale(1.4).setTint(0xffa850).setBlendMode(ADD).setDepth(5.55).setAlpha(0.9);
+      s.tweens.add({ targets: flare, alpha: 0, duration: 1300, onComplete: () => flare.destroy() });
+      s.time.delayedCall(2200, () => jet.destroy());
+    };
+    parts.fx.beattyFire = () => {
+      const { bx, by } = burnAt();
+      fireAt(s, bx, by, 2, false, 5.4); fireAt(s, bx, by - 96, 1, false, 5.45);
+      const lit = s.add.image(bx, by - 100, 'glow').setScale(7).setTint(0xff8a40).setBlendMode(ADD).setDepth(5.3).setAlpha(0.35);
+      s.tweens.add({ targets: lit, alpha: 0.2, yoyo: true, repeat: -1, duration: 140 });
+    };
+    parts.fx.beattyEmbers = () => { // after he falls: the fire spreads low across the grass where he lies
+      const { bx, by } = burnAt();
+      fireAt(s, bx - 70, by + 2, 2, false, 5.4); fireAt(s, bx - 10, by + 4, 3, false, 5.4);
+    };
     // The Hound comes across the lawn, veers off, comes again, until Montag fires.
     const hound = s.add.sprite(1720, 470, 'hound:run').setOrigin(0.5, 1).setDepth(5.2).setVisible(false);
     let run: Phaser.Tweens.Tween | undefined;

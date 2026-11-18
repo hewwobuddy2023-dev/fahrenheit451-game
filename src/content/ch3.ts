@@ -90,7 +90,7 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: 'FABER', text: 'I know a printer who has been out of work forty years. That much I can do. And this.' },
     { who: N, text: 'In a back room of coils and crystals he gives you something green, no bigger than a bullet.' },
     { who: 'FABER', text: "In your ear. I'll hear what you hear, and I'll talk to you. Go to the firehouse tonight; we'll listen to your Captain together." },
-    { who: 'FABER', text: "You held the verse on the train: that was the first. Tonight, with your wife's friends, take your time: that's the second. The third will cost you. Choose it carefully." },
+    { who: 'FABER', text: "Tonight, let Beatty do the talking. A man like that says more than he means to. Listen, and I will listen with you." },
   ] },
 
   // ---- 09 Dover Beach ----

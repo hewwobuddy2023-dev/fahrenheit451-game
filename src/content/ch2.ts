@@ -153,11 +153,11 @@ export const SCRIPTS2: Record<string, Script> = {
   ] },
   h2_door: { lines: [
     { who: 'FRONT DOOR', text: 'Mrs. Montag, Mrs. Montag, someone here, someone here...' },
-    { who: N, text: 'Footsteps on the walk. A slow sniff under the door, and a smell like hot wiring.' },
+    { who: N, text: 'A pause on the step. Nobody answers, and nobody opens the door.' },
     { who: 'MONTAG', text: "Don't move." },
   ] },
   h2_read: { set: { 'c06.still': true }, lines: [
-    { who: N, text: 'One more sniff, then it moves off across the lawn.' },
+    { who: N, text: 'The footsteps go away down the walk and over the lawn.' },
     { who: 'MONTAG', text: "Let's see what this is." },
     { who: N, text: 'You open a book at random and read aloud, slowly: thousands of people who chose to die rather than break their eggs at the wrong end.' },
     { who: 'MILDRED', text: "What does that even mean? It doesn't mean anything!" },

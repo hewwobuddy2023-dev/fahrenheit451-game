@@ -1135,6 +1135,31 @@ export class RoomScene extends Phaser.Scene {
         this.scriptedPose = false;
         return;
       }
+      case 'beattyBurn': { // the novel's death: the flame thrower turns on Beatty; he is engulfed, staggers, falls, and the fire stays lit
+        const p = this.player, spr = this.npcs.find((n) => n.def.id === 'beatty')!.spr, calm = settings.reducedMotion;
+        this.data.set('burn', { nx: p.x - 52, ny: p.y - 112, bx: spr.x, by: spr.y });
+        sound.cue('ignite'); sound.cue('rush');
+        this.roomLights.push({ x: spr.x, y: 300, color: 0xff8a40, r: 640 });
+        if (!calm) cam.shake(1700, 0.003);
+        this.kit.fx.beattyJet?.();
+        await sleep(this, 340);
+        spr.setTint(0xffb060);
+        this.kit.fx.beattyFire?.();
+        if (!calm) cam.flash(260, 255, 190, 110);
+        await this.tween({ targets: spr, x: spr.x - 12, angle: 8, duration: 150, yoyo: true, repeat: calm ? 1 : 9, ease: 'Sine.easeInOut' });
+        await this.tween({ targets: spr, angle: -34, x: spr.x - 18, duration: 520, ease: 'Sine.easeIn' });
+        await this.tween({ targets: spr, angle: -88, x: spr.x - 30, y: spr.y + 8, duration: 460, ease: 'Quad.easeIn' });
+        spr.setTint(0x3a2a22);
+        this.kit.fx.beattyEmbers?.();
+        return;
+      }
+      case 'firemenDown': { // Montag turns the nozzle on the other two; they drop their helmets and go down
+        const down = this.npcs.filter((n) => n.def.id === 'black' || n.def.id === 'stoneman').map((n, i) =>
+          this.tween({ targets: n.spr, angle: -84, y: n.spr.y + 10, duration: 420, delay: i * 160, ease: 'Quad.easeIn' }));
+        sound.cue('caught');
+        await Promise.all(down);
+        return;
+      }
       case 'shake': if (!settings.reducedMotion) cam.shake(400, 0.006); return;
       case 'dark': this.dark?.set(true); return;
       case 'light': this.dark?.set(false); return;
