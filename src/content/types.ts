@@ -120,6 +120,8 @@ export interface RoomDef {
   npcs?: Npc[];
   lights?: Light[];
   hazards?: Hazard[];
+  /** Montag's one muttered tip, spoken once after the second failed attempt at any mini-game in this room (a bark, not a banner). */
+  failTip?: string;
   timer?: { ms: number; reset: number; label: string; when?: Cond; fail?: Step[] };
   /** Where Montag may walk while the player has control (a stair-split room: hall below, attic above). */
   walk?: (f: Flags) => [number, number];

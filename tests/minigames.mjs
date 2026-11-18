@@ -100,3 +100,16 @@ for (const exhausted of [false, true]) { // the river: out of breath, the light 
     console.log('PASS subway jingle drowns the missed line until the source is read again');
   } finally { s.close(); }
 }
+{ // Montag mutters the room's tip once, after the second failed attempt, and never again that visit
+  const s = await simulate({ save: { v: 1, room: 'boulevard', x: 400, flags: { 'e.boulevard': true, 'c11.kids': true } }, lowres: true });
+  try {
+    await s.advance(700); await s.tap(430, 282); await s.until(() => s.scene().sys.settings.key === 'room', 'Continue'); await campaign(s).settle();
+    const r = s.scene();
+    r.failed(); await s.advance(1500); assert.equal(r.barkTexts.length, 0, 'no tip after the first failure');
+    r.failed(); await s.advance(1500); assert.equal(r.barkTexts.length, 1, 'tip after the second');
+    assert.equal(r.barkTexts[0].text, r.room.failTip);
+    r.barkTexts.forEach((t) => t.destroy()); r.barkTexts = [];
+    r.failed(); await s.advance(1500); assert.equal(r.barkTexts.length, 0, 'the tip is not repeated');
+    console.log('PASS one muttered tip after the second failure');
+  } finally { s.close(); }
+}

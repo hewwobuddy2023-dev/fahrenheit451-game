@@ -127,6 +127,7 @@ const ending: Step[] = [
 
 export const ROOMS5: Record<string, RoomDef> = {
   river: {
+    failTip: 'Under when it comes. Up when it goes.',
     id: 'river', chapter: 5, label: '', width: 2400, spawnX: 200, kit: 'forest:river',
     hazards: [
       { id: 'sl1', from: 480, to: 980, width: 150, period: 5200, look: 'searchlight', dive: true, reset: 300, fail: [{ say: 'rv_found' }], when: (f) => !f['c13.shore'] },
@@ -134,7 +135,6 @@ export const ROOMS5: Record<string, RoomDef> = {
     ],
     quietUi: true,
     objective: (f) => !f['c13.shore'] ? 'Reach the far shore' : !f['c13.track'] ? 'Find the railroad track' : 'Follow the track',
-    barks: [{ x: 420, range: 60, who: 'MONTAG', text: 'Lights! Hold DOWN to sink under them.', when: (f) => !f['c13.shore'] }],
     hints: (f) => {
       if (!f['c13.shore']) return ['The current has you. Keep swimming toward the far bank.', 'The bank is ahead to the right. Lights sweep the water between you and it.', 'When a light reaches you, hold [DOWN] to sink under it. Let go in the dark to breathe.'];
       if (!f['c13.track']) return ['You made it to the bank. Look around.', 'The rail track runs along the bank, further right.', 'Walk right along the bank until you find the track.'];
