@@ -78,9 +78,29 @@ export const SCRIPTS1: Record<string, Script> = {
     { who: N, text: 'Mildred is on top of the covers with her eyes open, a little radio in each ear. Something glass rolls off the sheet and against your foot.' },
     { who: 'MONTAG', text: 'Millie? ...Millie.' },
   ] },
+  h_unhappy: { lines: [
+    { who: N, text: 'The technicians pack their machines and go. Mildred sleeps, her mouth a little open. You sit in the dark.' },
+    { who: 'MONTAG', text: "I'm not happy." },
+    { who: N, text: 'You say it again, to see if it holds. It holds. All this time you have worn it like a mask, and the girl ran off across the lawn with it.' },
+  ] },
   h_call: { lines: [
     { who: 'MONTAG', text: "Emergency hospital. It's my wife. Please, hurry." },
     { who: 'TECHNICIAN', text: "That's the ninth tonight. Hold her head, would you?" },
+  ] },
+
+  // ---- the walk to work, next afternoon, in the thinning rain (novel order: Mildred, the door, Clarisse, then the firehouse) ----
+  r_walk: { lines: [
+    { who: 'CLARISSE', text: "Hello! I'm still crazy, if you wondered. The rain feels good. Rain even tastes good." },
+    { who: 'MONTAG', text: "I don't think I'd like that." },
+    { who: 'CLARISSE', text: "The last dandelion this year, on the lawn. If you rub it under your chin and it comes off yellow, you're in love. Hold still.", pose: 'reach' },
+    { who: N, text: 'She peers under your chin and frowns.' },
+    { who: 'CLARISSE', text: "What a shame. You're not in love with anyone." },
+    { who: 'MONTAG', text: 'I am. Very much!' },
+    { who: N, text: 'You hunt for a face to go with it, and there is none.' },
+    { who: 'CLARISSE', text: "I'm late for my psychiatrist. I make things up for him. He says I'm an onion, and he's peeling." },
+    { who: 'CLARISSE', text: "How did you come to be a fireman? When I said something about the moon, you looked at the moon. The others walk off. It doesn't seem right for you." },
+    { who: 'MONTAG', text: "Run along to your appointment." },
+    { who: N, text: 'She runs. You stand in the rain, and after a long time you tip your head back and open your mouth.' },
   ] },
 
   // ---- 03 Parlor Walls: she hears every word and does not listen ----
@@ -189,14 +209,13 @@ export const ROOMS1: Record<string, RoomDef> = {
     barks: [
       { x: 980, who: 'STONEMAN', text: 'Your deal, Black.' },
       { x: 1110, who: 'BLACK', text: 'Montag had a grin on him tonight like a jack-o\'-lantern.' },
-      { x: 1480, range: 100, who: 'MONTAG', text: 'Inside the kennel, something clicks awake.', cue: 'servo', fx: 'houndStir' }, // well before the Watch prompt, so the two never stack
     ],
     enter: [{ key: 'e.station1', steps: [{ fx: 'poleSlide' }, { say: 's1_time' }] }],
     hotspots: [
       { id: 'rack', x: 620, label: 'Hang up your helmet', script: 's1_helmet', doneFlag: 's1.helmet', doneScript: 's1_helmet' },
       { id: 'cards', x: 1110, label: 'Listen to the card game', script: 's1_cards' },
       { id: 'beatty', x: 1290, label: 'Talk to Beatty', script: 's1_beatty' },
-      { id: 'hound', x: 1630, label: 'Watch the Hound', steps: [{ cam: 1740, ms: 700 }, { fx: 'houndStir' }, { say: 's1_hound' }, { follow: true }] },
+      { id: 'hound', x: 1630, label: 'Look at the kennel', steps: [{ cam: 1740, ms: 700 }, { say: 's1_hound' }, { follow: true }] },
       { id: 'out', x: 2250, label: 'Leave for home', required: true, door: true, exit: { room: 'corner' } },
     ],
   },
@@ -237,9 +256,22 @@ export const ROOMS1: Record<string, RoomDef> = {
     ],
   },
 
+  // the afternoon after the overdose: Clarisse in the rain on the way to work. Plays itself, then the firehouse.
+  rain: {
+    id: 'rain', chapter: 1, label: '', width: 1700, spawnX: 200, kit: 'street:corner', quietUi: true,
+    coda: 'Happy. The word follows you all the way to the firehouse.',
+    npcs: [{ id: 'clarisse', fig: 'clarisse', name: 'CLARISSE', x: 900, face: -1 }],
+    objective: () => 'Walk to work',
+    hints: () => ['The firehouse is down the street.', 'Walk right along the sidewalk.', 'Walk all the way right and press [E] to go on to work.'],
+    enter: [{ key: 'e.rain', steps: [
+      { fx: 'rainWalk' }, { walk: 780, ms: 3200 }, { say: 'r_walk' },
+      { npc: 'clarisse', x: 1700, ms: 1700 }, { npc: 'clarisse', show: false }, { wait: 1400 }, { goto: 'station2', x: 2200 },
+    ] }],
+    hotspots: [{ id: 'work', x: 1620, label: 'Go on to work', required: true, exit: { room: 'station2', x: 2200 } }],
+  },
+
   home1: {
     id: 'home1', chapter: 1, label: '', width: 2600, spawnX: 200, kit: 'home', quietUi: true,
-    coda: 'Happy. The word follows you all the way to the firehouse.',
     dark: (f) => !f['h1.day'],
     // seated center stage on the sofa, back to the door. Loud walls: she watches them. Any wall off: she reads her part.
     // She turns to Montag only for the goodbye (a scripted step), then goes back to the walls.
@@ -260,7 +292,7 @@ export const ROOMS1: Record<string, RoomDef> = {
         : ['It is time to go to work.', 'The front door is at the far left.', 'Walk all the way left and press [E] at the door.'],
     enter: [{ key: 'e.home1', steps: [
       { walk: 330, ms: 900 }, { cam: 400, ms: 900 }, { wait: 500 }, { follow: true },
-      { walk: 860, ms: 2400 }, { fx: 'dark' }, { say: 'h_dark' }, { fx: 'jets' }, { say: 'h_call' },
+      { walk: 860, ms: 2400 }, { fx: 'dark' }, { say: 'h_dark' }, { fx: 'jets' }, { say: 'h_call' }, { say: 'h_unhappy' },
       { fade: 'out', ms: 900 }, { set: { 'h1.day': true } }, { fx: 'light' }, { walk: 1500, ms: 10 }, { fade: 'in', ms: 600 },
       { title: 'THE NEXT AFTERNOON' },
     ] }],
@@ -279,7 +311,7 @@ export const ROOMS1: Record<string, RoomDef> = {
           { say: 'm_after' }] },
       { id: 'tdone', x: 1760, label: 'Mildred', when: (f) => !!f['c03.script'], script: 'm_done' },
       { id: 'door', x: 140, label: 'Leave for work', required: true, when: (f) => !!f['h1.day'],
-        requires: ['c03.t3', 'c03.script'], lockedScript: 'm_notyet', exit: { room: 'station2', x: 2200 },
+        requires: ['c03.t3', 'c03.script'], lockedScript: 'm_notyet', exit: { room: 'rain', x: 200 },
         steps: [
           { if: (f) => down(f) > 0, then: [{ fx: 'wallsOn' }, { cam: 1980, ms: 1400 }, { say: 'm_leave_on' }, { follow: true }, { wait: 500 }] },
           { fx: 'closeIn' }, { wait: 600 }, { say: 'm_leave2' }, { fx: 'rainDoor' }, { wait: 700 }, { walk: 115, ms: 500 }, { fx: 'leave' }, { wait: 300 },

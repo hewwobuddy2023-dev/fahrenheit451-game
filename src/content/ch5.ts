@@ -43,19 +43,22 @@ export const SCRIPTS5: Record<string, Script> = {
   // ---- 14 The Book People (untimed recall) ----
   cp_offer: { lines: [
     { who: 'GRANGER', text: 'What have you got to offer?' },
-    { who: 'MONTAG', text: 'Part of Ecclesiastes. Let me try.' },
+    { who: 'MONTAG', text: "Part of Ecclesiastes, and a little Revelation. I've tried to hold on to it. Let me try again." },
   ], puzzle: { title: 'What you carry', source: 'KJV Ecclesiastes 3:1–2 · Read, then preserve the sequence.',
     fragments: ['To every thing there is a season,', 'and a time to every purpose under the heaven:', 'a time to be born, and a time to die;', 'a time to plant, and a time to pluck up that which is planted;'],
     distractions: ['Consider the lilies of the field,', "Denham's does it!"] },
     choices: [{ text: 'Offer the passage to Granger.', next: 'ec_end' }] },
   ec_end: { set: { 'c14.recall': true }, lines: [
     { who: N, text: '"To every thing there is a season, and a time to every purpose under the heaven..."' },
-    { who: 'GRANGER', text: 'See? It was in there all along.' },
+    { who: 'MONTAG', text: 'That is as far as it goes. The rest is gone when I turn my head.' },
+    { who: 'GRANGER', text: "Stop trying so hard. Let it alone and it will come when you need it." },
   ], choices: [{ text: '"Who are you people?"', next: 'cp_people' }] },
   cp_people: { set: { 'c14.met': true }, lines: [
     { who: 'GRANGER', text: 'Teachers, once. Writers, a preacher. We read the books, then burned them ourselves so nobody could find them on us. Now we keep them up here.' },
     { who: 'GRANGER', text: "I carry the Republic. Mr. Simmons there has Marcus Aurelius. Over there, Swift, Darwin, Thoreau, the Gospels." },
     { who: 'BOOK PERSON', text: "I'm only the binding. You want the pages." },
+    { who: 'REVEREND', text: 'That book of Ecclesiastes. The only other copy I know of is with a man named Harris, in Youngstown.' },
+    { who: 'GRANGER', text: 'Then until we find Harris, Montag, you are the Book of Ecclesiastes.' },
     { who: 'GRANGER', text: 'There are thousands of us along the old railroad tracks. If the cities ever want them back, they know where to ask.' },
   ] },
 
@@ -72,10 +75,27 @@ export const SCRIPTS5: Record<string, Script> = {
     { text: "Go back tonight. Faber's plan: plant the books, turn in the alarms.", when: (f) => !f['c11.plant'], set: { 'c15.ending': 'defiance' }, reply: [{ who: 'GRANGER', text: 'Rage was all we had once, too. Go carefully.' }] },
     { text: 'Let Montag stay dead. Walk away alone, and keep quiet.', set: { 'c15.ending': 'submission' }, reply: [{ who: 'GRANGER', text: "Nobody will stop you. I hope you find a quiet place." }] },
   ] },
-  war: { lines: [
-    { who: N, text: 'The jets are over you before anyone has looked up. Down the river the city stands up in the air for a second, then falls, and the noise arrives after.' },
-    { who: 'MONTAG', text: 'Millie...' },
+  // the bombs, as the novel has them: the others, Mildred in her hotel room, Chicago, the city in the air, then the verse
+  war1: { sub: true, lines: [
+    { who: N, text: 'The jets are over you before anyone has looked up.' },
+    { who: 'MONTAG', text: 'Run! Faber! Clarisse!' },
+    { who: N, text: 'Clarisse is dead. Faber is on a bus somewhere, the highway still ahead of it.' },
+    { who: 'MONTAG', text: 'Millie. Get out of there!' },
+    { who: N, text: 'In her hotel room she leans toward the parlor wall, as if she could climb in.' },
+    { who: N, text: 'The wall says her name. It says nothing about the bomb.' },
+    { who: N, text: 'The first one lands. For an instant she sees her own face in the dark glass.' },
+    { who: N, text: 'She looks up, and the hotel comes down.' },
+  ] },
+  war2: { sub: true, lines: [
     { who: 'MONTAG', text: 'Chicago. We met in Chicago.' },
+    { who: N, text: 'Down the river the city stands up in the air for a second, then falls.' },
+    { who: N, text: 'The sound of it arrives after.' },
+  ] },
+  war_recall: { sub: true, lines: [
+    { who: N, text: 'Face down in the dust, you reach for it, and the Preacher is there.' },
+    { who: N, text: '"To every thing there is a season, and a time to every purpose under the heaven."' },
+    { who: N, text: 'There is no jingle in it anywhere.' },
+    { who: 'GRANGER', text: 'There.' },
   ] },
 
   ep_pres: { lines: [
@@ -109,7 +129,7 @@ const ending: Step[] = [
   { if: (f) => !!f['c11.plant'] || f['c09.outburst'] === true, then: [{ say: 'in_angry' }],
     else: [{ if: (f) => f['c01.tone'] === 'eager' && f['c09.outburst'] !== true, then: [{ say: 'in_tired' }], else: [{ say: 'in_quiet' }] }] },
   { say: 'cp_choice' },
-  { fx: 'tvOff' }, { wait: 300 }, { fx: 'bombs' }, { wait: 1800 }, { say: 'war' }, { wait: 800 }, { fx: 'dawn' },
+  { fx: 'tvOff' }, { wait: 300 }, { fx: 'closeIn' }, { fx: 'bombs' }, { wait: 1800 }, { say: 'war1' }, { wait: 500 }, { say: 'war2' }, { wait: 600 }, { say: 'war_recall' }, { fx: 'closeOut' }, { wait: 800 }, { fx: 'dawn' },
   { if: (f) => f['c15.ending'] === 'preservation', then: [
     { say: 'ep_pres' },
     { if: looked, then: [{ say: 'ep_pres_dew' }] },

@@ -175,6 +175,12 @@ export function cinematicSet(s: Phaser.Scene, room: RoomDef): CinemaParts {
     const board = s.add.image(1500, F - 230, 'k:street:farboard').setOrigin(0.5, 1).setScale(0.6, 0.6).setAlpha(0).setDepth(0.6).setScrollFactor(0.45);
     parts.fx.billboard = () => s.tweens.add({ targets: board, alpha: 0.85, duration: 1600 });
   }
+  if (room.id === 'rain') {
+    // the thinning rain on the way to work: streaks across the whole view, and a cooler cast over the street
+    s.add.rectangle(0, 0, 1366, 768, 0x1c2a36, 0.22).setOrigin(0).setScrollFactor(0).setDepth(6.4);
+    s.add.particles(0, 0, 'dot', { x: { min: 0, max: 1400 }, y: -10, speedY: { min: 520, max: 640 }, speedX: -40, lifespan: 1100, frequency: settings.reducedMotion ? 90 : 14,
+      scaleY: 3.5, scaleX: 0.35, alpha: 0.4, tint: 0xa8c0d0 }).setDepth(6.5).setScrollFactor(0);
+  }
   if (room.id === 'lawn2') {
     // the low garden fence Montag vaults to reach the books (hotspot 'fence' at x 1190)
     paint(s, 'k:street:fence', 120, 70, (c) => {

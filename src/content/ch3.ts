@@ -30,6 +30,10 @@ export const SCRIPTS3: Record<string, Script> = {
     { who: 'MONTAG', text: "He doesn't know which one. I'll need a copy first." },
   ] },
   f_leave_locked: { lines: [{ who: N, text: 'Not yet. You have not phoned the name in the hall.' }] },
+  bk_bank: { lines: [
+    { who: N, text: 'The bank on the corner is open all night. A robot teller counts the bills into your hand and wishes you a pleasant evening.' },
+    { who: EAR, text: 'Ten million men mobilized. Do you hear? Go home, Montag.' },
+  ] },
   fb_out_locked: { lines: [{ who: 'FABER', text: "No—wait. You haven't heard what I can do. Sit." }] },
 
   // ---- 08 The Sieve and the Sand (untimed recall) ----
@@ -87,9 +91,13 @@ export const SCRIPTS3: Record<string, Script> = {
     { text: '"Courage."', again: true, reply: [{ who: 'FABER', text: 'Courage comes after. What do you DO with what you have understood?' }] },
   ] },
   fb_ear: { set: { 'faber.ear': true }, lines: [
-    { who: 'FABER', text: 'I know a printer who has been out of work forty years. That much I can do. And this.' },
+    { who: 'FABER', text: 'I know a printer who has been out of work forty years. That much I can do. Have you any money?' },
+    { who: 'MONTAG', text: 'Four, five hundred dollars.' },
+    { who: 'FABER', text: 'Bring it. Printers do not work for nothing. And this.' },
     { who: N, text: 'In a back room of coils and crystals he gives you something green, no bigger than a bullet.' },
     { who: 'FABER', text: "In your ear. I'll hear what you hear, and I'll talk to you. Go to the firehouse tonight; we'll listen to your Captain together." },
+    { who: 'MONTAG', text: "Keep the Bible. I'll chance turning in a substitute." },
+    { who: N, text: 'You put it in his hands. He holds it like something that could break.' },
     { who: 'FABER', text: "Tonight, let Beatty do the talking. A man like that says more than he means to. Listen. I'll listen too." },
   ] },
 
@@ -134,7 +142,10 @@ export const SCRIPTS3: Record<string, Script> = {
   ] },
   l_burn: { set: { 'c09.burned': true }, lines: [
     { who: EAR, text: 'Now. The incinerator. Put the book in.' },
-    { who: N, text: 'The book goes down the brass slot. The rest you carry out to the bushes by the back fence. In the bathroom a tap runs and runs.' },
+    { who: N, text: 'The book goes down the brass slot. The rest you carry out to the bushes by the back fence.' },
+    { who: N, text: 'In the bathroom the water runs. You hear Mildred shake the sleeping tablets into her hand.' },
+    { who: EAR, text: 'Fool, Montag. Oh, you silly fool.' },
+    { who: 'MONTAG', text: 'Shut up!' },
   ] },
   l_burn_locked: { lines: [{ who: N, text: 'Not yet. Read to the ladies first. The book is still in your coat.' }] },
 
@@ -204,7 +215,7 @@ export const ROOMS3: Record<string, RoomDef> = {
     enter: [{ key: 'e.faber1', steps: [{ say: 'fb_door' }] }],
     hotspots: [
       { id: 'faber', x: 640, label: 'Talk to Faber', required: true, script: 'fb_talk', doneFlag: 'faber.ear', doneScript: 'fb_ear' },
-      { id: 'out', x: 140, label: 'Go home', required: true, requires: ['faber.ear'], lockedScript: 'fb_out_locked', door: true, exit: { room: 'home4', x: 1450 } },
+      { id: 'out', x: 140, label: 'Go home', required: true, script: 'bk_bank', requires: ['faber.ear'], lockedScript: 'fb_out_locked', door: true, exit: { room: 'home4', x: 1450 } },
     ],
   },
 
