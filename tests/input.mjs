@@ -244,7 +244,7 @@ await check("pillow: starts at 1/3, a wrong answer adds 1 or 2, 3/3 plays Beatty
     const to = async (first) => { for (let i = 0; i < 300 && q.options()[0] !== first; i++) { q.adv(); await s.advance(120); } assert.equal(q.options()[0], first); };
     await to('Let her.'); await s.advance(100);
     assert.equal(r.dialogue.suspicion, 1, 'the meter starts at 1');
-    const rows = r.dialogue.choiceRows.map((row) => row.list[0]), meterBottom = r.dialogue.meter.y + 14;
+    const rows = r.dialogue.choiceRows.map((row) => row.list[0]), meterBottom = r.dialogue.meter.y + 26;
     assert.ok(meterBottom <= Math.min(...rows.map((b) => b.y - b.displayHeight / 2)), 'the meter sits above the panel, never over a choice row');
     q.choose(0); await s.advance(100);                       // wrong: +1
     assert.ok(r.dialogue.suspicion >= 2);

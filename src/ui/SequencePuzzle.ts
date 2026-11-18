@@ -66,12 +66,17 @@ export class SequencePuzzle {
     };
     label(60, 36, this.def.title.toUpperCase(), 24, C.amber).setFontFamily(FONT.display).setLetterSpacing(4);
     const button = (x: number, y: number, w: number, h: number, value: string, fn: () => void, chosen = false, display = true, placed = false) => {
-      const box = s.add.rectangle(x, y, w, h, C.emberN, chosen ? 0.2 : 0.05).setOrigin(0)
-        .setStrokeStyle(chosen ? 2 : 1, chosen ? C.amberN : C.emberN, chosen ? 1 : 0.35).setScrollFactor(0).setInteractive({ useHandCursor: true }).on('pointerdown', fn);
+      // recall cards are slips of paper with a drop shadow: a placed one greys out, the chosen one lifts and gets an amber edge
+      if (!display) parts.push(s.add.rectangle(x + 3, y + 5, w, h, 0x000000, 0.5).setOrigin(0));
+      const box = (display
+        ? s.add.rectangle(x, y, w, h, C.emberN, chosen ? 0.2 : 0.05)
+        : s.add.rectangle(x, y - (chosen ? 3 : 0), w, h, placed ? 0x5d5547 : 0xe9dcc0, placed ? 0.7 : 1)).setOrigin(0)
+        .setStrokeStyle(chosen ? 3 : 1, chosen ? C.amberN : display ? C.emberN : 0x2a2018, chosen ? 1 : display ? 0.35 : 0.6).setScrollFactor(0).setInteractive({ useHandCursor: true }).on('pointerdown', fn);
       const t = text(s, x + 16, y + h / 2, value, display
         ? { fontFamily: FONT.display, fontSize: '16px', color: chosen ? C.amber : C.cream, wordWrap: { width: w - 28 } }
-        : { fontSize: '17px', color: placed ? C.muted : chosen ? C.amber : C.cream, lineSpacing: 2, wordWrap: { width: w - 60 } })
+        : { fontSize: '18px', color: placed ? '#9a9080' : '#241a12', lineSpacing: 2, wordWrap: { width: w - 60 } })
         .setOrigin(0, 0.5).setLetterSpacing(display ? 2 : 0);
+      if (!display && chosen) t.setY(y + h / 2 - 3);
       parts.push(box, t);
     };
     button(792, 36, 108, 44, 'PAUSE', this.pause);
@@ -84,9 +89,9 @@ export class SequencePuzzle {
       const n = this.def.fragments.length, sw = (PW - 56) / n;
       for (let i = 0; i < n; i++) {
         const filled = i < this.selected.length, x = X + 28 + i * sw;
-        parts.push(s.add.rectangle(x, 100, sw - 10, 78, filled ? C.amberN : C.creamN, filled ? 0.14 : 0.04).setOrigin(0).setStrokeStyle(filled ? 2 : 1, filled ? C.amberN : C.creamN, filled ? 0.9 : 0.25));
+        parts.push(s.add.rectangle(x, 100, sw - 10, 78, filled ? 0xe9dcc0 : 0x000000, filled ? 1 : 0.35).setOrigin(0).setStrokeStyle(filled ? 3 : 1, filled ? C.amberN : C.creamN, filled ? 1 : 0.25));
         parts.push(filled
-          ? text(s, x + 10, 139, this.selected[i], { fontSize: '13px', color: C.cream, wordWrap: { width: sw - 30 } }).setOrigin(0, 0.5)
+          ? text(s, x + 10, 139, this.selected[i], { fontSize: '14px', color: '#241a12', wordWrap: { width: sw - 30 } }).setOrigin(0, 0.5)
           : text(s, x + (sw - 10) / 2, 139, String(i + 1), { fontFamily: FONT.display, fontSize: '26px', color: C.creamDim }).setOrigin(0.5).setAlpha(0.35));
       }
       this.cards.forEach((word, i) => {

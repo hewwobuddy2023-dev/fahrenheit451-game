@@ -62,7 +62,7 @@ export class Dialogue {
   private watch?: Script['suspicion'];
   private suspicion = 0;
   private firstChoices?: Choice[];
-  private meter?: Phaser.GameObjects.Graphics;
+  private meter?: Phaser.GameObjects.Container;
   private sel = 0;
   private acc: Flags = {};
   private flags: Flags = {};
@@ -335,15 +335,12 @@ export class Dialogue {
   /** Three eyes above the panel, no words: each one that opens is Beatty looking harder. The third is the catch. */
   private paintMeter() {
     if (!this.watch) return;
-    const g = (this.meter ??= this.scene.add.graphics().setScrollFactor(0).setDepth(1300));
-    const x0 = BOX.x + BOX.w - 90;
-    g.setY(this.panelTop - 24).setVisible(true).clear();
-    for (let i = 0; i < 3; i++) {
-      const x = x0 + i * 44, on = i < this.suspicion, col = i >= 2 ? C.emberN : C.amberN;
-      g.fillStyle(0x0d0a09, 0.9).fillRoundedRect(x - 20, -14, 40, 28, 14).lineStyle(on ? 2 : 1, on ? col : C.creamN, on ? 1 : 0.35).strokeRoundedRect(x - 20, -14, 40, 28, 14);
-      if (on) g.fillStyle(C.creamN, 1).fillEllipse(x, 0, 28, 16).fillStyle(col, 1).fillCircle(x, 0, 6).fillStyle(0x0d0a09, 1).fillCircle(x, 0, 2.5);
-      else g.lineStyle(2, C.creamN, 0.4).beginPath().arc(x, -3, 9, 0.4, Math.PI - 0.4).strokePath();
+    if (!this.meter) {
+      const eyes = [0, 1, 2].map((i) => this.scene.add.image(i * 54, 0, 'cue:eye0').setScale(0.72));
+      this.meter = this.scene.add.container(BOX.x + BOX.w - 120, 0, eyes).setScrollFactor(0).setDepth(1300);
     }
+    this.meter.setY(this.panelTop - 30).setVisible(true);
+    (this.meter.list as Phaser.GameObjects.Image[]).forEach((e, i) => e.setTexture(i >= this.suspicion ? 'cue:eye0' : i >= 2 ? 'cue:eye2' : 'cue:eye1'));
   }
 
   private close() {
