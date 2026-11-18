@@ -50,6 +50,13 @@ export const MUSE: Record<string, (f: Flags) => Muse> = {
     'Go inside. Get this over with. {dir}',
   ],
 
+  rain: () => [
+    'Clarisse. In the rain, of all things.',
+    'The firehouse is down the street. {dir}',
+    'Walk on to work. Press E. {dir}',
+    'Go on, Montag. Press E. {dir}',
+  ],
+
   home1: (f) => !f['h1.day'] ? dark : !f['c03.t1'] ? [
     'She is on the sofa. I should say something.',
     'Mildred is on the sofa. {dir}',

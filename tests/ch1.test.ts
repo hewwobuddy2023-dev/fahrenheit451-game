@@ -129,3 +129,12 @@ test('Chapter 1 poses exist, set-piece subtitles fit the letterbox, and the Houn
     }
   }
 });
+
+test('the way out of the parlor passes through the rain walk, and a save made in the rain can still reach the firehouse', () => {
+  assert.equal(ROOMS.home1.hotspots.find((h) => h.id === 'door')!.exit!.room, 'rain');
+  const goes = (ROOMS.rain.enter ?? []).flatMap((e) => e.steps).some((s) => 'goto' in s && s.goto === 'station2');
+  assert.ok(goes, 'the walk ends at the firehouse by itself');
+  const out = ROOMS.rain.hotspots.find((h) => h.exit?.room === 'station2');
+  assert.ok(out && !out.requires && (!out.when || out.when({})), 'a resumed save has an open way on');
+  assert.ok(ROOMS.rain.chapter === 1 && ROOMS.station2.chapter === 2, 'the chapter card still plays on the way into the firehouse');
+});

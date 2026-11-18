@@ -1103,6 +1103,7 @@ export class RoomScene extends Phaser.Scene {
     if (name === 'houndStir') sound.cue('servo');
     if (name === 'wallsOn') sound.setTelevision(true);
     if (name === 'rainDoor') sound.setProfile('rain');
+    if (name === 'rainWalk') return sound.setProfile('rain');
     if (name === 'leave') { this.scriptedPose = true; return this.tween({ targets: this.player, alpha: 0, duration: 700 }); } // update() would reset alpha otherwise
     if (name === 'unhush') return sound.setDuck(false);
     const k = this.kit.fx[name];

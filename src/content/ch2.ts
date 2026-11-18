@@ -92,7 +92,10 @@ export const SCRIPTS2: Record<string, Script> = {
   h2_sick: { lines: [
     { who: N, text: 'Morning. Fever, and the kerosene in your coat turns your stomach.' },
     { who: 'MONTAG', text: "I'm not going in tonight." },
-    { who: 'MILDRED', text: "You've never been sick, not once. ...Oh! There's a car outside. It's Captain Beatty." },
+    { who: 'MILDRED', text: "You've never been sick, not once." },
+    { who: 'MONTAG', text: "Last night I thought about every drop of kerosene I've used in ten years. A man was behind each of those books. He sat down and took a long time to put it on paper." },
+    { who: 'MONTAG', text: "I never once thought of that. And I come along with a match and it's over in two minutes." },
+    { who: 'MILDRED', text: "Let me alone, Guy. I didn't do anything. ...Oh! There's a car outside. It's Captain Beatty." },
   ] },
 
   // ---- 05 Beatty's Argument: keep the pillow book hidden ----
