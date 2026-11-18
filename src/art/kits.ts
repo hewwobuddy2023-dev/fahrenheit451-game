@@ -772,7 +772,14 @@ const attic: Kit = (s) => {
     // a small attic window and the dusty shaft of light it throws across the heaps
     c.fillStyle = '#3a2c20'; c.fillRect(1356, 30, 88, 64); c.fillStyle = '#c9b48a'; c.fillRect(1362, 36, 76, 52); c.fillStyle = '#3a2c20'; c.fillRect(1398, 36, 4, 52); c.fillRect(1362, 60, 76, 3);
     c.fillStyle = 'rgba(242,205,150,0.09)'; poly(c, [1362, 90, 1438, 90, 1560, F - 40, 1260, F - 40]);
-    // books heaped in irregular mounds: single books of different sizes, tilted more toward the edges, with loose ones slid down the slopes
+    for (let x = 200; x < 640; x += 110) { c.fillStyle = '#2a1c12'; c.fillRect(x, 120, 90, 200); c.fillStyle = '#4a3220'; for (let y = 130; y < 310; y += 30) c.fillRect(x + 4, y, 82, 4); for (let y = 134; y < 310; y += 30) for (let b = x + 6; b < x + 84; b += 7) { c.fillStyle = ['#6b2a1a', '#2a3a5a', '#7a6a3a'][(b + y) % 3]; c.fillRect(b, y - 18, 6, 18); } }
+    radial(c, 1400, 60, 200, 'rgba(242,165,74,A)', 0.2);
+    interiorTrim(c, RW, F);
+    speckle(c, RW, F, 14000, 41);
+  });
+  // the heaps are their own layer: the attic is empty until the books come down
+  paint(s, 'k:attic:heaps', RW, F, (c) => {
+    // single books of different sizes, tilted more toward the edges, with loose ones slid down the slopes
     const r = rng(8), tones = ['#6b2a1a', '#2a3a5a', '#7a6a3a', '#4a5a3a', '#5a2a3a', '#3a3a44', '#8a5a2a', '#24402f'];
     const book = (x: number, y: number, bw: number, bh: number, a: number) => {
       c.save(); c.translate(x, y); c.rotate(a); if (r() < 0.5) c.scale(-1, 1);
@@ -794,20 +801,58 @@ const attic: Kit = (s) => {
       }
       for (let i = 0; i < 10; i++) { const side = r() < 0.5 ? -1 : 1; book(cx + side * (w / 2 - 14 + r() * 46), F - 6 - r() * 4, 22 + r() * 12, 7 + r() * 4, side * (0.25 + r() * 0.9)); }
     }
-    for (let x = 200; x < 640; x += 110) { c.fillStyle = '#2a1c12'; c.fillRect(x, 120, 90, 200); c.fillStyle = '#4a3220'; for (let y = 130; y < 310; y += 30) c.fillRect(x + 4, y, 82, 4); for (let y = 134; y < 310; y += 30) for (let b = x + 6; b < x + 84; b += 7) { c.fillStyle = ['#6b2a1a', '#2a3a5a', '#7a6a3a'][(b + y) % 3]; c.fillRect(b, y - 18, 6, 18); } }
-    radial(c, 1400, 60, 200, 'rgba(242,165,74,A)', 0.2);
-    interiorTrim(c, RW, F);
-    speckle(c, RW, F, 14000, 41);
   });
   addLayer(s, 'k:attic:wall', 1, 1);
+  const heaps = addLayer(s, 'k:attic:heaps', 1, 1.05).setAlpha(0);
+  // Hall below the partition (x < SPLIT) and attic above it share one strip; whichever floor Montag is not on is blacked out.
+  const SPLIT = 1062, ink = 0x0a0705;
+  const attic = s.add.rectangle(SPLIT, 0, RW - SPLIT, H, ink, 1).setOrigin(0).setDepth(6.5);
+  const hall = s.add.rectangle(0, 0, SPLIT, H, ink, 1).setOrigin(0).setDepth(6.5).setAlpha(0);
+  const way = s.add.rectangle(1004, 70, 58, F - 70, 0x2a1c12, 1).setOrigin(0).setDepth(6.6).setAlpha(0); // the doorway down
+  const wayLit = s.add.image(1033, F - 40, 'glow').setScale(0.9, 1.8).setTint(0xf2a54a).setAlpha(0).setBlendMode(ADD).setDepth(6.7);
+  let open = false, heapsOn = false, reveal = false;
+  const kero = s.add.ellipse(430, F + 36, 260, 34, 0x1a1208, 0.55).setDepth(1.95).setVisible(false); // kerosene around the woman
   paint(s, 'k:banister', 50, H, (c) => { c.fillStyle = '#0a0705'; c.fillRect(20, 120, 12, H); c.fillRect(0, 110, 50, 14); });
   occluder(s, 'k:banister', 880, 1.3);
   dust(s, RW);
-  const fall = s.add.particles(0, 0, 'book', { x: { min: 1000, max: 1500 }, y: 40, speedY: { min: 120, max: 220 }, rotate: { min: 0, max: 360 }, lifespan: 1800, frequency: 120, gravityY: 200, emitting: false }).setDepth(7);
+  const pause = (ms: number) => new Promise<void>((r) => s.time.delayedCall(ms, r));
+  // books shed from the rafters across the whole attic
+  const fall = s.add.particles(0, 0, 'tome', { tint: [0xb06a58, 0x6a82b0, 0xc4ae6a, 0x7a9a6a, 0xa0607a, 0x8a8a96], x: { min: 1100, max: 1740 }, y: 20, speedX: { min: -140, max: 60 }, speedY: { min: 60, max: 200 }, rotate: { min: 0, max: 360 }, angle: { min: 0, max: 360 },
+    lifespan: 1300, frequency: 45, gravityY: 520, scale: { min: 0.6, max: 1 }, emitting: false }).setDepth(7);
   return {
     floor: { key: 'boards', top: '#3a281a', bottom: '#100a06', line: 'rgba(0,0,0,0.5)', spacing: 60, kind: 'boards' },
     lights: [{ x: 400, y: 200, color: C.amberN, r: 300 }, { x: 1400, y: 120, color: C.amberN, r: 360 }],
-    fx: { books: () => { fall.start(); s.time.delayedCall(4000, () => fall.stop()); }, glowOrange: () => { if (!settings.reducedMotion) s.cameras.main.flash(900, 255, 120, 40); } },
+    update: (f) => {
+      const up = (f['a.fell'] || open) && !f['a.down'];
+      hall.setAlpha(up ? 1 : 0);
+      if (!reveal) attic.setAlpha(up ? 0 : 1);
+      way.setAlpha(up ? 1 : 0); wayLit.setAlpha(up ? 0.5 : 0);
+      if (f['a.fell'] && !heapsOn) { heapsOn = true; heaps.setAlpha(1); }
+      kero.setVisible(!!f['a.down'] && !f['c04.plea']);
+    },
+    fx: {
+      // the attic opens: the stairwell goes dark behind Montag and the lit roof space fades in
+      atticOpen: async () => {
+        open = true; hall.setAlpha(1); way.setAlpha(1); wayLit.setAlpha(0.5); reveal = true;
+        s.tweens.add({ targets: attic, alpha: 0, duration: settings.reducedMotion ? 0 : 1600 });
+        await pause(settings.reducedMotion ? 100 : 1900); reveal = false;
+      },
+      // the stacks let go: books pour off the rafters, the heaps build on the floor, loose ones slide to Montag's feet
+      avalanche: async () => {
+        heapsOn = true;
+        fall.start();
+        s.tweens.add({ targets: heaps, alpha: 1, duration: settings.reducedMotion ? 0 : 2200, delay: 500 });
+        for (let i = 0; i < 12; i++) {
+          const sx = 1480 + Math.random() * 220, b = s.add.image(sx, FLOOR_TOP - 150 - Math.random() * 40, 'tome').setTint([0xb06a58, 0x6a82b0, 0xc4ae6a, 0x7a9a6a][i % 4]).setDepth(5.2).setAngle(Math.random() * 90);
+          s.tweens.add({ targets: b, x: 1160 + Math.random() * 170, y: FLOOR_TOP + 6 + Math.random() * 14, angle: b.angle + 200 + Math.random() * 300, delay: i * 120, duration: 900, ease: 'Quad.easeIn',
+            onComplete: () => s.tweens.add({ targets: b, alpha: 0, duration: 400, delay: 1600, onComplete: () => b.destroy() }) });
+        }
+        await pause(2400); fall.stop(); await pause(600);
+      },
+      glowOrange: () => { if (!settings.reducedMotion) s.cameras.main.flash(900, 255, 120, 40); },
+      // the match goes up and the stairwell hall catches
+      hallFire: () => { for (const x of [380, 440, 500]) fireAt(s, x, FLOOR_TOP + 24, 3, false, 5.5); },
+    },
   };
 };
 

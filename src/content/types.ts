@@ -74,6 +74,7 @@ export interface Hotspot {
   auto?: boolean;            // triggers on arrival, no key press
   steps?: Step[];            // run after the script (or alone)
   exit?: { room: string; x?: number };
+  door?: boolean;            // the exit is a door: Montag walks to it and goes through (a knock of the latch) instead of cutting away
   vault?: boolean;           // a low obstacle: blocks walking; E / Space / VAULT hops over it
 }
 
@@ -120,6 +121,8 @@ export interface RoomDef {
   lights?: Light[];
   hazards?: Hazard[];
   timer?: { ms: number; reset: number; label: string; when?: Cond; fail?: Step[] };
+  /** Where Montag may walk while the player has control (a stair-split room: hall below, attic above). */
+  walk?: (f: Flags) => [number, number];
   limp?: boolean;            // slower movement (after the Hound's needle)
   dark?: Cond;               // night-time darkness overlay
   objective: (f: Flags) => string;

@@ -175,7 +175,7 @@ export const ROOMS3: Record<string, RoomDef> = {
     hotspots: [
       { id: 'file', x: 1000, label: 'Your file-wallet', required: true, script: 'f_file', doneFlag: 'c07.file', doneScript: 'f_file' },
       { id: 'phone', x: 290, label: 'The phone', required: true, requires: ['c07.file'], lockedScript: 'f_phone_locked', script: 'f_call', doneFlag: 'c07.call', doneScript: 'f_leave' },
-      { id: 'door', x: 140, label: 'Leave for the subway', required: true, requires: ['c07.call'], lockedScript: 'f_leave_locked', script: 'f_leave', exit: { room: 'subway', x: 220 } },
+      { id: 'door', x: 140, label: 'Leave for the subway', required: true, requires: ['c07.call'], lockedScript: 'f_leave_locked', script: 'f_leave', door: true, exit: { room: 'subway', x: 220 } },
     ],
   },
 
@@ -204,7 +204,7 @@ export const ROOMS3: Record<string, RoomDef> = {
     enter: [{ key: 'e.faber1', steps: [{ say: 'fb_door' }] }],
     hotspots: [
       { id: 'faber', x: 640, label: 'Talk to Faber', required: true, script: 'fb_talk', doneFlag: 'faber.ear', doneScript: 'fb_ear' },
-      { id: 'out', x: 140, label: 'Go home', required: true, requires: ['faber.ear'], lockedScript: 'fb_out_locked', exit: { room: 'home4', x: 1450 } },
+      { id: 'out', x: 140, label: 'Go home', required: true, requires: ['faber.ear'], lockedScript: 'fb_out_locked', door: true, exit: { room: 'home4', x: 1450 } },
     ],
   },
 
